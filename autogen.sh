@@ -1,3 +1,4 @@
 autoreconf -fvi
+aclocal
 autoconf
-./configure
+automake
