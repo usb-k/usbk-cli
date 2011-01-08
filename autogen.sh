@@ -1,0 +1,3 @@
+autoreconf -fvi
+autoconf
+./configure
