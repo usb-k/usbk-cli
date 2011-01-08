@@ -1,0 +1,58 @@
+/*
+    usbk - Management software for USB-K crypro device
+
+    Copyright (C) 2010,  Murat KILIVAN <murat@tamara.com.tr>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#define _USBK_SCSI_H
+#include "usbk_scsi.h"
+
+int send_scsi_command(t_usbk *usbk, unsigned char *buff, int cmd_index, int len, char rw){
+	  short int cmdlen = sizeof(st_cmd);
+	  st_packet packet;
+	  unsigned char buffer[512];
+
+	  if(usbk_open(usbk->dev) == 1){
+	    printf("Hata: device adi yanlis veya root yetkisine sahip degilsiniz.\n");
+	    exit(1);
+	  }
+
+	  memset(buffer,0,sizeof(buffer));
+	  if (rw == WRITE_SCSI){
+		  if(len != 0)
+			  memcpy(buffer, buff, len);
+	  }
+
+	  packet.cmd = scsi_cmd[cmd_index-1];
+	  packet.cmdlen = cmdlen;
+	  packet.cmddir = (rw == WRITE_SCSI) ? OUTDIR : INDIR;
+	  packet.data = buffer;
+	  packet.datalen = 512;
+
+	  if(usbk_sg_tansfer(&packet) == 1){
+	    printf("Hata: SCSI okuma hatasi.\n");
+	    exit(1);
+	  }
+
+	  if (rw == READ_SCSI){
+		  if(len != 0)
+			  memcpy(buff, buffer, len);
+	  }
+
+	  usbk_close();
+	  return 0;
+}
+
