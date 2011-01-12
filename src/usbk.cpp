@@ -240,6 +240,10 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
+	if(main_operation == 0){
+		exit(0);
+	}
+
 	strncpy(usbk.dev, argv[argc - 1], SIZE_DEVNAME);
 	if (find_sdevices(&usbk) == 0) {
 		printf("Hata: %s üzerinde USBK cihazı bulunamadi\n", usbk.dev);
