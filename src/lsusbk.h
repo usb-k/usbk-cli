@@ -17,7 +17,7 @@
 #include <libgen.h>
 #include <linux/major.h>
 #include <time.h>
-#include "General.h"
+#include "general.h"
 
 #define NAME_LEN_MAX 260
 #define FT_OTHER 0

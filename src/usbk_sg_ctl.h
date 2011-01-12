@@ -1,6 +1,6 @@
 #ifdef _USBK_SG_CTL_H
 
-#include "General.h"
+#include "general.h"
 #include <scsi/sg.h>
 
 int usbk_open(char* DevicePath);

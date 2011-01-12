@@ -7,5 +7,5 @@ usbk_SOURCES=usbk.cpp \
 			 lsusbk.h \
 			 usbk_scsi.h \
 			 usbk_sg_ctl.h \
-			 General.h \
-			 ScsiStructure.h
+			 general.h \
+			 scsi_structure.h

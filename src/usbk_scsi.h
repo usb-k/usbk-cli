@@ -18,7 +18,7 @@
 
 #ifdef _USBK_SCSI_H
 
-#include "General.h"
+#include "general.h"
 #include "usbk_sg_ctl.h"
 
 st_cmd scsi_cmd[][10] = {

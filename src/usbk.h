@@ -1,6 +1,6 @@
 #ifdef _USBK_H
 
-#include "General.h"
+#include "general.h"
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
