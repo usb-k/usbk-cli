@@ -240,7 +240,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	if(main_operation == 0){
+	if(!iflag && main_operation == 0){
 		exit(0);
 	}
 
