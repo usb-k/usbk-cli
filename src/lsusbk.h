@@ -5,6 +5,10 @@
 #define _GNU_SOURCE
 #endif
 
+#define _BSD_SOURCE
+#define _SVID_SOURCE
+#include <features.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -96,7 +100,11 @@ static int parse_colon_list(const char * colon_list, struct addr_hctl * outp);
 static void one_sdev_entry(const char * dir_name, const char * devname);
 int match_sdev_entry(const char * dir_name, const char * devname, t_usbk *usbk);
 static int sdev_scandir_select(const struct dirent * s);
+#if(__GLIBC_MINOR__ >= 9)
 static int sdev_scandir_sort(const struct dirent ** a, const struct dirent ** b);
+#else
+static int sdev_scandir_sort(const void* a, const void *b);
+#endif
 static void list_sdevices(void);
 int lsusbk(void);
 int find_sdevices(t_usbk *usbk);
