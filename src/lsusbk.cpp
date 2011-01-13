@@ -1,11 +1,21 @@
-/* This is a utility program for listing SCSI devices and hosts (HBAs)
+/*
+ * @file lsusb.cpp
+ *
+ * Copyright (C) 2003-2009 D. Gilbert
+ * Copyright (C) 2010
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * See http://www.gnu.org/licenses/ for more information
+ *
+ ****************************************************************************
+ * This is a utility program for listing SCSI devices and hosts (HBAs)
  * in the Linux operating system. It is applicable to kernel versions
  * 2.6.1 and greater.
- *  Copyright (C) 2003-2009 D. Gilbert
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2, or (at your option)
- *  any later version.
+ *
  */
 
 #define _LSUSBK_H

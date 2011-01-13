@@ -1,25 +1,75 @@
-README
+Architecture of USB-K CryptoBridge
+==================================
 
------------------------------------------------
-|                usbk                         |
------------------------------------------------
+      Hardware Archtitecture                        Software Architecture
+      ~~~~~~~~~~~~~~~~~~~~~~                        ~~~~~~~~~~~~~~~~~~~~~
 
----------------------   -----------------------
-|       scsi        |   |                     |
----------------------   |                     |
-                        |      lsusbk         |
----------------------   |                     |
-|   scsi_io_ctl     |   |                     |
----------------------   -----------------------
+   +--------------------------+
+   |   USB Disc/Flash Memory  |                  Encrypted data with 128 Bit AES
+   +--------------------------+
+               ^
+               |                                           ^   ^   ^
+               v                                           |   |   |
+   +--------------------------+                            |   |   |
+   |                          |                            |   |   |
+   |         USB-K            |                   [ AES ENCRYPTION/DECRYPTION ]
+   |      CryptoBridge        |                            |   |   |
+   |                          |                            v   v   v
+   +--------------------------+                    Keys   [1] [2] [3]
+               ^                                           ^   ^   ^
+               |                                           |   |   |
+               v                                           v   v   v
+   +--------------------------+            +------------------------------------------+
+   |         ______           |            |            Linux Kernel                  |
+   |        | USB  |          |            +------------------------------------------+
+   |        | PORT |          |                                            ^ v
+   |        \______/          |            +----------------+        +----------------+
+   |                          |            |                |  <-->  |   SCSI IOCTL   |
+   |                          |            |                |        +----------------+
+   |                          |            |    libusbk     |              ^ v
+   |       User's PC          |            |                |        +----------------+
+   |                          |            |                |  <-->  | SCSI Interface |
+   |                          |            +----------------+        +----------------+
+   |                          |                    ^
+   |                          |                    v
+   |                          |            +----------------+
+   |                          |            | usbk interface |
+   |                          |            |    cli/gui     |
+   |                          |            +----------------+
+   +--------------------------+
 
------------------------------------------------
-|               kernel                        |
------------------------------------------------
 
-/*************************************************************/
-/* TEST EDILEN LINUX SURUMLERI                               */
-/*************************************************************/
+About USB-K
+===========
+USB-K CryptoBridge encrypts data independent by the operation systems and all filesystems.
+USB-K works in SCSI level and encrypts/decryps data on the fly. USB-K uses 3 keys and a
+password for this operation. Whenever user inserts USB-K into USB Hub of the PC, USB-K
+must be initialized (there is an exceptional situation!).
+
+USB-K contains 3 keys by default. Each of which might be used by and USB disc device.
+In order to use these 3 keys, user must enter the password. Password is 123456 by default.
+If user enters incorrect password 3 times, all 3 keys are resetted by USB-K and the encrtypted
+data becomes garbage. After that, there is NO WAY to save encrypted unless user
+remember 128 bit long AES keys.
+
+The 3 keys can be set by user, USB-K lets user to do this. If user note 128 bit long keys
+to somewhere, data might be recovered.
+
+USB-K causes 30% performance loss. Normally user doesn't feel anything unless user
+read/write a big file.
+
+
+
+About USB-K Software
+====================
+libusbk - the place which operation has performed :FIXME: more detail
+lsusbk - command line interface to manage USB-K :FIXME: more detail
+
+
+Works well on
+=============
 RedHat 5
-Pardus 2009.2
+Pardus 2009.2, 2011, Corporate2
 Mint 10 (GNOME)
 Ubuntu 8.04, 9.10, 10.04
+

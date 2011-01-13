@@ -1,3 +1,20 @@
+/*
+ * @file usbk_sg_ctl.h
+ *
+ * Copyright (C) 2010
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * See http://www.gnu.org/licenses/ for more information
+ *
+ ****************************************************************************
+ *
+ */
+
+
 #ifdef _USBK_SG_CTL_H
 
 #include "general.h"
