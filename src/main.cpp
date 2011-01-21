@@ -25,6 +25,10 @@
 #define USBK_PRODUCT_ID         0xa100
 #define USBK_VENDOR_ID         0x2384
 
+//Msgs of DeviceControl
+#define MISSING_PARAMETER    "Missing parameter"
+#define WARNING              "Warning:"
+
 using namespace std;
 
 /* Flag set by ‘--verbose’. */

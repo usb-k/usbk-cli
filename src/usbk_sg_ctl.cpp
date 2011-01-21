@@ -23,7 +23,7 @@ int usbk_open(char* DevicePath)
     sg_fd  = open(DevicePath , O_RDWR);// | O_EXCL)
 
     if (sg_fd < 0) {
-        fprintf(stderr, NOTDEVICE);
+        fprintf(stderr, "Not device!\n");
         return 1;
     }
 
@@ -69,13 +69,13 @@ int usbk_sg_tansfer(st_packet *scsi_packet)
 //    printf("\n");
 
     if (ioctl(sg_fd, SG_IO, &io_hdr) < 0) {
-        fprintf(stderr,MSGERRIOCTL);
+        fprintf(stderr, "Error in IOCTL_SCSI\n");
         return 1;
     } else if ((io_hdr.info & SG_INFO_OK_MASK) != SG_INFO_OK) {
-        fprintf(stderr, CMDFAIL);
+        fprintf(stderr, "Command failed!\n");
         if (io_hdr.sb_len_wr > 0) {
             i=0;
-            printf(MSGSENSEDATA);
+            printf("Sense data: \n");
             while(i < io_hdr.sb_len_wr) {
                 printf("0x%02X ", sense_buffer[i]);
                 i++;
@@ -101,7 +101,7 @@ int usbk_sg_tansfer(st_packet *scsi_packet)
         return 1;
     }
 
-    //printf(MSGRETBYTE, io_hdr.dxfer_len);
+    //printf("ByteReturn :: %x\n", io_hdr.dxfer_len);
     scsi_packet->datalen = io_hdr.dxfer_len;
 
     return 0;

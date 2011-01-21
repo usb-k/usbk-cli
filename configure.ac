@@ -15,7 +15,6 @@ AC_CHECK_LIB([usb], [usb_init], [], [
 
 # Checks for header files.
 #AC_CHECK_HEADERS([src/General.h usbk.h lsubk.h ScsiStructure.h usbk_scsi.h usbk_sg_ctl.h])
-
 #AC_CONFIG_HEADERS([src/General.h usbk.h lsubk.h ScsiStructure.h usbk_scsi.h usbk_sg_ctl.h])
 
 AC_CONFIG_FILES(Makefile src/Makefile)
