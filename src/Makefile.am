@@ -1,5 +1,5 @@
 bin_PROGRAMS=usbk
-usbk_SOURCES=usbk.cpp \
+usbk_SOURCES=main.cpp \
              lsusbk.cpp \
              usbk_scsi.cpp \
              usbk_sg_ctl.cpp \

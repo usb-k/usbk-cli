@@ -2,14 +2,14 @@
 
 (automake --version) < /dev/null > /dev/null 2>&1 || {
     echo
-    echo "You must have automake installed to compile Stardict";
+    echo "You must have automake installed to compile USB-K";
     echo
     exit 1
 }
 
 (autoconf --version) < /dev/null > /dev/null 2>&1 || {
     echo
-    echo "You must have autoconf installed to compile Stardict";
+    echo "You must have autoconf installed to compile USB-K";
     echo
     exit 1
 }
