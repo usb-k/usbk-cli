@@ -27,39 +27,9 @@
 
 #include "scsi_structure.h"
 
-//Good & Bad
-#define GOOD    0x01
-#define BAD     0x00
-
-//Screen Message
-
-//Msgs of SCSI_CMD_Sender
-#define MSGINIT              "Init Processing...\n"
-#define MSGINITOK            "Init OK!\n"
-
-//Msgs of UserInterface
-#define MSGPATHENTERY        "Enter sg Number (/dev/sg<number>)  ::::  "
-#define DPATHLEN             256
-#define DPATHLENEX           3
-#define NOITEM               "Your selection is not available...\n"
-#define MSGCLOSEDEV          "System is closing...."
-
-//Msgs of DeviceControl
-#define NOTDEVICE            "Not device!!!\n"
-#define MSGERRIOCTL          "Error in IOCTL_SCSI\n"
-#define MSGERRCODE           "Error code :: %x\n"
-#define MSGRETBYTE           "ByteReturn :: %x\n"
-#define CMDFAIL              "Command failed!\n"
-#define MSGSENSEDATA         "Sense data: \n"
-#define MSGSENSELEN          "Sense den :: %x\n"
-#define UNHANDLEDSTATUS      "Command sent but returned with an unhandled status code: %02X\n"
-#define MISSING_PARAMETER    "Missing parameter"
-#define WARNING              "Warning:"
-
 #define MAX_STR_LEN          32
 
-typedef struct _st_cmd
-{
+typedef struct __ST_CMD {
     char opcode;
     char lun;
     char v_opcode;
@@ -70,21 +40,19 @@ typedef struct _st_cmd
     char len1;
     char len0;
     char cntrl;
-}st_cmd;
+} st_cmd;
 
-typedef struct _st_packet
-{
+typedef struct __ST_PACKET {
     int     sg_fd;
     char    cmdtype;
     int     cmddir;
     st_cmd *cmd;
-    unsigned int     cmdlen;
-    unsigned char   *data;
-    unsigned int     datalen;
-}st_packet;
+    unsigned int   cmdlen;
+    unsigned char *data;
+    unsigned int   datalen;
+} st_packet;
 
-typedef struct _t_usbk
-{
+typedef struct __USBK {
     char dev[SIZE_DEVNAME];
     char sg_dev[SIZE_DEVNAME];
     char vendor[MAX_STR_LEN];
@@ -93,7 +61,7 @@ typedef struct _t_usbk
     t_UI_DEVINFO info;
     char backdisk_dev[SIZE_DEVNAME];
     t_UI_STATUSALL status;
-}t_usbk;
+} t_usbk;
 
 #endif // GENERAL_H_
 

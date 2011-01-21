@@ -1,0 +1,74 @@
+USB-K CryptoBridge Mimarisi
+==================================
+
+         Donanım Mimarisi                              Yazılım Mimarisi
+      ~~~~~~~~~~~~~~~~~~~~~~                        ~~~~~~~~~~~~~~~~~~~~~
+
+   +--------------------------+
+   |   USB Disc/Flash Bellek  |                  128 Bit AES ile şifrelenmiş veri
+   +--------------------------+
+               ^
+               |                                           ^   ^   ^
+               v                                           |   |   |
+   +--------------------------+                            |   |   |
+   |                          |                            |   |   |
+   |         USB-K            |                   [ AES ENCRYPTION/DECRYPTION ]
+   |      CryptoBridge        |                            |   |   |
+   |                          |                            v   v   v
+   +--------------------------+              Anahtarlar   [1] [2] [3]
+               ^                                           ^   ^   ^
+               |                                           |   |   |
+               v                                           v   v   v
+   +--------------------------+            +------------------------------------------+
+   |         ______           |            |            Linux Kernel                  |
+   |        | USB  |          |            +------------------------------------------+
+   |        | PORT |          |                                            ^ v
+   |        \______/          |            +----------------+        +----------------+
+   |                          |            |                |  <-->  |   SCSI IOCTL   |
+   |                          |            |                |        +----------------+
+   |                          |            |    libusbk     |              ^ v
+   |       User's PC          |            |                |        +----------------+
+   |                          |            |                |  <-->  | SCSI Interface |
+   |                          |            +----------------+        +----------------+
+   |                          |                    ^
+   |                          |                    v
+   |                          |            +----------------+
+   |                          |            |  usbk arayüzü  |
+   |                          |            |    cli/gui     |
+   |                          |            +----------------+
+   +--------------------------+
+
+
+USB-K Hakkında
+==============
+USB-K CryptoBridge, işletim sistemlerinden ve dosya sistemlerinden bağımsız olarak verileri
+şifreler. USB-K SCSI katmanında çalışır ve çalışma anında şifreleme ve çözme işlemlerini
+yerine getirir. USB-K bu işlem için 3 anahtar ve parola kullanır. Kullanıcı USB Hub'a USB-K
+cihazını yerleştirdiğinde USB-K aktive edilmelidir (bunun için istisnai bir durum da vardır!).
+
+USB-K varsayılan olarak 3 anahtar kullanır. Her bir anahtar başka bir USB disk için kullanı-
+labilir. Bu 3 anahtarı kullanmak için kullanıcı bir parola girmelidir. Parola varsayılan
+olarak 123456 dır. Eğer kullanıcı 3 kere üst üste parolayı yanlış girerse 3 anahtar USB-K
+cihazı tarafından sıfırlanır ve şifrelenmiş veriler çöp hale gelir. Bu aşama sonrasında,
+eğer kullanıcı 128 bit uzunluğundaki AES anahtarlarını hatırlayamazsa şifrelenmiş verilerin
+kurtarılması için hiçbir yol kalmamış demektir.
+
+Bu 3 anahtar kullanıcı tarafından ayarlanabilir, USB-K bu işlem için kullanıcıya izin verir.
+Eğer kullanıcı bu 128 bitlik anahtarları bir yerlere not ederse, olası bir sıfırlanma anında
+veriler başka bir USB-K tarafından kurtarılabilir.
+
+USB-K %30 performans kaybına yol açar. Normalde eğer kullanıcı büyük bir dosya ile okuma/yazma
+işlemi yapmadığı müddetçe hiçbir şey hissetmez.
+
+USB-K Yazılımı Hakkında
+=======================
+libusbk - işlemleri yapıldığı kitaplık :FIXME: ayrıntı yaz
+lsusbk - USB-K konsol arayüzü :FIXME: ayrıntı yaz
+
+Şu işletim sistemlerinde düzgün çalışır
+=======================================
+RedHat 5
+Pardus 2009.2, 2011, Corporate2
+Mint 10 (GNOME)
+Ubuntu 8.04, 9.10, 10.04
+
