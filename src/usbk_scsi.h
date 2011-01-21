@@ -37,8 +37,8 @@
 #include "general.h"
 #include "usbk_sg_ctl.h"
 
-extern int send_scsi_command(t_usbk *usbk, unsigned char *buff, int cmd_index, int len, char rw);
-extern st_cmd scsi_cmd[][10];
+extern int send_scsi_command(USBK_T *usbk, unsigned char *buff, int cmd_index, int len, char rw);
+extern ST_CMD_T scsi_cmd[][10];
 
 #endif
 

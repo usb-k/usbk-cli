@@ -40,17 +40,17 @@ typedef struct __ST_CMD {
     char len1;
     char len0;
     char cntrl;
-} st_cmd;
+} ST_CMD_T;
 
 typedef struct __ST_PACKET {
-    int     sg_fd;
-    char    cmdtype;
-    int     cmddir;
-    st_cmd *cmd;
+    int  sg_fd;
+    char cmdtype;
+    int  cmddir;
+    ST_CMD_T      *cmd;
     unsigned int   cmdlen;
     unsigned char *data;
     unsigned int   datalen;
-} st_packet;
+} ST_PACKET_T;
 
 typedef struct __USBK {
     char dev[SIZE_DEVNAME];
@@ -58,10 +58,10 @@ typedef struct __USBK {
     char vendor[MAX_STR_LEN];
     char model[MAX_STR_LEN];
     char rev[MAX_STR_LEN];
-    t_UI_DEVINFO info;
+    UI_DEVINFO_T info;
     char backdisk_dev[SIZE_DEVNAME];
-    t_UI_STATUSALL status;
-} t_usbk;
+    UI_STATUSALL_T status;
+} USBK_T;
 
 #endif // GENERAL_H_
 

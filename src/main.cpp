@@ -34,22 +34,22 @@ using namespace std;
 /* Flag set by ‘--verbose’. */
 static int verbose_flag;
 
-t_usbk usbk;
+USBK_T usbk;
 
 int main(int argc, char *argv[])
 {
     int c;
-    t_UI_ACTIVATE act;
-    t_UI_PAROLA opt_parola;
-    t_UI_AESNB opt_key;
-    t_UI_DEVNAME opt_dev_name;
-    t_UI_SET_DEV_NAME set_dev_name;
-    t_UI_SET_AES_KEY set_key;
-    t_UI_KEYNAME opt_aes_name;
-    t_UI_CHANGE_PASS change_pas;
-    t_UI_PAROLA opt_new_password;
-    tAESKEY opt_aes_key;
-    t_UI_SET_AUTO_ACTIVATE set_auto;
+    UI_ACTIVATE_T act;
+    UI_PASSWD_T opt_parola;
+    UI_AESNB_T opt_key;
+    UI_DEVNAME_T opt_dev_name;
+    UI_SET_DEV_NAME_T set_dev_name;
+    UI_SET_AES_KEY_T set_key;
+    UI_KEYNAME_T opt_aes_name;
+    UI_CHANGE_PASS_T change_pas;
+    UI_PASSWD_T opt_new_password;
+    AESKEY_T opt_aes_key;
+    UI_SET_AUTO_ACTIVATE_T set_auto;
     t_UI_OPTION opt_auto_activate;
     char opt_key_format;
     char opt_string_key[64];
@@ -131,27 +131,27 @@ int main(int argc, char *argv[])
         case 'c':
             cflag = 1;
             main_operation++;
-            if(strlen(optarg) > sizeof(t_UI_PAROLA)){
-                printf("Uyarı: Parola %d karakterden uzun olamaz.\n", sizeof(t_UI_PAROLA));
+            if(strlen(optarg) > sizeof(UI_PASSWD_T)){
+                printf("Uyarı: Parola %d karakterden uzun olamaz.\n", sizeof(UI_PASSWD_T));
                 exit(1);
             }
-            strncpy(opt_new_password.u8, optarg, sizeof(t_UI_PAROLA));
+            strncpy(opt_new_password.u8, optarg, sizeof(UI_PASSWD_T));
             break;
 
         case 'n':
             nflag = 1;
             main_operation++;
-            strncpy(opt_dev_name.c, optarg, sizeof(t_UI_DEVNAME));
+            strncpy(opt_dev_name.c, optarg, sizeof(UI_DEVNAME_T));
             break;
 
         case 'm':
             mflag = 1;
             //main_operation++;
-            if(strlen(optarg) > sizeof(t_UI_KEYNAME)){
-                printf("Uyarı: Key adi %d karakterden uzun olamaz.\n", sizeof(t_UI_KEYNAME));
+            if(strlen(optarg) > sizeof(UI_KEYNAME_T)){
+                printf("Uyarı: Key adi %d karakterden uzun olamaz.\n", sizeof(UI_KEYNAME_T));
                 exit(1);
             }
-            strncpy(opt_aes_name.c, optarg, sizeof(t_UI_KEYNAME));
+            strncpy(opt_aes_name.c, optarg, sizeof(UI_KEYNAME_T));
             break;
 
         case 'x':
@@ -189,11 +189,11 @@ int main(int argc, char *argv[])
 
         case 'p':
             pflag = 1;
-            if(strlen(optarg) > sizeof(t_UI_PAROLA)){
-                printf("Uyarı: Parola %d karakterden uzun olamaz.\n", sizeof(t_UI_PAROLA));
+            if(strlen(optarg) > sizeof(UI_PASSWD_T)){
+                printf("Uyarı: Parola %d karakterden uzun olamaz.\n", sizeof(UI_PASSWD_T));
                 exit(1);
             }
-            strncpy(opt_parola.u8, optarg, sizeof(t_UI_PAROLA));
+            strncpy(opt_parola.u8, optarg, sizeof(UI_PASSWD_T));
             break;
 
         case 'f':
@@ -264,10 +264,10 @@ int main(int argc, char *argv[])
                     printf("%s [%s] cihazı zaten aktif.\n", usbk.dev, usbk.info.devname.c);
                     exit(0);
                 } else {
-                    memset(&act, 0, sizeof(t_UI_ACTIVATE));
+                    memset(&act, 0, sizeof(UI_ACTIVATE_T));
                     strncpy(act.parola.u8, opt_parola.u8, sizeof(act.parola));
                     memcpy(&act.SelectedKeyNo, &opt_key, sizeof(act.SelectedKeyNo));
-                    send_scsi_command(&usbk, (unsigned char*) &act, ACTIVATE_KEY, sizeof(t_UI_ACTIVATE), WRITE_SCSI);
+                    send_scsi_command(&usbk, (unsigned char*) &act, ACTIVATE_KEY, sizeof(UI_ACTIVATE_T), WRITE_SCSI);
                     usbk_check_last_opr(&usbk);
                     if (iflag) {
                         usbk_get_dev_info(&usbk);
@@ -316,10 +316,10 @@ int main(int argc, char *argv[])
                 printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devname.c);
                 exit(0);
             } else {
-                memset(&change_pas, 0, sizeof(t_UI_CHANGE_PASS));
+                memset(&change_pas, 0, sizeof(UI_CHANGE_PASS_T));
                 strncpy(change_pas.old_password.u8, opt_parola.u8, sizeof(change_pas.old_password));
                 strncpy(change_pas.new_password.u8, opt_new_password.u8, sizeof(change_pas.new_password));
-                send_scsi_command(&usbk, (unsigned char*) &change_pas, CHANGE_PASS, sizeof(t_UI_CHANGE_PASS), WRITE_SCSI);
+                send_scsi_command(&usbk, (unsigned char*) &change_pas, CHANGE_PASS, sizeof(UI_CHANGE_PASS_T), WRITE_SCSI);
                 usbk_check_last_opr(&usbk);
                 if (iflag) {
                     usbk_get_dev_info(&usbk);
@@ -345,10 +345,10 @@ int main(int argc, char *argv[])
                         usbk.dev, usbk.info.devname.c);
                 exit(0);
             } else {
-                memset(&set_dev_name, 0, sizeof(t_UI_SET_DEV_NAME));
+                memset(&set_dev_name, 0, sizeof(UI_SET_DEV_NAME_T));
                 strncpy(set_dev_name.parola.u8, opt_parola.u8, sizeof(set_dev_name.parola));
                 strncpy(set_dev_name.devname.c, opt_dev_name.c, sizeof(set_dev_name.devname));
-                send_scsi_command(&usbk, (unsigned char*) &set_dev_name, SET_DEV_NAME, sizeof(t_UI_SET_DEV_NAME), WRITE_SCSI);
+                send_scsi_command(&usbk, (unsigned char*) &set_dev_name, SET_DEV_NAME, sizeof(UI_SET_DEV_NAME_T), WRITE_SCSI);
                 usbk_check_last_opr(&usbk);
                 if (iflag) {
                     usbk_get_dev_info(&usbk);
@@ -375,12 +375,12 @@ int main(int argc, char *argv[])
                             usbk.dev, usbk.info.devname.c);
                     exit(0);
                 } else {
-                    memset(&set_key, 0, sizeof(t_UI_SET_AES_KEY));
+                    memset(&set_key, 0, sizeof(UI_SET_AES_KEY_T));
                     strncpy(set_key.parola.u8, opt_parola.u8, sizeof(set_key.parola));
                     memcpy(&set_key.aes_key_no, &opt_key, sizeof(set_key.aes_key_no));
                     strncpy(set_key.aes_name.c, opt_aes_name.c, sizeof(set_key.aes_name));
                     memset(&set_key.nameonly, 1, sizeof(set_key.nameonly));
-                    send_scsi_command(&usbk, (unsigned char*) &set_key, SET_KEY, sizeof(t_UI_SET_AES_KEY), WRITE_SCSI);
+                    send_scsi_command(&usbk, (unsigned char*) &set_key, SET_KEY, sizeof(UI_SET_AES_KEY_T), WRITE_SCSI);
                     usbk_check_last_opr(&usbk);
                     if (iflag) {
                         usbk_get_dev_info(&usbk);
@@ -412,7 +412,7 @@ int main(int argc, char *argv[])
                             usbk.dev, usbk.info.devname.c);
                     exit(0);
                 } else {
-                    memset(&set_key, 0, sizeof(t_UI_SET_AES_KEY));
+                    memset(&set_key, 0, sizeof(UI_SET_AES_KEY_T));
                     strncpy(set_key.parola.u8, opt_parola.u8, sizeof(set_key.parola));
                     memcpy(&set_key.aes_key_no, &opt_key, sizeof(set_key.aes_key_no));
                     strncpy(set_key.aes_key.key, opt_aes_key.key, sizeof(set_key.aes_key));
@@ -438,7 +438,7 @@ int main(int argc, char *argv[])
                         cout << "Beklenmeyen hata!" << endl;
                     }
 
-                    send_scsi_command(&usbk, (unsigned char*) &set_key, SET_KEY, sizeof(t_UI_SET_AES_KEY), WRITE_SCSI);
+                    send_scsi_command(&usbk, (unsigned char*) &set_key, SET_KEY, sizeof(UI_SET_AES_KEY_T), WRITE_SCSI);
                     usbk_check_last_opr(&usbk);
                     if (iflag) {
                         usbk_get_dev_info(&usbk);
@@ -469,11 +469,11 @@ int main(int argc, char *argv[])
                             usbk.dev, usbk.info.devname.c);
                     exit(0);
                 } else {
-                    memset(&set_auto, 0, sizeof(t_UI_SET_AUTO_ACTIVATE));
+                    memset(&set_auto, 0, sizeof(UI_SET_AUTO_ACTIVATE_T));
                     strncpy(set_auto.parola.u8, opt_parola.u8, sizeof(set_auto.parola));
                     memcpy(&set_auto.SelectedKeyNo, &opt_key, sizeof(set_auto.SelectedKeyNo));
                     memcpy(&set_auto.AutoActivate, &opt_auto_activate, sizeof(set_auto.AutoActivate));
-                    send_scsi_command(&usbk, (unsigned char*) &set_auto, SET_AUTO_ACTIVE, sizeof(t_UI_SET_AUTO_ACTIVATE), WRITE_SCSI);
+                    send_scsi_command(&usbk, (unsigned char*) &set_auto, SET_AUTO_ACTIVE, sizeof(UI_SET_AUTO_ACTIVATE_T), WRITE_SCSI);
                     usbk_check_last_opr(&usbk);
                     if (iflag) {
                         usbk_get_dev_info(&usbk);
@@ -503,12 +503,12 @@ int main(int argc, char *argv[])
                 printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devname.c);
                 exit(0);
             } else {
-                memset(&set_auto, 0, sizeof(t_UI_SET_AUTO_ACTIVATE));
+                memset(&set_auto, 0, sizeof(UI_SET_AUTO_ACTIVATE_T));
                 strncpy(set_auto.parola.u8, opt_parola.u8, sizeof(set_auto.parola));
                 memcpy(&set_auto.SelectedKeyNo, &opt_key, sizeof(set_auto.SelectedKeyNo));
                 memcpy(&set_auto.AutoActivate, &opt_auto_activate,
                         sizeof(set_auto.AutoActivate));
-                send_scsi_command(&usbk, (unsigned char*) &set_auto, SET_AUTO_ACTIVE, sizeof(t_UI_SET_AUTO_ACTIVATE), WRITE_SCSI);
+                send_scsi_command(&usbk, (unsigned char*) &set_auto, SET_AUTO_ACTIVE, sizeof(UI_SET_AUTO_ACTIVATE_T), WRITE_SCSI);
                 usbk_check_last_opr(&usbk);
                 if (iflag) {
                     usbk_get_dev_info(&usbk);
@@ -676,8 +676,8 @@ void scan_usb() {
     }
 }
 
-void usbk_show_show_dev_info(t_usbk *usbk) {
-    //t_UI_DEVINFO dev_info;
+void usbk_show_show_dev_info(USBK_T *usbk) {
+    //UI_DEVINFO_T dev_info;
     int i;
     char status[13];
     char backdisk[8];
@@ -718,15 +718,15 @@ void usbk_show_show_dev_info(t_usbk *usbk) {
 
 }
 
-int usbk_get_dev_info(t_usbk *usbk) {
-    send_scsi_command(usbk, (unsigned char*) &usbk->info, GET_DEV_INFO, sizeof(t_UI_DEVINFO), READ_SCSI);
-    //memcpy((char*) &usbk->info, buffer, sizeof(t_UI_DEVINFO));
+int usbk_get_dev_info(USBK_T *usbk) {
+    send_scsi_command(usbk, (unsigned char*) &usbk->info, GET_DEV_INFO, sizeof(UI_DEVINFO_T), READ_SCSI);
+    //memcpy((char*) &usbk->info, buffer, sizeof(UI_DEVINFO_T));
     return 0;
 }
 
-int usbk_check_last_opr(t_usbk *usbk){
+int usbk_check_last_opr(USBK_T *usbk){
 
-    send_scsi_command(usbk, (unsigned char*) &usbk->status, GET_STATUS, sizeof(t_UI_STATUSALL), READ_SCSI);
+    send_scsi_command(usbk, (unsigned char*) &usbk->status, GET_STATUS, sizeof(UI_STATUSALL_T), READ_SCSI);
     if(usbk->status.lastopt == 2){
         printf("Hata: Parola yanlis. RetryNum:%d\n", usbk->status.retry_num);
         exit(1);

@@ -24,8 +24,8 @@
 #define USBK_MODEL    "Cryptographer"
 
 // Function prototypes
-static int cmp_hctl(const struct addr_hctl * le, const struct addr_hctl * ri);
-static void invalidate_hctl(struct addr_hctl * p);
+static int cmp_hctl(const ADDR_HCTL_T * le, const ADDR_HCTL_T * ri);
+static void invalidate_hctl(ADDR_HCTL_T * p);
 static int first_scandir_select(const struct dirent * s);
 static int scan_for_first(const char * dir_name);
 static int non_sg_scandir_select(const struct dirent * s);
@@ -35,9 +35,9 @@ static int get_value(const char * dir_name, const char * base_name, char * value
 static void collect_dev_nodes ();
 static void free_dev_node_list ();
 static int get_dev_node (char *wd, char *node, enum dev_type type);
-static int parse_colon_list(const char * colon_list, struct addr_hctl * outp);
+static int parse_colon_list(const char * colon_list, ADDR_HCTL_T * outp);
 static void one_sdev_entry(const char * dir_name, const char * devname);
-static int match_sdev_entry(const char * dir_name, const char * devname, t_usbk *usbk);
+static int match_sdev_entry(const char * dir_name, const char * devname, USBK_T *usbk);
 static int sdev_scandir_select(const struct dirent * s);
 
 static int sdev_scandir_sort(const void* a, const void *b);
@@ -49,7 +49,7 @@ static const char * const sysfsroot = "/sys";
 static const char * const bus_scsi_devs = "/bus/scsi/devices";
 static const char * const dev_dir = "/dev";
 
-static struct addr_hctl filter;
+static ADDR_HCTL_T filter;
 static int filter_active = 0;
 
 static struct dev_node_list* dev_node_listhead = NULL;
@@ -59,7 +59,7 @@ static struct item_t non_sg;
 static struct item_t aa_first;
 
 /* Compare <host:controller:target:lun> tuples (aka <h:c:t:l> or hctl) */
-static int cmp_hctl(const struct addr_hctl * le, const struct addr_hctl * ri)
+static int cmp_hctl(const ADDR_HCTL_T * le, const ADDR_HCTL_T * ri)
 {
     if (le->h == ri->h) {
         if (le->c == ri->c) {
@@ -75,7 +75,7 @@ static int cmp_hctl(const struct addr_hctl * le, const struct addr_hctl * ri)
     return (le->h < ri->h) ? -1 : 1;
 }
 
-static void invalidate_hctl(struct addr_hctl * p)
+static void invalidate_hctl(ADDR_HCTL_T * p)
 {
     if (p) {
         p->h = -1;
@@ -472,7 +472,7 @@ exit:
 /*  Parse colon_list into host/channel/target/lun ("hctl") array,
  *  return 1 if successful, else 0.
  */
-static int parse_colon_list(const char * colon_list, struct addr_hctl * outp)
+static int parse_colon_list(const char * colon_list, ADDR_HCTL_T * outp)
 {
     const char * elem_end;
 
@@ -623,7 +623,7 @@ static void one_sdev_entry(const char * dir_name, const char * devname)
     printf("\n");
 }
 
-int match_sdev_entry(const char * dir_name, const char * devname, t_usbk *usbk) // char *dev_find, char *sg_dev)
+int match_sdev_entry(const char * dir_name, const char * devname, USBK_T *usbk) // char *dev_find, char *sg_dev)
 {
     char buff[NAME_LEN_MAX];
     char value[NAME_LEN_MAX];
@@ -733,7 +733,7 @@ static int sdev_scandir_select(const struct dirent * s)
         return 0;
     if (strchr(s->d_name, ':')) {
         if (filter_active) {
-            struct addr_hctl s_hctl;
+            ADDR_HCTL_T s_hctl;
 
             if (! parse_colon_list(s->d_name, &s_hctl)) {
                 fprintf(stderr, "sdev_scandir_select: parse failed\n");
@@ -768,8 +768,8 @@ static int sdev_scandir_sort(const void* p1, const void *p2)
 
     const char * lnam = (*a)->d_name;
     const char * rnam = (*b)->d_name;
-    struct addr_hctl left_hctl;
-    struct addr_hctl right_hctl;
+    ADDR_HCTL_T left_hctl;
+    ADDR_HCTL_T right_hctl;
 
     if (! parse_colon_list(lnam, &left_hctl)) {
         fprintf(stderr, "sdev_scandir_sort: left parse failed\n");
@@ -824,7 +824,7 @@ int lsusbk(void)
 }
 
 
-int find_sdevices(t_usbk *usbk)
+int find_sdevices(USBK_T *usbk)
 {
     char buff[NAME_LEN_MAX];
     char name[NAME_LEN_MAX];

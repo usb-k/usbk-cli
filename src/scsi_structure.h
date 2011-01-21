@@ -22,111 +22,107 @@
 #define NB_AESKEY         3
 
 #define SIZE_DEVNAME      11
-#define VERSIONLEN        2
-#define REVISIONLEN       2
-#define PAROLA_LEN        16
+#define VERSION_LEN        2
+#define REVISION_LEN       2
+#define PASSWD_LEN        16
 #define SIZE_KEYNAME      12
 
 //direction
 #define INDIR             0X01
 #define OUTDIR            0X00
 
-typedef char t_UI_STATUS;
-typedef char t_UI_NBRETRY;
-typedef char t_UI_MSG;
-typedef char t_UI_MSGCODE;
+// packed structures required or not
+#ifdef PACKAGED_STRUCT
+#  define ATTR_PACKED __attribute__((__packed__))
+#else
+#  define ATTR_PACKED
+#endif
 
-typedef struct { //__attribute__((__packed__))
-    t_UI_STATUS        lastopt;
-    t_UI_NBRETRY    retry_num;
-    t_UI_MSG        msg;
-    t_UI_MSGCODE    msg_code;
-} t_UI_STATUSALL;
+typedef char ui_status_t;
+typedef char ui_nbretry_t;
+typedef char ui_msg_t;
+typedef char ui_msgcode_t;
 
-typedef char t_UI_AESNB;
+typedef struct __UI_STATUSALL ATTR_PACKED {
+    ui_status_t     lastopt;
+    ui_nbretry_t    retry_num;
+    ui_msg_t        msg;
+    ui_msgcode_t    msg_code;
+} UI_STATUSALL_T;
+
+typedef char UI_AESNB_T;
 typedef char t_UI_OPTION;
 
-typedef struct {
+typedef struct __AESKEY {
   char key[16];
-} tAESKEY;
+} AESKEY_T;
 
-typedef union //__attribute__((__packed__))
-{
+typedef union __UI_DEVNAME ATTR_PACKED {
     char c[SIZE_DEVNAME];
-} t_UI_DEVNAME;
+} UI_DEVNAME_T;
 
-typedef union
-{
+typedef union __UI_KEYNAME {
     char c[SIZE_KEYNAME];
-} t_UI_KEYNAME;
+} UI_KEYNAME_T;
 
-typedef union
-{
-      char  u8 [PAROLA_LEN];
-} t_UI_PAROLA;
+typedef union __UI_PASSWD {
+      char  u8 [PASSWD_LEN];
+} UI_PASSWD_T;
 
-typedef union
-{
+typedef union __UI_FIRMVER {
     char u8[16];
-    struct //__attribute__((__packed__))
-    {
-        char version[VERSIONLEN];
-        char revision[REVISIONLEN];
+    struct ATTR_PACKED {
+        char version[VERSION_LEN];
+        char revision[REVISION_LEN];
         char reserved[12];
     };
-} t_UI_FIRMVER;
+} UI_FIRMVER_T;
 
-typedef struct //__attribute__((__packed__))
-{
-    t_UI_FIRMVER    firmver;
+typedef struct __UI_DEVINFO ATTR_PACKED {
+    UI_FIRMVER_T    firmver;
     char            serial[SIDLEN];
     char            login;
-    t_UI_DEVNAME    devname;
+    UI_DEVNAME_T    devname;
     char            backdisk;
-    t_UI_NBRETRY     retry_num;
-    t_UI_AESNB        multikeycap;
-    t_UI_AESNB        autologin_key_num;
-    t_UI_AESNB        currentkeynum;
-    t_UI_KEYNAME    keyname[NB_AESKEY];
-}t_UI_DEVINFO;
+    ui_nbretry_t     retry_num;
+    UI_AESNB_T        multikeycap;
+    UI_AESNB_T        autologin_key_num;
+    UI_AESNB_T        currentkeynum;
+    UI_KEYNAME_T    keyname[NB_AESKEY];
+} UI_DEVINFO_T;
 
 //////////////////////////////////////////////////
 // SCSI Data Buffer Structure
 //////////////////////////////////////////////////
-typedef struct //__attribute__((__packed__))
-{
-    t_UI_PAROLA     parola;
-    t_UI_AESNB        SelectedKeyNo;
-}t_UI_ACTIVATE;
+typedef struct __UI_ACTIVATE ATTR_PACKED {
+    UI_PASSWD_T     parola;
+    UI_AESNB_T        SelectedKeyNo;
+} UI_ACTIVATE_T;
 
-typedef struct //__attribute__((__packed__))
-{
-    t_UI_PAROLA     parola;
-    t_UI_DEVNAME     devname;
-}t_UI_SET_DEV_NAME;
+typedef struct __UI_SET_DEV_NAME ATTR_PACKED {
+    UI_PASSWD_T     parola;
+    UI_DEVNAME_T     devname;
+} UI_SET_DEV_NAME_T;
 
-typedef struct //__attribute__((__packed__))
-{
-    t_UI_PAROLA         parola;
-    t_UI_AESNB            aes_key_no;
-    tAESKEY                 aes_key;
-    t_UI_KEYNAME        aes_name;
+typedef struct __UI_SET_AES_KEY ATTR_PACKED {
+    UI_PASSWD_T         parola;
+    UI_AESNB_T            aes_key_no;
+    AESKEY_T                 aes_key;
+    UI_KEYNAME_T        aes_name;
     char                nameonly;
-}t_UI_SET_AES_KEY;
+} UI_SET_AES_KEY_T;
 
-typedef struct //__attribute__((__packed__))
-{
-    t_UI_PAROLA         parola;
-    t_UI_AESNB            SelectedKeyNo;
+typedef struct __UI_SET_AUTO_ACTIVATE ATTR_PACKED {
+    UI_PASSWD_T         parola;
+    UI_AESNB_T            SelectedKeyNo;
     t_UI_OPTION            AutoActivate;
-}t_UI_SET_AUTO_ACTIVATE;
+} UI_SET_AUTO_ACTIVATE_T;
 
-typedef struct //__attribute__((__packed__))
-{
-    t_UI_PAROLA         old_password;
-    t_UI_PAROLA         new_password;
-    t_UI_AESNB            aes_key_no; // simdilik kullanilmiyor
-}t_UI_CHANGE_PASS;
+typedef struct __UI_CHANGE_PASS ATTR_PACKED {
+    UI_PASSWD_T  old_password;
+    UI_PASSWD_T  new_password;
+    UI_AESNB_T   aes_key_no; // not using for now
+} UI_CHANGE_PASS_T;
 
 #endif // SCSISTRUCTURE_H_
 
