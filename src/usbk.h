@@ -1,7 +1,7 @@
 /*
  * @file usbk.h
  *
- * Copyright (C) 2010
+ * Copyright (C) 2010 USB-K Team
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,9 +14,9 @@
  *
  */
 
-#ifdef _USBK_H
+#ifndef USBK_H_
+#define USBK_H_
 
-#include "general.h"
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
@@ -25,16 +25,18 @@
 #include <string.h>
 #include <usb.h>
 #include <sys/ioctl.h>
+
+#include "general.h"
 #include "usbk_scsi.h"
 #include "lsusbk.h"
-
 
 void print_help(int exval);
 void scan_usb();
 void usbk_show_show_dev_info(t_usbk *usbk);
 int usbk_get_dev_info(t_usbk *usbk);
 int usbk_check_last_opr(t_usbk *usbk);
-int check_key_decimal(string str, char *key);
-int check_key_text(string str, char *key);
+int check_key_decimal(std::string str, char *key);
+int check_key_text(std::string str, char *key);
 
-#endif
+#endif // USBK_H_
+

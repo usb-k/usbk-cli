@@ -1,7 +1,7 @@
 /*
  * @file usbk_sg_ctl.cpp
  *
- * Copyright (C) 2009, 2010
+ * Copyright (C) 2010 USB-K Team
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,33 +14,32 @@
  *
  */
 
-#define _USBK_SG_CTL_H
 #include "usbk_sg_ctl.h"
 
-int sg_fd;
+static int sg_fd;
 
 int usbk_open(char* DevicePath)
 {
-
     sg_fd  = open(DevicePath , O_RDWR);// | O_EXCL)
 
-    if (sg_fd < 0)
-    {
-        fprintf(stderr,NOTDEVICE);
+    if (sg_fd < 0) {
+        fprintf(stderr, NOTDEVICE);
         return 1;
     }
+
     return 0;
 }
 
 void usbk_close(void)
 {
-	close(sg_fd);
+    close(sg_fd);
 }
 
 int usbk_sg_tansfer(st_packet *scsi_packet)
 {
     sg_io_hdr_t  io_hdr;
-    int i;
+    int i=0;
+    int j=0;
     unsigned char  sense_buffer[32];
 
     memset(sense_buffer, 0, sizeof(sense_buffer));
@@ -48,12 +47,9 @@ int usbk_sg_tansfer(st_packet *scsi_packet)
 
     io_hdr.interface_id = 'S';
 
-    if (scsi_packet->cmddir == 0x01)
-    {
+    if (scsi_packet->cmddir == 0x01) {
         io_hdr.dxfer_direction =  SG_DXFER_FROM_DEV ; //packet.cmddir;
-    }
-    else if (scsi_packet->cmddir == 0x00)
-    {
+    } else if (scsi_packet->cmddir == 0x00) {
         io_hdr.dxfer_direction =  SG_DXFER_TO_DEV ; //packet.cmddir;
     }
 
@@ -72,82 +68,70 @@ int usbk_sg_tansfer(st_packet *scsi_packet)
 //    }
 //    printf("\n");
 
-
-    if (ioctl(sg_fd, SG_IO, &io_hdr) < 0)
-    {
+    if (ioctl(sg_fd, SG_IO, &io_hdr) < 0) {
         fprintf(stderr,MSGERRIOCTL);
         return 1;
-    }
-    else if ((io_hdr.info & SG_INFO_OK_MASK) != SG_INFO_OK)
-    {
+    } else if ((io_hdr.info & SG_INFO_OK_MASK) != SG_INFO_OK) {
         fprintf(stderr, CMDFAIL);
-        if (io_hdr.sb_len_wr > 0)
-        {
-        	i=0;
-        	printf(MSGSENSEDATA);
-           while(i < io_hdr.sb_len_wr)
-           {
-               printf("0x%02X ", sense_buffer[i]);
-               i++;
-               if(i%16 == 0)
-               {
-                   int j=0;
-                   for(j=0;j<16;j++)
-                   {
-                       printf("%c", sense_buffer[i-16+j]);
-                   }
-                   printf("\n");
-               }
-               else if(i%8 == 0) printf("- ");
-           }
-           int j ;
-           for (j=0;j<i%16;j++)
-           {
-               printf("%c", sense_buffer[i-i%16+j]);
-           }
-           printf("\n");
+        if (io_hdr.sb_len_wr > 0) {
+            i=0;
+            printf(MSGSENSEDATA);
+            while(i < io_hdr.sb_len_wr) {
+                printf("0x%02X ", sense_buffer[i]);
+                i++;
+
+                if(i%16 == 0) {
+                    for(j=0; j<16; j++) {
+                        printf("%c", sense_buffer[i-16+j]);
+                    }
+
+                    printf("\n");
+                } else if(i%8 == 0)
+                    printf("- ");
+            }
+
+            for (j=0; j<i%16; j++) {
+                printf("%c", sense_buffer[i-i%16+j]);
+            }
+
+            printf("\n");
         }
+
         scsi_packet->datalen = 0;
         return 1;
     }
 
-	//printf(MSGRETBYTE, io_hdr.dxfer_len);
-	scsi_packet->datalen = io_hdr.dxfer_len;
-	return 0;
+    //printf(MSGRETBYTE, io_hdr.dxfer_len);
+    scsi_packet->datalen = io_hdr.dxfer_len;
+
+    return 0;
 }
 
 void usbk_sg_show_packet(st_packet *scsi_packet)
 {
-     if(scsi_packet->datalen)
-        {
-            printf("Received/Sent data: \n");
+    int i=0;
+    int j=0;
 
-            int i=0;
-            while(i < scsi_packet->datalen)
-            {
-                printf("0x%02X ", scsi_packet->data[i]);
-                i++;
+    if(scsi_packet->datalen) {
+        printf("Received/Sent data: \n");
 
-                if(i%16 == 0)
-                {
-                    int j=0;
-                    for(j=0;j<16;j++)
-                    //while(j<16)
-                    {
-                        printf("%c", scsi_packet->data[i-16+j]);
-                      //  j++;
-                    }
-                    printf("\n");
-                }
-                else if(i%8 == 0) printf("- ");
-            }
-            int j ;
-            for (j=0;j<i%16;j++)
-            {
-                printf("%c", scsi_packet->data[i-i%16+j]);
-            }
-            printf("\n\n");
+        while(i < scsi_packet->datalen) {
+            printf("0x%02X ", scsi_packet->data[i]);
+            i++;
+
+            if(i%16 == 0) {
+                for(j=0; j<16; j++)
+                    printf("%c", scsi_packet->data[i-16+j]);
+
+                printf("\n");
+            } else if(i%8 == 0)
+                printf("- ");
         }
-}
 
+        for (j=0; j<i%16; j++)
+            printf("%c", scsi_packet->data[i-i%16+j]);
+
+        printf("\n\n");
+    }
+}
 
