@@ -18,6 +18,7 @@
 #ifndef USBK_SG_CTL_H_
 #define USBK_SG_CTL_H_
 
+#include <sys/types.h>
 #include <scsi/sg.h>
 
 #include "general.h"
