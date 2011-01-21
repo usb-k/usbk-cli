@@ -17,7 +17,7 @@
 
 #include "usbk_scsi.h"
 
-st_cmd scsi_cmd[][10] = {
+ST_CMD_T scsi_cmd[][10] = {
         {0xFE, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00}, // 0 GET_STATUS
         {0xFE, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00}, // 1 GET_DEV_INFO
         {0xFE, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00}, // 2
@@ -30,10 +30,10 @@ st_cmd scsi_cmd[][10] = {
         {0xFE, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00}, // 9
 };
 
-int send_scsi_command(t_usbk *usbk, unsigned char *buff, int cmd_index, int len, char rw)
+int send_scsi_command(USBK_T *usbk, unsigned char *buff, int cmd_index, int len, char rw)
 {
-    short int cmdlen = sizeof(st_cmd);
-    st_packet packet;
+    short int cmdlen = sizeof(ST_CMD_T);
+    ST_PACKET_T packet;
     unsigned char buffer[512];
 
     if(usbk_open(usbk->dev) == 1) {

@@ -52,12 +52,12 @@
 #define FT_BLOCK 1
 #define FT_CHAR 2
 
-struct addr_hctl {
+typedef struct __ADDR_HCTL {
     int h;
     int c;
     int t;
     int l;
-};
+} ADDR_HCTL_T;
 
 /* Device node list: contains the information needed to match a node with a
    sysfs class device. */
@@ -100,7 +100,7 @@ struct item_t {
 };
 
 extern int lsusbk(void);
-extern int find_sdevices(t_usbk *usbk);
+extern int find_sdevices(USBK_T *usbk);
 
 #endif // LSUSBK_H_
 

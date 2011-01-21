@@ -35,7 +35,7 @@ void usbk_close(void)
     close(sg_fd);
 }
 
-int usbk_sg_tansfer(st_packet *scsi_packet)
+int usbk_sg_tansfer(ST_PACKET_T *scsi_packet)
 {
     sg_io_hdr_t  io_hdr;
     int i=0;
@@ -107,7 +107,7 @@ int usbk_sg_tansfer(st_packet *scsi_packet)
     return 0;
 }
 
-void usbk_sg_show_packet(st_packet *scsi_packet)
+void usbk_sg_show_packet(ST_PACKET_T *scsi_packet)
 {
     int i=0;
     int j=0;
