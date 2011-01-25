@@ -40,7 +40,11 @@ static void one_sdev_entry(const char * dir_name, const char * devname);
 static int match_sdev_entry(const char * dir_name, const char * devname, USBK_T *usbk);
 static int sdev_scandir_select(const struct dirent * s);
 
-static int sdev_scandir_sort(const void* a, const void *b);
+#if(__GLIBC_MINOR__ >= 9)
+static int sdev_scandir_sort(const struct dirent ** a, const struct dirent ** b);
+#else
+static int sdev_scandir_sort(const void* p1, const void *p2);
+#endif
 
 static void list_sdevices(void);
 
@@ -760,12 +764,14 @@ static int sdev_scandir_select(const struct dirent * s)
  * Function signature was more generic before version 0.23 :
  * static int sdev_scandir_sort(const void * a, const void * b)
  */
-static int sdev_scandir_sort(const void* p1, const void *p2)
-{
-    const struct dirent * const * a = (const struct dirent * const *) p1;
-    const struct dirent * const * b = (const struct dirent * const *) p2;
-    //return (*d1)->d_namlen-(*d2)->d_namlen;
 
+#if(__GLIBC_MINOR__ >= 9)
+static int sdev_scandir_sort(const struct dirent ** a, const struct dirent ** b){
+#else
+static int sdev_scandir_sort(const void* p1, const void *p2){
+    const struct dirent * const * a = reinterpret_cast<const struct dirent * const *>(p1); 
+    const struct dirent * const * b = reinterpret_cast<const struct dirent * const *>(p2); 
+#endif
     const char * lnam = (*a)->d_name;
     const char * rnam = (*b)->d_name;
     ADDR_HCTL_T left_hctl;
