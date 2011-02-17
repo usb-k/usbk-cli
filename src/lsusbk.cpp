@@ -21,7 +21,7 @@
 #include "lsusbk.h"
 
 #define USBK_VENDOR   "USBK"
-#define USBK_MODEL    "Cryptographer"
+#define USBK_MODEL    "CryptoBridge"
 
 // Function prototypes
 static int cmp_hctl(const ADDR_HCTL_T * le, const ADDR_HCTL_T * ri);

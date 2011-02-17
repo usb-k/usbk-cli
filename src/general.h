@@ -18,6 +18,17 @@
 #ifndef GENERAL_H_
 #define GENERAL_H_
 
+#define U8 unsigned char
+#define U16 unsigned int
+#define U32 unsigned long
+#define SIZE_DEVNAME 11
+//direction
+#define INDIR             0X01
+#define OUTDIR            0X00
+#define NB_AESKEY         3
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,9 +36,10 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#include "scsi_structure.h"
+#include "uip.h"
 
 #define MAX_STR_LEN          32
+
 
 typedef struct __ST_CMD {
     char opcode;
@@ -58,9 +70,9 @@ typedef struct __USBK {
     char vendor[MAX_STR_LEN];
     char model[MAX_STR_LEN];
     char rev[MAX_STR_LEN];
-    UI_DEVINFO_T info;
+    t_UIP_DEVINFO info;
     char backdisk_dev[SIZE_DEVNAME];
-    UI_STATUSALL_T status;
+    t_UIP_GETSTATUS status;
 } USBK_T;
 
 #endif // GENERAL_H_

@@ -1,0 +1,13 @@
+.project
+.cproject
+Makefile.in
+aclocal.m4
+autom4te.cache/
+build/
+config.guess
+config.sub
+configure
+depcomp
+install-sh
+missing
+src/Makefile.in
