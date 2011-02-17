@@ -28,6 +28,8 @@
 //Msgs of DeviceControl
 #define MISSING_PARAMETER    "Missing parameter"
 #define WARNING              "Warning:"
+#define MSG_FABRIC_DEFAULT   "Fabric default"
+#define MSG_MUST_REMOVE      "Must Remove"
 
 using namespace std;
 
@@ -39,18 +41,17 @@ USBK_T usbk;
 int main(int argc, char *argv[])
 {
     int c;
-    UI_ACTIVATE_T act;
-    UI_PASSWD_T opt_parola;
-    UI_AESNB_T opt_key;
-    UI_DEVNAME_T opt_dev_name;
-    UI_SET_DEV_NAME_T set_dev_name;
-    UI_SET_AES_KEY_T set_key;
-    UI_KEYNAME_T opt_aes_name;
-    UI_CHANGE_PASS_T change_pas;
-    UI_PASSWD_T opt_new_password;
-    AESKEY_T opt_aes_key;
-    UI_SET_AUTO_ACTIVATE_T set_auto;
-    t_UI_OPTION opt_auto_activate;
+    t_UIP_ACTIVATE act;
+    t_UIP_PAROLA opt_parola;
+    t_UIP_KEYNB opt_key;
+    t_UIP_DEVLABEL opt_dev_name;
+    t_UIP_SETDEVICELABEL set_dev_name;
+    t_UIP_SETKEY set_key;
+    t_UIP_KEYNAME opt_aes_name;
+    t_UIP_CHPASS change_pas;
+    t_UIP_PAROLA opt_new_password;
+    t_UIP_KEY opt_aes_key;
+    t_UIP_SETAUTOACTIVATE set_auto;
     char opt_key_format;
     char opt_string_key[64];
 
@@ -131,27 +132,27 @@ int main(int argc, char *argv[])
         case 'c':
             cflag = 1;
             main_operation++;
-            if(strlen(optarg) > sizeof(UI_PASSWD_T)){
-                printf("Uyarı: Parola %d karakterden uzun olamaz.\n", sizeof(UI_PASSWD_T));
+            if(strlen(optarg) > sizeof(opt_new_password.s)){
+                printf("Uyarı: Parola %d karakterden uzun olamaz.\n", sizeof(opt_new_password.s));
                 exit(1);
             }
-            strncpy(opt_new_password.u8, optarg, sizeof(UI_PASSWD_T));
+            strncpy(opt_new_password.s, optarg, sizeof(opt_new_password.s));
             break;
 
         case 'n':
             nflag = 1;
             main_operation++;
-            strncpy(opt_dev_name.c, optarg, sizeof(UI_DEVNAME_T));
+            strncpy(opt_dev_name.s, optarg, sizeof(opt_dev_name.s));
             break;
 
         case 'm':
             mflag = 1;
-            //main_operation++;
-            if(strlen(optarg) > sizeof(UI_KEYNAME_T)){
-                printf("Uyarı: Key adi %d karakterden uzun olamaz.\n", sizeof(UI_KEYNAME_T));
+            main_operation++;
+            if(strlen(optarg) > sizeof(opt_aes_name.s)){
+                printf("Uyarı: Key adi %d karakterden uzun olamaz.\n", sizeof(opt_aes_name.s));
                 exit(1);
             }
-            strncpy(opt_aes_name.c, optarg, sizeof(UI_KEYNAME_T));
+            strncpy(opt_aes_name.s, optarg, sizeof(opt_aes_name.s));
             break;
 
         case 'x':
@@ -163,13 +164,11 @@ int main(int argc, char *argv[])
         case 't':
             tflag = 1;
             main_operation++;
-            opt_auto_activate = 'E';
             break;
 
         case 'T':
             Tflag = 1;
             main_operation++;
-            opt_auto_activate = 'D';
             break;
 
         case 'l':
@@ -189,11 +188,11 @@ int main(int argc, char *argv[])
 
         case 'p':
             pflag = 1;
-            if(strlen(optarg) > sizeof(UI_PASSWD_T)){
-                printf("Uyarı: Parola %d karakterden uzun olamaz.\n", sizeof(UI_PASSWD_T));
+            if(strlen(optarg) > sizeof(opt_parola.s)){
+                printf("Uyarı: Parola %d karakterden uzun olamaz.\n", sizeof(opt_parola.s));
                 exit(1);
             }
-            strncpy(opt_parola.u8, optarg, sizeof(UI_PASSWD_T));
+            strncpy(opt_parola.s, optarg, sizeof(opt_parola.s));
             break;
 
         case 'f':
@@ -260,21 +259,35 @@ int main(int argc, char *argv[])
     if (aflag) {
         if (kflag) {
             if (pflag) {
-                if (usbk.info.login == 0) {
-                    printf("%s [%s] cihazı zaten aktif.\n", usbk.dev, usbk.info.devname.c);
-                    exit(0);
-                } else {
-                    memset(&act, 0, sizeof(UI_ACTIVATE_T));
-                    strncpy(act.parola.u8, opt_parola.u8, sizeof(act.parola));
-                    memcpy(&act.SelectedKeyNo, &opt_key, sizeof(act.SelectedKeyNo));
-                    send_scsi_command(&usbk, (unsigned char*) &act, ACTIVATE_KEY, sizeof(UI_ACTIVATE_T), WRITE_SCSI);
+                switch(usbk.info.devstate.me){
+                case ACTIVATE:
+                case ACTIVATE_WITH_BACKDISK:
+                    printf("%s [%s] cihazı zaten aktif.\n", usbk.dev, usbk.info.devlabel.s);
+                	break;
+                case DEACTIVATE:
+                    memset(&act, 0, sizeof(act));
+                    strncpy(act.password.s, opt_parola.s, sizeof(act.password.s));
+                    memcpy(&act.keyno, &opt_key, sizeof(act.keyno));
+                    send_scsi_command(&usbk, (unsigned char*) &act, ACTIVATE_KEY, sizeof(act), WRITE_SCSI);
                     usbk_check_last_opr(&usbk);
                     if (iflag) {
                         usbk_get_dev_info(&usbk);
                         usbk_show_show_dev_info(&usbk);
                     }
+                    printf("pass:%s\n",opt_parola.s);
                     printf("Done.\n");
                     exit(0);
+                	break;
+                case FABRIC_DEFAULT:
+                	printf("%s\n", MSG_FABRIC_DEFAULT);
+                    exit(0);
+                    break;
+                case MUST_REMOVE:
+                	printf("%s\n", MSG_MUST_REMOVE);
+                    exit(0);
+                	break;
+                default:
+                	break;
                 }
             }
             else{
@@ -292,10 +305,9 @@ int main(int argc, char *argv[])
     // DEACTIVATE
     /////////////////////////////////////////////
     if (dflag) {
-        if (usbk.info.login == 1) {
-            printf("%s [%s] cihazı zaten deaktif.\n", usbk.dev, usbk.info.devname.c);
-            exit(0);
-        } else {
+        switch(usbk.info.devstate.me){
+        case ACTIVATE:
+        case ACTIVATE_WITH_BACKDISK:
             send_scsi_command(&usbk, (unsigned char*) NULL, DEACTIVATE_KEY, 0, WRITE_SCSI);
             usbk_check_last_opr(&usbk);
             if (iflag) {
@@ -304,6 +316,21 @@ int main(int argc, char *argv[])
             }
             printf("Done.\n");
             exit(0);
+            break;
+        case DEACTIVATE:
+            printf("%s [%s] cihazı zaten deaktif.\n", usbk.dev, usbk.info.devlabel.s);
+            exit(0);
+            break;
+        case FABRIC_DEFAULT:
+            printf("%s\n", MSG_FABRIC_DEFAULT);
+            exit(0);
+            break;
+        case MUST_REMOVE:
+            printf("%s\n", MSG_MUST_REMOVE);
+            exit(0);
+            break;
+        default:
+            break;
         }
     }
 
@@ -311,15 +338,18 @@ int main(int argc, char *argv[])
     // CHANGE PASSWORD
     /////////////////////////////////////////////
     if (cflag) {
-        if (pflag) {
-            if (usbk.info.login == 0) {
-                printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devname.c);
-                exit(0);
-            } else {
-                memset(&change_pas, 0, sizeof(UI_CHANGE_PASS_T));
-                strncpy(change_pas.old_password.u8, opt_parola.u8, sizeof(change_pas.old_password));
-                strncpy(change_pas.new_password.u8, opt_new_password.u8, sizeof(change_pas.new_password));
-                send_scsi_command(&usbk, (unsigned char*) &change_pas, CHANGE_PASS, sizeof(UI_CHANGE_PASS_T), WRITE_SCSI);
+        switch(usbk.info.devstate.me){
+        case ACTIVATE:
+        case ACTIVATE_WITH_BACKDISK:
+            printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devlabel.s);
+            exit(0);
+            break;
+        case DEACTIVATE:
+            if (pflag) {
+                memset(&change_pas, 0, sizeof(change_pas));
+                strncpy(change_pas.old_password.s, opt_parola.s, sizeof(change_pas.old_password.s));
+                strncpy(change_pas.new_password.s, opt_new_password.s, sizeof(change_pas.new_password.s));
+                send_scsi_command(&usbk, (unsigned char*) &change_pas, CHANGE_PASS, sizeof(change_pas), WRITE_SCSI);
                 usbk_check_last_opr(&usbk);
                 if (iflag) {
                     usbk_get_dev_info(&usbk);
@@ -328,10 +358,30 @@ int main(int argc, char *argv[])
                 printf("Done.\n");
                 exit(0);
             }
-        }
-        else{
-            printf("%s%s\n", WARNING, MISSING_PARAMETER);
+            else
+            {
+                printf("%s%s\n", WARNING, MISSING_PARAMETER);
+                exit(0);
+            }
+            break;
+        case FABRIC_DEFAULT:
+            memset(&change_pas, 0, sizeof(change_pas));
+            strncpy(change_pas.new_password.s, opt_new_password.s, sizeof(change_pas.new_password.s));
+            send_scsi_command(&usbk, (unsigned char*) &change_pas, CHANGE_PASS, sizeof(change_pas), WRITE_SCSI);
+            usbk_check_last_opr(&usbk);
+            if (iflag) {
+                usbk_get_dev_info(&usbk);
+                usbk_show_show_dev_info(&usbk);
+            }
+            printf("Done.\n");
             exit(0);
+            break;
+        case MUST_REMOVE:
+            printf("%s\n", MSG_MUST_REMOVE);
+            exit(0);
+            break;
+        default:
+            break;
         }
     }
 
@@ -340,15 +390,17 @@ int main(int argc, char *argv[])
     /////////////////////////////////////////////
     if (nflag) {
         if (pflag) {
-            if (usbk.info.login == 0) {
-                printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n",
-                        usbk.dev, usbk.info.devname.c);
+            switch(usbk.info.devstate.me){
+            case ACTIVATE:
+            case ACTIVATE_WITH_BACKDISK:
+                printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devlabel.s);
                 exit(0);
-            } else {
-                memset(&set_dev_name, 0, sizeof(UI_SET_DEV_NAME_T));
-                strncpy(set_dev_name.parola.u8, opt_parola.u8, sizeof(set_dev_name.parola));
-                strncpy(set_dev_name.devname.c, opt_dev_name.c, sizeof(set_dev_name.devname));
-                send_scsi_command(&usbk, (unsigned char*) &set_dev_name, SET_DEV_NAME, sizeof(UI_SET_DEV_NAME_T), WRITE_SCSI);
+                break;
+            case DEACTIVATE:
+                memset(&set_dev_name, 0, sizeof(set_dev_name));
+                strncpy(set_dev_name.password.s, opt_parola.s, sizeof(set_dev_name.password.s));
+                strncpy(set_dev_name.devlabel.s, opt_dev_name.s, sizeof(set_dev_name.devlabel.s));
+                send_scsi_command(&usbk, (unsigned char*) &set_dev_name, SET_DEV_NAME, sizeof(set_dev_name), WRITE_SCSI);
                 usbk_check_last_opr(&usbk);
                 if (iflag) {
                     usbk_get_dev_info(&usbk);
@@ -356,6 +408,17 @@ int main(int argc, char *argv[])
                 }
                 printf("Done.\n");
                 exit(0);
+                break;
+            case FABRIC_DEFAULT:
+                printf("%s\n", MSG_FABRIC_DEFAULT);
+                exit(0);
+                break;
+            case MUST_REMOVE:
+                printf("%s\n", MSG_MUST_REMOVE);
+                exit(0);
+                break;
+            default:
+                break;
             }
         }
         else{
@@ -370,17 +433,19 @@ int main(int argc, char *argv[])
     if (mflag && !xflag) {
         if (kflag) {
             if (pflag) {
-                if (usbk.info.login == 0) {
-                    printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n",
-                            usbk.dev, usbk.info.devname.c);
+                switch(usbk.info.devstate.me){
+                case ACTIVATE:
+                case ACTIVATE_WITH_BACKDISK:
+                    printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devlabel.s);
                     exit(0);
-                } else {
-                    memset(&set_key, 0, sizeof(UI_SET_AES_KEY_T));
-                    strncpy(set_key.parola.u8, opt_parola.u8, sizeof(set_key.parola));
-                    memcpy(&set_key.aes_key_no, &opt_key, sizeof(set_key.aes_key_no));
-                    strncpy(set_key.aes_name.c, opt_aes_name.c, sizeof(set_key.aes_name));
-                    memset(&set_key.nameonly, 1, sizeof(set_key.nameonly));
-                    send_scsi_command(&usbk, (unsigned char*) &set_key, SET_KEY, sizeof(UI_SET_AES_KEY_T), WRITE_SCSI);
+                    break;
+                case DEACTIVATE:
+                    memset(&set_key, 0, sizeof(set_key));
+                    strncpy(set_key.password.s, opt_parola.s, sizeof(set_key.password.s));
+                    memcpy(&set_key.keyno, &opt_key, sizeof(set_key.keyno));
+                    strncpy(set_key.keyname.s, opt_aes_name.s, sizeof(set_key.keyname.s));
+                    memset(&set_key.options.me, SETKEY_NAMEONLY, sizeof(set_key.options.me));
+                    send_scsi_command(&usbk, (unsigned char*) &set_key, SET_KEY, sizeof(set_key), WRITE_SCSI);
                     usbk_check_last_opr(&usbk);
                     if (iflag) {
                         usbk_get_dev_info(&usbk);
@@ -388,6 +453,18 @@ int main(int argc, char *argv[])
                     }
                     printf("Done.\n");
                     exit(0);
+                    break;
+                case FABRIC_DEFAULT:
+                    printf("%s\n", MSG_FABRIC_DEFAULT);
+                    exit(0);
+                    break;
+                case MUST_REMOVE:
+                    printf("%s\n", MSG_MUST_REMOVE);
+                    exit(0);
+                    break;
+                default:
+                    printf("default error\n");
+                    break;
                 }
             }
             else{
@@ -407,30 +484,32 @@ int main(int argc, char *argv[])
     if (xflag) {
         if (pflag) {
             if (kflag) {
-                if (usbk.info.login == 0) {
+                switch(usbk.info.devstate.me){
+                case ACTIVATE:
+                case ACTIVATE_WITH_BACKDISK:
                     printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n",
-                            usbk.dev, usbk.info.devname.c);
+                            usbk.dev, usbk.info.devlabel.s);
                     exit(0);
-                } else {
-                    memset(&set_key, 0, sizeof(UI_SET_AES_KEY_T));
-                    strncpy(set_key.parola.u8, opt_parola.u8, sizeof(set_key.parola));
-                    memcpy(&set_key.aes_key_no, &opt_key, sizeof(set_key.aes_key_no));
-                    strncpy(set_key.aes_key.key, opt_aes_key.key, sizeof(set_key.aes_key));
-                    memset(&set_key.nameonly, 0, sizeof(set_key.nameonly));
+                    break;
+                case DEACTIVATE:
+                    memset(&set_key, 0, sizeof(set_key));
+                    strncpy(set_key.password.s, opt_parola.s, sizeof(set_key.password.s));
+                    memcpy(&set_key.keyno, &opt_key, sizeof(set_key.keyno));
+                    memset(&set_key.options.me, SETKEY_NAME_AND_KEY, sizeof(set_key.options.me));
                     if (mflag) {
-                        strncpy(set_key.aes_name.c, opt_aes_name.c, sizeof(set_key.aes_name));
+                        strncpy(set_key.keyname.s, opt_aes_name.s, sizeof(set_key.keyname.s));
+                    }else{
+                        strncpy(set_key.keyname.s, usbk.info.keyname[opt_key].s, sizeof(set_key.keyname.s));
                     }
 
                     //printf("key:%s\n", opt_string_key);
-                    string str;
-                    str = opt_string_key;
                     if (opt_key_format == 'd') {
-                        if(check_key_decimal(str, set_key.aes_key.key) == -1){
+                        if(check_key_decimal((string)opt_string_key, opt_aes_key.u8) == -1){
                             printf("Hata: key format yanlis.\n");
                             exit(0);
                         }
                     }else if(opt_key_format == 't'){
-                        if(check_key_text(str, set_key.aes_key.key) == -1){
+                        if(check_key_text((string)opt_string_key, set_key.key.u8) == -1){
                             printf("Hata: key format yanlis.\n");
                             exit(0);
                         }
@@ -438,7 +517,7 @@ int main(int argc, char *argv[])
                         cout << "Beklenmeyen hata!" << endl;
                     }
 
-                    send_scsi_command(&usbk, (unsigned char*) &set_key, SET_KEY, sizeof(UI_SET_AES_KEY_T), WRITE_SCSI);
+                    send_scsi_command(&usbk, (unsigned char*) &set_key, SET_KEY, sizeof(set_key), WRITE_SCSI);
                     usbk_check_last_opr(&usbk);
                     if (iflag) {
                         usbk_get_dev_info(&usbk);
@@ -446,6 +525,17 @@ int main(int argc, char *argv[])
                     }
                     printf("Done.\n");
                     exit(0);
+                    break;
+                case FABRIC_DEFAULT:
+                    printf("%s\n", MSG_FABRIC_DEFAULT);
+                    exit(0);
+                    break;
+                case MUST_REMOVE:
+                    printf("%s\n", MSG_MUST_REMOVE);
+                    exit(0);
+                    break;
+                default:
+                    break;
                 }
             }
             else{
@@ -458,22 +548,50 @@ int main(int argc, char *argv[])
             exit(0);
         }
     }
+
+    /*
+            switch(usbk.info.devstate.me){
+            case ACTIVATE:
+            case ACTIVATE_WITH_BACKDISK:
+                break;
+            case DEACTIVATE:
+                break;
+            case FABRIC_DEFAULT:
+                printf("%s\n", MSG_FABRIC_DEFAULT);
+                exit(0);
+                break;
+            case MUST_REMOVE:
+                printf("%s\n", MSG_MUST_REMOVE);
+                exit(0);
+                break;
+            default:
+                break;
+            }
+
+    */
+
     /////////////////////////////////////////////
     // ENABLE AUTO ACTIVATE
     /////////////////////////////////////////////
     if (tflag) {
         if (pflag) {
             if (kflag) {
-                if (usbk.info.login == 0) {
+
+
+                switch(usbk.info.devstate.me){
+                case ACTIVATE:
+                case ACTIVATE_WITH_BACKDISK:
                     printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n",
-                            usbk.dev, usbk.info.devname.c);
+                            usbk.dev, usbk.info.devlabel.s);
                     exit(0);
-                } else {
-                    memset(&set_auto, 0, sizeof(UI_SET_AUTO_ACTIVATE_T));
-                    strncpy(set_auto.parola.u8, opt_parola.u8, sizeof(set_auto.parola));
-                    memcpy(&set_auto.SelectedKeyNo, &opt_key, sizeof(set_auto.SelectedKeyNo));
-                    memcpy(&set_auto.AutoActivate, &opt_auto_activate, sizeof(set_auto.AutoActivate));
-                    send_scsi_command(&usbk, (unsigned char*) &set_auto, SET_AUTO_ACTIVE, sizeof(UI_SET_AUTO_ACTIVATE_T), WRITE_SCSI);
+                    break;
+                case DEACTIVATE:
+                    memset(&set_auto, 0, sizeof(set_auto));
+                    strncpy(set_auto.password.s, opt_parola.s, sizeof(set_auto.password.s));
+                    memcpy(&set_auto.keyno, &opt_key, sizeof(set_auto.keyno));
+                    //set_auto.keyno = 3;
+
+                    send_scsi_command(&usbk, (unsigned char*) &set_auto, SET_AUTO_ACTIVE, sizeof(set_auto), WRITE_SCSI);
                     usbk_check_last_opr(&usbk);
                     if (iflag) {
                         usbk_get_dev_info(&usbk);
@@ -481,6 +599,17 @@ int main(int argc, char *argv[])
                     }
                     printf("Done.\n");
                     exit(0);
+                    break;
+                case FABRIC_DEFAULT:
+                    printf("%s\n", MSG_FABRIC_DEFAULT);
+                    exit(0);
+                    break;
+                case MUST_REMOVE:
+                    printf("%s\n", MSG_MUST_REMOVE);
+                    exit(0);
+                    break;
+                default:
+                    break;
                 }
             }
             else{
@@ -499,16 +628,17 @@ int main(int argc, char *argv[])
     /////////////////////////////////////////////
     if (Tflag) {
         if (pflag) {
-            if (usbk.info.login == 0) {
-                printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devname.c);
+            switch(usbk.info.devstate.me){
+            case ACTIVATE:
+            case ACTIVATE_WITH_BACKDISK:
+                printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devlabel.s);
                 exit(0);
-            } else {
-                memset(&set_auto, 0, sizeof(UI_SET_AUTO_ACTIVATE_T));
-                strncpy(set_auto.parola.u8, opt_parola.u8, sizeof(set_auto.parola));
-                memcpy(&set_auto.SelectedKeyNo, &opt_key, sizeof(set_auto.SelectedKeyNo));
-                memcpy(&set_auto.AutoActivate, &opt_auto_activate,
-                        sizeof(set_auto.AutoActivate));
-                send_scsi_command(&usbk, (unsigned char*) &set_auto, SET_AUTO_ACTIVE, sizeof(UI_SET_AUTO_ACTIVATE_T), WRITE_SCSI);
+                break;
+            case DEACTIVATE:
+                memset(&set_auto, 0, sizeof(set_auto));
+                strncpy(set_auto.password.s, opt_parola.s, sizeof(set_auto.password.s));
+                memset(&set_auto.keyno, 0, sizeof(set_auto.keyno));
+                send_scsi_command(&usbk, (unsigned char*) &set_auto, SET_AUTO_ACTIVE, sizeof(set_auto), WRITE_SCSI);
                 usbk_check_last_opr(&usbk);
                 if (iflag) {
                     usbk_get_dev_info(&usbk);
@@ -516,6 +646,17 @@ int main(int argc, char *argv[])
                 }
                 printf("Done.\n");
                 exit(0);
+                break;
+            case FABRIC_DEFAULT:
+                printf("%s\n", MSG_FABRIC_DEFAULT);
+                exit(0);
+                break;
+            case MUST_REMOVE:
+                printf("%s\n", MSG_MUST_REMOVE);
+                exit(0);
+                break;
+            default:
+                break;
             }
         }
         else{
@@ -679,68 +820,103 @@ void scan_usb() {
 void usbk_show_show_dev_info(USBK_T *usbk) {
     //UI_DEVINFO_T dev_info;
     int i;
-    char status[13];
+    char status[64];
     char backdisk[8];
-    char autoactive[9];
+    char autoactive[64];
     char model[32];
 
     sprintf(model, "%s %s", usbk->model, usbk->rev);
 
-    if (usbk->info.login == 1) {
-        sprintf(status, "Deactive");
-        sprintf(backdisk, "-");
-    } else {
-        sprintf(status, "active [%d]", usbk->info.currentkeynum);
-        if (usbk->info.backdisk == 1) {
-            sprintf(backdisk, "none");
-        } else {
-            sprintf(backdisk, "exist");
-        }
+    sprintf(backdisk, "-");
+
+    switch(usbk->info.devstate.me){
+    case ACTIVATE:
+        sprintf(status, "active [%d]", usbk->info.current_keyno);
+        sprintf(backdisk, "none");
+        break;
+    case ACTIVATE_WITH_BACKDISK:
+        sprintf(status, "active [%d]", usbk->info.current_keyno);
+        sprintf(backdisk, "exist");
+        break;
+    case DEACTIVATE:
+        sprintf(status, "deactive");
+        break;
+    case FABRIC_DEFAULT:
+        sprintf(status, "%s", MSG_FABRIC_DEFAULT);
+        break;
+    case MUST_REMOVE:
+        sprintf(status, "%s", MSG_MUST_REMOVE);
+        break;
+    default:
+        sprintf(status, "%d", usbk->info.devstate.me);
+        break;
     }
 
-    if (usbk->info.autologin_key_num == 0) {
+
+
+    if (usbk->info.autoactivate_keyno == 0) {
         sprintf(autoactive, "disable");
     } else {
-        sprintf(autoactive, "key %d", usbk->info.autologin_key_num);
+        sprintf(autoactive, "enable with key #%d", usbk->info.autoactivate_keyno);
     }
+    printf(" logic name              %s\n", usbk->dev);
+    printf(" model                   %s\n", usbk->model);
+    printf(" revision                %s\n", usbk->rev);
+    printf(" serial number           ");
+    for(i=0; i<15; i++){
+        printf("%2.2X", usbk->info.serial.u8[i]);
+    }
+    printf("\n");
+    printf(" firmware verison        %s\n", usbk->info.firmware_ver.s);
+    printf(" label                   %s\n", usbk->info.devlabel.s);
+    printf(" status                  %s\n", status);
+    printf(" retry number            %d\n", usbk->info.retry_num);
+    printf(" back disk               %s\n", backdisk);
+    printf(" auto activation         %s\n", autoactive);
+    printf(" max. key capacity       %d\n", usbk->info.multikeycap);
+    for(i=0; i<usbk->info.multikeycap; i++){
+        printf("   key %d name            %s\n",i, usbk->info.keyname[i].s);
+    }
+/*
 
-    //        123456789012 1234567890123456 1234 12345678901 123456 12345678 1234567890 12345 12345678 123456789 123456789012
+    //      123456789012 1234567890123456 1234 12345678901 123456 12345678 1234567890 12345 12345678 123456789 123456789012
     printf("device       Model            Rev  Name        Serial Firmware Status     Retry BackDisk Auto Act. KeyNames    \n");
     //                                                 deactive                  disable
     //                                                 active [1                 key 1
     printf(
             "%-12.12s %-16.16s %-4.4s %-11.11s %-6.6s %-8.8s %-10.10s %-5d %-8.8s %-9.9s [1] %-12s\n",
-            usbk->dev, usbk->model, usbk->rev, usbk->info.devname.c,
-            usbk->info.serial, usbk->info.firmver.u8, status,
-            usbk->info.retry_num, backdisk, autoactive, usbk->info.keyname[0].c);
+            usbk->dev, usbk->model, usbk->rev, usbk->info.devlabel.s,
+            usbk->info.serial.u8, usbk->info.firmware_ver.s, status,
+            usbk->info.retry_num, backdisk, autoactive, usbk->info.keyname[0].s);
     for (i = 1; i < usbk->info.multikeycap; i++)
-        printf("%99.s[%d] %-12s\n", " ", i + 1, usbk->info.keyname[i].c);
+        printf("%99.s[%d] %-12s\n", " ", i + 1, usbk->info.keyname[i].s);
+
+*/
 
 }
 
 int usbk_get_dev_info(USBK_T *usbk) {
-    send_scsi_command(usbk, (unsigned char*) &usbk->info, GET_DEV_INFO, sizeof(UI_DEVINFO_T), READ_SCSI);
+    send_scsi_command(usbk, (unsigned char*) &usbk->info, GET_DEV_INFO, sizeof(t_UIP_DEVINFO), READ_SCSI);
     //memcpy((char*) &usbk->info, buffer, sizeof(UI_DEVINFO_T));
     return 0;
 }
 
 int usbk_check_last_opr(USBK_T *usbk){
 
-    send_scsi_command(usbk, (unsigned char*) &usbk->status, GET_STATUS, sizeof(UI_STATUSALL_T), READ_SCSI);
-    if(usbk->status.lastopt == 2){
+    send_scsi_command(usbk, (unsigned char*) &usbk->status, GET_STATUS, sizeof(t_UIP_GETSTATUS), READ_SCSI);
+    if(usbk->status.lastop.me == OPRS_INVALID_PASS){
         printf("Hata: Parola yanlis. RetryNum:%d\n", usbk->status.retry_num);
         exit(1);
     }
-    else if(usbk->status.lastopt == 3){
-        printf("\n*******************************************\n");
-        printf("Uyari: USBK cihazinizdaki bilgiler silindi.\n");
-        printf("Yeni parolaniz 123456 dir.\n");
-        printf("Lutfen cihazinizi tekrar konfigure ediniz.\n");
-        printf("*******************************************\n\n");
+    else if(usbk->status.lastop.me == OPRS_FABRIC_RESET){
+        printf("\n*********************************************\n");
+        printf(" Uyari: USBK cihazinizdaki bilgiler silindi. \n");
+        printf(" Lutfen cihazinizi tekrar konfigure ediniz.  \n");
+        printf("*********************************************\n\n");
         return 1;
     }
-    else if(usbk->status.lastopt != 0){
-        printf("Hata: Islem basarisiz. MSG_CODE:0x%02X MSG:0x%02X RetryNum:%d\n", usbk->status.msg_code, usbk->status.msg, usbk->status.retry_num);
+    else if(usbk->status.lastop.me != OPRS_PASS){
+        printf("Hata: Islem basarisiz. MSG_CODE:0x%02X RetryNum:%d\n", usbk->status.lastop.me, usbk->status.retry_num);
         exit(1);
     }
     return 0;
@@ -753,7 +929,7 @@ int usbk_check_last_opr(USBK_T *usbk){
 // 5) string to integer islemini yap
 // 6) 16 adet sayı cikartabildin mi?
 // 7) sayılar 0 ile 255 arasinda mi?
-int check_key_decimal(string str, char *key){
+int check_key_decimal(string str, U8 *key){
     int ikey[16];
     size_t found;
     string::iterator it;
@@ -816,11 +992,11 @@ int check_key_decimal(string str, char *key){
 }
 
 
-int check_key_text(string str, char *key){
+int check_key_text(string str, U8 *key){
     if (str.size() > 16){
         return -1;
     }
-    strncpy(key, str.c_str(), 16);
+    strncpy((char*)key, str.c_str(), 16);
     return 0;
 }
 
