@@ -28,8 +28,8 @@
 //Msgs of DeviceControl
 #define MISSING_PARAMETER    "Missing parameter"
 #define WARNING              "Warning:"
-#define MSG_FABRIC_DEFAULT   "Fabric default"
-#define MSG_MUST_REMOVE      "Must Remove"
+#define MSG_FABRIC_DEFAULT   "Fabric default. Please first set your password.\n"
+#define MSG_MUST_REMOVE      "Must remove. Please remove and re-plug the USBK.\n"
 
 using namespace std;
 
@@ -274,7 +274,6 @@ int main(int argc, char *argv[])
                         usbk_get_dev_info(&usbk);
                         usbk_show_show_dev_info(&usbk);
                     }
-                    printf("pass:%s\n",opt_parola.s);
                     printf("Done.\n");
                     exit(0);
                 	break;
