@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(usbk, 1.1, [murat@usbk.com])
+AC_INIT(usbk, 1.2, [murat@usbk.com])
 
 
 AC_CANONICAL_SYSTEM
