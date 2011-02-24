@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
         { "activate", no_argument, 0, 'a' },
         { "deactivate", no_argument, 0, 'd' },
         { "newpass", required_argument, 0, 'c' },
-        { "devname", required_argument, 0, 'n' },
+        { "label", required_argument, 0, 'n' },
         { "keyname", required_argument, 0, 'm' },
         { "change-key", required_argument, 0, 'x' },
         { "enable-auto", no_argument, 0, 't' },
@@ -697,7 +697,7 @@ void print_help(int exval) {
     printf("  -a, --activate                activate device\n");
     printf("  -d, --deactivate              deactivate device\n");
     printf("  -c, --newpasswd=NEWPASS       change the password to NEWPASS\n");
-    printf("  -n, --devname=DEVNAME         change the device name to DEVNAME\n");
+    printf("  -n, --label=LABEL             change the label to LABEL\n");
     printf("  -m, --keyname=KEYNAME         change then key nameto NAME\n");
     printf("  -x, --change-key=NEWKEY       change the key to NEWKEY\n");
     printf("  -t, --enable-auto             enable auto activate\n");
