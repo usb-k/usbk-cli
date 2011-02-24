@@ -21,12 +21,11 @@
 #define U8 unsigned char
 #define U16 unsigned int
 #define U32 unsigned long
-#define SIZE_DEVNAME 11
+
 //direction
 #define INDIR             0X01
 #define OUTDIR            0X00
 #define NB_AESKEY         3
-
 
 
 #include <stdio.h>
@@ -64,16 +63,6 @@ typedef struct __ST_PACKET {
     unsigned int   datalen;
 } ST_PACKET_T;
 
-typedef struct __USBK {
-    char dev[SIZE_DEVNAME];
-    char sg_dev[SIZE_DEVNAME];
-    char vendor[MAX_STR_LEN];
-    char model[MAX_STR_LEN];
-    char rev[MAX_STR_LEN];
-    t_UIP_DEVINFO info;
-    char backdisk_dev[SIZE_DEVNAME];
-    t_UIP_GETSTATUS status;
-} USBK_T;
 
 #endif // GENERAL_H_
 

@@ -1,15 +1,16 @@
 /*! \file *********************************************************************
  *
- * \brief UIP.h - Created on: Feb 7, 2011
+ * \brief UIP.h - Created on: Feb 18, 2011
  *
  * This file includes...
  *
- * - Compiler:          GNU GCC for AVR32
- * - Supported devices: DEMM and EVK1104
- * - AppNote:           USBK_UI_ Protocol_2v3r0
+ * - Compiler:              GNU GCC for AVR32, GNU GCC for Linux CLI, Visual Studio 2010 for Windows GUI
+ * - Supported firmware:    USBK 2v5
+ * - Supported software:    USBK Management Software GUI for Windows 2v3 and USBK Management Software CLI for Linux 1v2
+ * - AppNote:               USBK_UI_Protocol_2v5r0
  *
- * \author              Timucin Anuslu
- *                      Tamara Elektronik : http://www.tamara.com.tr \n
+ * \author                  Timucin Anuslu, Murat Kılıvan
+ *                          Tamara Elektronik : http://www.tamara.com.tr \n
  *
  ******************************************************************************/
 
@@ -28,6 +29,12 @@
 //                          OPMSG_DISABLE           = 0,
 //                      }t_UIP_OPRSTATUS_MSG;
 //
+//              In C and C++ for Linux,
+//                      typedef enum __attribute__((__packed__))
+//                      {
+//                          OPMSG_DISABLE           = 0,
+//                      }t_UIP_OPRSTATUS_MSG;
+//
 //              In C# for windows,
 //                      typedef enum : char{
 //                          OPMSG_DISABLE           = 0,
@@ -35,26 +42,37 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define PROTOCOL_HEADER "USBK"
 
-#ifdef PACKAGED_STRUCT
-#  define ATTR_PACKED __attribute__((__packed__))
-#  define ATTR_ENUM_PACKED __attribute__((__packed__))
+#if defined(__AVR32__)
+#  define ATTR_PACKED_BEGIN __attribute__((__packed__))
+#  define ATTR_ENUM_PACKED_BEGIN __attribute__((__packed__))
+#  define ATTR_PACKED_END
+#  define ATTR_ENUM_PACKED_END
+#elif  defined(__linux__)
+#  define ATTR_PACKED_BEGIN
+#  define ATTR_ENUM_PACKED_BEGIN __attribute__((__packed__))
+#  define ATTR_PACKED_END
+#  define ATTR_ENUM_PACKED_END
+#elif defined(WIN32)
+#  define ATTR_PACKED_BEGIN
+#  define ATTR_ENUM_PACKED_BEGIN
+#  define ATTR_PACKED_END
+#  define ATTR_ENUM_PACKED_END : char
 #else
-#  define ATTR_PACKED
-#  define ATTR_ENUM_PACKED __attribute__((__packed__))
+#error must define environment
 #endif
 
+#define PROTOCOL_HEADER "USBK"
 
 typedef U32 t_UIP_TAGNUMBER;
 
-typedef struct ATTR_PACKED __UIP_FIRMVER
+typedef struct ATTR_PACKED_BEGIN __UIP_FIRMVER ATTR_PACKED_END
 {
 #define UIP_FIRMWAREVIR_SIZE        15
     char                s[UIP_FIRMWAREVIR_SIZE+1];
 }t_UIP_FIRMVER;
 
-typedef union ATTR_PACKED __UIP_SERIAL
+typedef union ATTR_PACKED_BEGIN __UIP_SERIAL ATTR_PACKED_END
 {
 #define UIP_SERIAL_TOTALSIZE        32
 #define UIP_SERIAL_SIZE             15
@@ -66,14 +84,20 @@ typedef U8 t_UIP_FABDEF;
 typedef U8 t_UIP_LOGSTAT;
 typedef U8 t_UIP_BACKDSTAT;
 
-typedef struct ATTR_PACKED __UIP_MODEL
+typedef struct ATTR_PACKED_BEGIN __UIP_PRODUCT ATTR_PACKED_END
+{
+#define UIP_PRODUCT_SIZE          31
+    char s[UIP_PRODUCT_SIZE+1];
+}t_UIP_PRODUCT;
+
+typedef struct ATTR_PACKED_BEGIN __UIP_MODEL ATTR_PACKED_END
 {
 #define UIP_MODEL_SIZE          15
     char s[UIP_MODEL_SIZE+1];
 }t_UIP_MODEL;
 
 
-typedef union ATTR_PACKED __UIP_DEVLABEL
+typedef union ATTR_PACKED_BEGIN __UIP_DEVLABEL ATTR_PACKED_END
 {
 #define UIP_DEVLABEL_TOTALSIZE      65
 #define UIP_DEVLABEL_SIZE           11
@@ -81,7 +105,7 @@ typedef union ATTR_PACKED __UIP_DEVLABEL
     U8 all[UIP_DEVLABEL_TOTALSIZE];
 }t_UIP_DEVLABEL;
 
-typedef enum ATTR_ENUM_PACKED __E_UIP_DEVSTATE // must be 1 byte
+typedef enum ATTR_ENUM_PACKED_BEGIN __E_UIP_DEVSTATE ATTR_ENUM_PACKED_END // must be 1 byte
 {
     ACTIVATE                = 1,
     ACTIVATE_WITH_BACKDISK  = 2,
@@ -90,7 +114,7 @@ typedef enum ATTR_ENUM_PACKED __E_UIP_DEVSTATE // must be 1 byte
     MUST_REMOVE             = 5,
 }e_UIP_DEVSTATE;
 
-typedef union ATTR_PACKED __UIP_DEVSTATE
+typedef union ATTR_PACKED_BEGIN __UIP_DEVSTATE ATTR_PACKED_END
 {
 #define UIP_DEVSTATE_TOTALSIZE  4
     e_UIP_DEVSTATE  me;
@@ -101,7 +125,7 @@ typedef union ATTR_PACKED __UIP_DEVSTATE
 typedef U8 t_UIP_KEYNB;
 typedef U8 t_UIP_NBRETRY;
 
-typedef union ATTR_PACKED __UIP_KEY
+typedef union ATTR_PACKED_BEGIN __UIP_KEY ATTR_PACKED_END
 {
 #define KEY_LEN     32
       U32 u32[KEY_LEN/4];
@@ -109,7 +133,7 @@ typedef union ATTR_PACKED __UIP_KEY
       U8  u8 [KEY_LEN];
 }t_UIP_KEY;
 
-typedef union ATTR_PACKED __UIP_KEYNAME
+typedef union ATTR_PACKED_BEGIN __UIP_KEYNAME ATTR_PACKED_END
 {
 #define UIP_KEYNAME_TOTALSIZE       65
 #define UIP_KEYNAME_SIZE            12
@@ -117,7 +141,7 @@ typedef union ATTR_PACKED __UIP_KEYNAME
     U8 all [UIP_KEYNAME_TOTALSIZE];
 }t_UIP_KEYNAME;
 
-typedef union ATTR_PACKED __UIP_PAROLA
+typedef union ATTR_PACKED_BEGIN __UIP_PAROLA ATTR_PACKED_END
 {
 #define UIP_PAROLA_TOTALSIZE        65
 #define UIP_PAROLA_SIZE             17
@@ -127,7 +151,7 @@ typedef union ATTR_PACKED __UIP_PAROLA
 
 typedef U8 t_UIP_OPTION;
 
-typedef enum ATTR_ENUM_PACKED __E_UIP_OPRSTATUS     // must be 1 byte
+typedef enum ATTR_ENUM_PACKED_BEGIN __E_UIP_OPRSTATUS ATTR_ENUM_PACKED_END // must be 1 byte
 {
     OPRS_PASS           = 1,
     OPRS_GEN_FAIL       = 2,
@@ -137,14 +161,14 @@ typedef enum ATTR_ENUM_PACKED __E_UIP_OPRSTATUS     // must be 1 byte
 }e_UIP_OPRSTATUS;
 
 
-typedef union ATTR_PACKED __UIP_OPRSTATUS
+typedef union ATTR_PACKED_BEGIN __UIP_OPRSTATUS ATTR_PACKED_END
 {
 #define UIP_OPRSTATUS_TOTALSIZE     4
     e_UIP_OPRSTATUS     me;
     U8                  all[UIP_OPRSTATUS_TOTALSIZE];
 }t_UIP_OPRSTATUS;
 
-typedef enum ATTR_ENUM_PACKED __E_UIP_OPRSTATUS_MSG // must be 1 byte (int)
+typedef enum ATTR_ENUM_PACKED_BEGIN __E_UIP_OPRSTATUS_MSG ATTR_ENUM_PACKED_END // must be 1 byte (int)
 {
     OPMSG_DISABLE           = 1,
     OPMSG_INVALID_KEYNO     = 2,
@@ -153,7 +177,7 @@ typedef enum ATTR_ENUM_PACKED __E_UIP_OPRSTATUS_MSG // must be 1 byte (int)
 
 }e_UIP_OPRSTATUS_MSG;
 
-typedef union ATTR_PACKED __UIP_OPRSTATUS_MSG
+typedef union ATTR_PACKED_BEGIN __UIP_OPRSTATUS_MSG ATTR_PACKED_END
 {
 #define UIP_OPRSTATUS_MSG_TOTALSIZE     4
     e_UIP_OPRSTATUS_MSG     me;
@@ -161,7 +185,7 @@ typedef union ATTR_PACKED __UIP_OPRSTATUS_MSG
 }t_UIP_OPRSTATUS_MSG;
 
 
-typedef struct ATTR_PACKED __UIP_HEADER
+typedef struct ATTR_PACKED_BEGIN __UIP_HEADER ATTR_PACKED_END
 {
 #define UIP_HEADER_SIZE     15
     char s[UIP_HEADER_SIZE+1];
@@ -171,16 +195,14 @@ typedef struct ATTR_PACKED __UIP_HEADER
 #define SETKEY_NAMEONLY     0x00    // 0b00000000
 #define SETKEY_NAME_AND_KEY 0x01    // 0b00000001
 
-#define SETKEY_MASK_OFFSET_KEY          0
-
-typedef union ATTR_PACKED _UIP_KEYOPTION
+typedef union ATTR_PACKED_BEGIN _UIP_KEYOPTION ATTR_PACKED_END
 {
 #define UIP_KEYOPTION_TOTALSIZE     4
     U8 me;
     U8 all[UIP_KEYOPTION_TOTALSIZE];
 }t_UIP_KEYOPTION;
 
-typedef enum ATTR_PACKED __E_UIP_KEYSIZE
+typedef enum ATTR_ENUM_PACKED_BEGIN __E_UIP_KEYSIZE ATTR_ENUM_PACKED_END //must be 1 byte
 {
     KEYSIZE_128 = 1,
     KEYSIZE_192 = 2,
@@ -188,7 +210,7 @@ typedef enum ATTR_PACKED __E_UIP_KEYSIZE
 }e_UIP_KEYSIZE;
 
 
-typedef union ATTR_PACKED __UIP_KEYSIZE
+typedef union ATTR_PACKED_BEGIN __UIP_KEYSIZE ATTR_PACKED_END
 {
 #define UIP_KEYSIZE_TOTALSIZE       4
     e_UIP_KEYSIZE me;
@@ -224,7 +246,7 @@ typedef union ATTR_PACKED __UIP_KEYSIZE
 // STRUCTURE OF DATA PHASE FOR VENDOR SPECIFIC COMMAND
 // ------------------------------------------------------------------------------------
 
-typedef struct ATTR_PACKED __UIP_GETSTATUS
+typedef struct ATTR_PACKED_BEGIN __UIP_GETSTATUS ATTR_PACKED_END
 {
     t_UIP_TAGNUMBER     tag;                        // 4 byte binary
     t_UIP_OPRSTATUS     lastop;                     // 1 byte, type = enum[t_UIP_OPRSTATUS] + reserved
@@ -232,10 +254,11 @@ typedef struct ATTR_PACKED __UIP_GETSTATUS
     t_UIP_NBRETRY       retry_num;                  // 1 byte binary [NB_RETRY:0]
 }t_UIP_GETSTATUS;
 
-typedef struct ATTR_PACKED __UIP_DEVINFO
+typedef struct ATTR_PACKED_BEGIN __UIP_DEVINFO ATTR_PACKED_END
 {
     t_UIP_HEADER        header;                     // 15 byte string + null
     t_UIP_FIRMVER       firmware_ver;               // 15 byte string + null
+    t_UIP_PRODUCT       product;                    // 31 byte string + null
     t_UIP_MODEL         model;                      // 15 byte string + null
     t_UIP_KEYNB         multikeycap;                // 1 byte binary [NB_AESKEY]
     t_UIP_SERIAL        serial;                     // 15 byte binary + reserved
@@ -247,40 +270,40 @@ typedef struct ATTR_PACKED __UIP_DEVINFO
     t_UIP_KEYNAME       keyname[NB_AESKEY];         // (12 byte string + null + reserved) x NB_AESKEY
 }t_UIP_DEVINFO;
 
-typedef struct ATTR_PACKED __UIP_ACTIVATE
+typedef struct ATTR_PACKED_BEGIN __UIP_ACTIVATE ATTR_PACKED_END
 {
     t_UIP_TAGNUMBER     tag;                        // 4 byte binary
     t_UIP_PAROLA        password;                   // 16 byte string + null + reserved
     t_UIP_KEYNB         keyno;                      // 1 byte binary [1:NB_AESKEY]
 }t_UIP_ACTIVATE;
 
-typedef struct ATTR_PACKED __UIP_DEACTIVATE
+typedef struct ATTR_PACKED_BEGIN __UIP_DEACTIVATE ATTR_PACKED_END
 {
     t_UIP_TAGNUMBER     tag;                        // 4 byte binary
 }t_UIP_DEACTIVATE;
 
-typedef struct ATTR_PACKED __UIP_SETDEVICELABEL
+typedef struct ATTR_PACKED_BEGIN __UIP_SETDEVICELABEL ATTR_PACKED_END
 {
     t_UIP_TAGNUMBER     tag;                        // 4 byte binary
     t_UIP_PAROLA        password;                   // 16 byte string + null + reserved
     t_UIP_DEVLABEL      devlabel;                   // 11 byte string + null + reserved
 }t_UIP_SETDEVICELABEL;
 
-typedef struct ATTR_PACKED __UIP_CHPASS
+typedef struct ATTR_PACKED_BEGIN __UIP_CHPASS ATTR_PACKED_END
 {
     t_UIP_TAGNUMBER     tag;                        // 4 byte binary
     t_UIP_PAROLA        old_password;               // 16 byte string + null + reserved
     t_UIP_PAROLA        new_password;               // 16 byte string + null + reserved
 }t_UIP_CHPASS;
 
-typedef struct ATTR_PACKED __UIP_SETAUTOACTIVATE
+typedef struct ATTR_PACKED_BEGIN __UIP_SETAUTOACTIVATE ATTR_PACKED_END
 {
     t_UIP_TAGNUMBER     tag;                        // 4 byte binary
     t_UIP_PAROLA        password;                   // 16 byte string + null + reserved
     t_UIP_KEYNB         keyno;                      // 1 byte binary [0:NB_AESKEY]
 }t_UIP_SETAUTOACTIVATE;
 
-typedef struct ATTR_PACKED __UIP_SETKEY
+typedef struct ATTR_PACKED_BEGIN __UIP_SETKEY ATTR_PACKED_END
 {
     t_UIP_TAGNUMBER     tag;                        // 4 byte binary
     t_UIP_PAROLA        password;                   // 16 byte string + null + reserved
@@ -292,11 +315,9 @@ typedef struct ATTR_PACKED __UIP_SETKEY
 }t_UIP_SETKEY;
 
 
-typedef struct ATTR_PACKED __UIP_GENERATEKEY
+typedef struct ATTR_PACKED_BEGIN __UIP_GENERATEKEY ATTR_PACKED_END
 {
     t_UIP_KEY           key;                        // 32 byte binary
 }t_UIP_GENERATEKEY;
-
-
 
 #endif /* UIP_H_ */
