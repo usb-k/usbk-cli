@@ -723,45 +723,6 @@ void print_help(int exval) {
     exit(exval);
 }
 
-void scan_usb() {
-    struct usb_bus *busses;
-    struct usb_bus *bus;
-    struct usb_device *ec3dev;
-    struct usb_dev_handle *ec3;
-    char serial_num[255], manufacturer[255], product[255];
-
-    printf("USBK encryption device list\n");
-
-    usb_init();
-    usb_find_busses();
-    usb_find_devices();
-    busses = usb_get_busses();
-
-    ec3dev = 0;
-    for (bus = busses; bus; bus = bus->next) {
-        struct usb_device *dev;
-        for (dev = bus->devices; dev; dev = dev->next) {
-            if ((dev->descriptor.idVendor == USBK_VENDOR_ID)
-                    && (dev->descriptor.idProduct == USBK_PRODUCT_ID)) {
-                ec3 = usb_open(dev);
-                usb_get_string_simple(ec3, dev->descriptor.iSerialNumber,
-                        serial_num, sizeof(serial_num));
-
-                usb_get_string_simple(ec3, dev->descriptor.iManufacturer,
-                        manufacturer, sizeof(manufacturer));
-
-                usb_get_string_simple(ec3, dev->descriptor.iProduct, product,
-                        sizeof(product));
-
-                usb_release_interface(ec3, 0);
-                usb_close(ec3);
-
-                printf("USB:%s\t%s\t%s\n", serial_num, product, manufacturer);
-            }
-        }
-    }
-}
-
 /*!
  *
  *murat@Murat:~/Tamara/Projeler/USB-K/linux/workspace/usbk-1.2/build$ sudo src/usbk /dev/sdd -i

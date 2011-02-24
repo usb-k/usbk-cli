@@ -32,7 +32,6 @@
 
 
 void print_help(int exval);
-void scan_usb();
 void usbk_show_show_dev_info(USBK_T *usbk);
 int usbk_get_dev_info(USBK_T *usbk);
 int usbk_check_last_opr(USBK_T *usbk);
