@@ -18,8 +18,6 @@
 //TODO: BackDisk in mount noktasını bul ve 'Show device list' de göster. 'Device info'da BackDisk sutunu kaldir.
 //TODO: BackDisk mount edilmiş ise deactive işlemi sırasında kullanıcıya uyarı ver ve emin misin diye sor.
 
-#include <iostream>
-
 #include "usbk.h"
 
 #define USBK_PRODUCT_ID         0xa100
@@ -28,8 +26,8 @@
 //Msgs of DeviceControl
 #define MISSING_PARAMETER    "Missing parameter"
 #define WARNING              "Warning:"
-#define MSG_FABRIC_DEFAULT   "Fabric default. Please first set your password.\n"
-#define MSG_MUST_REMOVE      "Must remove. Please remove and re-plug the USBK.\n"
+#define MSG_FABRIC_DEFAULT   "Fabric default. Please first set your password."
+#define MSG_MUST_REMOVE      "Must remove. Please remove and re-plug the USBK."
 
 using namespace std;
 
@@ -238,7 +236,7 @@ int main(int argc, char *argv[])
     }
 
     if (sflag) {
-        lsusbk();
+        usbk_list_devices();
         exit(1);
     }
 
@@ -246,12 +244,9 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-    strncpy(usbk.dev, argv[argc - 1], SIZE_DEVNAME);
-    if (find_sdevices(&usbk) == 0) {
-        printf("Hata: %s üzerinde USBK cihazı bulunamadi\n", usbk.dev);
-        exit(1);
-    }
-    usbk_get_dev_info(&usbk);
+    strcpy(usbk.dev, argv[argc - 1]);
+    usbk_get_device_info(&usbk);
+    usbk_get_scsi_dev_info(&usbk);
 
     /////////////////////////////////////////////
     // ACTIVATE
@@ -271,7 +266,7 @@ int main(int argc, char *argv[])
                     send_scsi_command(&usbk, (unsigned char*) &act, ACTIVATE_KEY, sizeof(act), WRITE_SCSI);
                     usbk_check_last_opr(&usbk);
                     if (iflag) {
-                        usbk_get_dev_info(&usbk);
+                        usbk_get_scsi_dev_info(&usbk);
                         usbk_show_show_dev_info(&usbk);
                     }
                     printf("Done.\n");
@@ -310,7 +305,7 @@ int main(int argc, char *argv[])
             send_scsi_command(&usbk, (unsigned char*) NULL, DEACTIVATE_KEY, 0, WRITE_SCSI);
             usbk_check_last_opr(&usbk);
             if (iflag) {
-                usbk_get_dev_info(&usbk);
+                usbk_get_scsi_dev_info(&usbk);
                 usbk_show_show_dev_info(&usbk);
             }
             printf("Done.\n");
@@ -351,7 +346,7 @@ int main(int argc, char *argv[])
                 send_scsi_command(&usbk, (unsigned char*) &change_pas, CHANGE_PASS, sizeof(change_pas), WRITE_SCSI);
                 usbk_check_last_opr(&usbk);
                 if (iflag) {
-                    usbk_get_dev_info(&usbk);
+                    usbk_get_scsi_dev_info(&usbk);
                     usbk_show_show_dev_info(&usbk);
                 }
                 printf("Done.\n");
@@ -369,7 +364,7 @@ int main(int argc, char *argv[])
             send_scsi_command(&usbk, (unsigned char*) &change_pas, CHANGE_PASS, sizeof(change_pas), WRITE_SCSI);
             usbk_check_last_opr(&usbk);
             if (iflag) {
-                usbk_get_dev_info(&usbk);
+                usbk_get_scsi_dev_info(&usbk);
                 usbk_show_show_dev_info(&usbk);
             }
             printf("Done.\n");
@@ -402,7 +397,7 @@ int main(int argc, char *argv[])
                 send_scsi_command(&usbk, (unsigned char*) &set_dev_name, SET_DEV_NAME, sizeof(set_dev_name), WRITE_SCSI);
                 usbk_check_last_opr(&usbk);
                 if (iflag) {
-                    usbk_get_dev_info(&usbk);
+                    usbk_get_scsi_dev_info(&usbk);
                     usbk_show_show_dev_info(&usbk);
                 }
                 printf("Done.\n");
@@ -447,7 +442,7 @@ int main(int argc, char *argv[])
                     send_scsi_command(&usbk, (unsigned char*) &set_key, SET_KEY, sizeof(set_key), WRITE_SCSI);
                     usbk_check_last_opr(&usbk);
                     if (iflag) {
-                        usbk_get_dev_info(&usbk);
+                        usbk_get_scsi_dev_info(&usbk);
                         usbk_show_show_dev_info(&usbk);
                     }
                     printf("Done.\n");
@@ -519,7 +514,7 @@ int main(int argc, char *argv[])
                     send_scsi_command(&usbk, (unsigned char*) &set_key, SET_KEY, sizeof(set_key), WRITE_SCSI);
                     usbk_check_last_opr(&usbk);
                     if (iflag) {
-                        usbk_get_dev_info(&usbk);
+                        usbk_get_scsi_dev_info(&usbk);
                         usbk_show_show_dev_info(&usbk);
                     }
                     printf("Done.\n");
@@ -593,7 +588,7 @@ int main(int argc, char *argv[])
                     send_scsi_command(&usbk, (unsigned char*) &set_auto, SET_AUTO_ACTIVE, sizeof(set_auto), WRITE_SCSI);
                     usbk_check_last_opr(&usbk);
                     if (iflag) {
-                        usbk_get_dev_info(&usbk);
+                        usbk_get_scsi_dev_info(&usbk);
                         usbk_show_show_dev_info(&usbk);
                     }
                     printf("Done.\n");
@@ -640,7 +635,7 @@ int main(int argc, char *argv[])
                 send_scsi_command(&usbk, (unsigned char*) &set_auto, SET_AUTO_ACTIVE, sizeof(set_auto), WRITE_SCSI);
                 usbk_check_last_opr(&usbk);
                 if (iflag) {
-                    usbk_get_dev_info(&usbk);
+                    usbk_get_scsi_dev_info(&usbk);
                     usbk_show_show_dev_info(&usbk);
                 }
                 printf("Done.\n");
@@ -665,7 +660,7 @@ int main(int argc, char *argv[])
     }
 
     if (iflag) {
-        usbk_get_dev_info(&usbk);
+        usbk_get_scsi_dev_info(&usbk);
         usbk_show_show_dev_info(&usbk);
         printf("Done.\n");
     }
@@ -695,8 +690,8 @@ void print_help(int exval) {
 
     printf("Examples:\n");
     printf("  usbk -s                       # Show device list\n");
-    printf("  usbk /dev/sdc -a -k 1 -p foo  # activate device with key 1\n");
-    printf("  usbk /dev/sdc -d              # deactivate device\n\n");
+    printf("  usbk sdc -a -k 1 -p foo  # activate device with key 1\n");
+    printf("  usbk sdc -d              # deactivate device\n\n");
 
     printf(" Main operation mode:\n\n");
     printf("  -a, --activate                activate device\n");
@@ -725,55 +720,6 @@ void print_help(int exval) {
     printf("--key-format=d\n");
     printf("--key-no=1\n\n");
 
-    exit(exval);
-}
-
-
-void print_help_eski(int exval) {
-    printf("%s version %s\n\n", PACKAGE, VERSION);
-
-    printf(" Main operation mode:\n\n");
-    printf("  -a, --activate                Activate device\n");
-    printf("  -d, --deactivate              Deactivate device\n");
-    printf("  -c, --newpasswd=[PASS]        Change password\n");
-    printf("  -n, --devname=NAME            Change device name\n");
-    printf("  -m, --keyname=NAME            Change key name\n");
-    printf("  -x, --key=KEY                 Change key\n");
-    printf("  -t, --enable-auto             Enable auto activate\n");
-    printf("  -T, --disable-auto            Disable auto activate\n");
-    printf("  -?, --gen-key-decimal         Generate and set random decimal key\n");
-    printf("  -?, --gen-key-text            Generate and set random text key\n");
-    printf("  -f, --show-devices            Show device list\n\n");
-
-
-    printf("USAGE:\n");
-    printf("  Activate device               %s <device> -ak <key no> -p <password> \n", PACKAGE);
-    printf("  Deactivate device             %s <device> -d \n", PACKAGE);
-    printf("  Change password               %s <device> -c <new password> -p <password> \n", PACKAGE);
-    printf("  Change device name            %s <device> -n <name> -p <password> \n", PACKAGE);
-    printf("  Change key name               %s <device> -m <key name> -k <key no> -p <password> \n", PACKAGE);
-    printf("  Change key                    %s <device> -x <key> -k <key no> -p <password> \n", PACKAGE);
-    printf("  Enable auto activate          %s <device> -tk <key no> -p <password> \n", PACKAGE);
-    printf("  Disable auto activate         %s <device> -Tp <password> \n", PACKAGE);
-    printf("  Generate and set random key   %s <device> -k <key no> -g <format> -p <password> \n", PACKAGE);
-    printf("  Show device info              %s <device> -i \n", PACKAGE);
-    printf("  Show device list              %s -f\n\n", PACKAGE);
-
-    printf("OPTIONS:\n");
-    printf("  -a                            Activate device with <key no>\n");
-    printf("  -d                            Deactivate device.\n");
-    printf("  -p <password>                 Password entry\n");
-    printf("  -n <device name>              Set <device name>\n");
-    printf("  -c <new password>             Set <new password>\n");
-    printf("  -k <key no>                   Set <key no>\n");
-    printf("  -m <key name>                 Set <key name>\n");
-    printf("  -x <key>                      Set <key>\n");
-    printf("  -g <format>                   Generate random key. <format> list:[text], [decimal] \n");
-    printf("  -t                            Enable auto activate\n");
-    printf("  -T                            Disable auto activate\n");
-    printf("  -f                            Show usbk encryption device list\n");
-    printf("  -i                            Print device info\n");
-    printf("  -v                            Print version\n\n");
     exit(exval);
 }
 
@@ -816,6 +762,23 @@ void scan_usb() {
     }
 }
 
+/*!
+ *
+ *murat@Murat:~/Tamara/Projeler/USB-K/linux/workspace/usbk-1.2/build$ sudo src/usbk /dev/sdd -i
+ * logic name              /dev/sdd
+ * model                   CryptoBridge
+ * revision                Beta
+ * serial number           0300000001035553424B0000000000
+ * firmware verison        v2.5 beta
+ * label
+ * status                  0
+ * retry number            0
+ * back disk               -
+ * auto activation         disable
+ * max. key capacity       0
+ *Done.
+ *
+ */
 void usbk_show_show_dev_info(USBK_T *usbk) {
     //UI_DEVINFO_T dev_info;
     int i;
@@ -824,7 +787,7 @@ void usbk_show_show_dev_info(USBK_T *usbk) {
     char autoactive[64];
     char model[32];
 
-    sprintf(model, "%s %s", usbk->model, usbk->rev);
+    //sprintf(model, "%s %s", usbk->model, usbk->rev);
 
     sprintf(backdisk, "-");
 
@@ -847,34 +810,33 @@ void usbk_show_show_dev_info(USBK_T *usbk) {
         sprintf(status, "%s", MSG_MUST_REMOVE);
         break;
     default:
-        sprintf(status, "%d", usbk->info.devstate.me);
+        sprintf(status, "%d:unknown", usbk->info.devstate.me);
         break;
     }
-
-
 
     if (usbk->info.autoactivate_keyno == 0) {
         sprintf(autoactive, "disable");
     } else {
         sprintf(autoactive, "enable with key #%d", usbk->info.autoactivate_keyno);
     }
-    printf(" logic name              %s\n", usbk->dev);
-    printf(" model                   %s\n", usbk->model);
-    printf(" revision                %s\n", usbk->rev);
-    printf(" serial number           ");
+    printf("\n  usbk information\n");
+    printf("    logic name              %s\n", usbk->dev);
+    printf("    back disk name          %s\n", usbk->backdisk_dev);
+    printf("    product                 %s\n", usbk->info.product.s);
+    printf("    serial number           ");
     for(i=0; i<15; i++){
         printf("%2.2X", usbk->info.serial.u8[i]);
     }
     printf("\n");
-    printf(" firmware verison        %s\n", usbk->info.firmware_ver.s);
-    printf(" label                   %s\n", usbk->info.devlabel.s);
-    printf(" status                  %s\n", status);
-    printf(" retry number            %d\n", usbk->info.retry_num);
-    printf(" back disk               %s\n", backdisk);
-    printf(" auto activation         %s\n", autoactive);
-    printf(" max. key capacity       %d\n", usbk->info.multikeycap);
+    printf("    firmware verison        %s\n", usbk->info.firmware_ver.s);
+    printf("    label                   %s\n", usbk->info.devlabel.s);
+    printf("    status                  %s\n", status);
+    printf("    retry number            %d\n", usbk->info.retry_num);
+    printf("    back disk               %s\n", backdisk);
+    printf("    auto activation         %s\n", autoactive);
+    printf("    max. key capacity       %d\n", usbk->info.multikeycap);
     for(i=0; i<usbk->info.multikeycap; i++){
-        printf("   key %d name            %s\n",i, usbk->info.keyname[i].s);
+        printf("      key %d name            %s\n",i, usbk->info.keyname[i].s);
     }
 /*
 
@@ -894,12 +856,6 @@ void usbk_show_show_dev_info(USBK_T *usbk) {
 
 }
 
-int usbk_get_dev_info(USBK_T *usbk) {
-    send_scsi_command(usbk, (unsigned char*) &usbk->info, GET_DEV_INFO, sizeof(t_UIP_DEVINFO), READ_SCSI);
-    //memcpy((char*) &usbk->info, buffer, sizeof(UI_DEVINFO_T));
-    return 0;
-}
-
 int usbk_check_last_opr(USBK_T *usbk){
 
     send_scsi_command(usbk, (unsigned char*) &usbk->status, GET_STATUS, sizeof(t_UIP_GETSTATUS), READ_SCSI);
@@ -913,6 +869,10 @@ int usbk_check_last_opr(USBK_T *usbk){
         printf(" Lutfen cihazinizi tekrar konfigure ediniz.  \n");
         printf("*********************************************\n\n");
         return 1;
+    }
+    else if(usbk->status.lastop.me == OPRS_USBK_UNPLUGING){
+        printf("%s\n", MSG_MUST_REMOVE);
+        return 0;
     }
     else if(usbk->status.lastop.me != OPRS_PASS){
         printf("Hata: Islem basarisiz. MSG_CODE:0x%02X RetryNum:%d\n", usbk->status.lastop.me, usbk->status.retry_num);

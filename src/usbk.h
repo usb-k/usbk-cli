@@ -28,7 +28,8 @@
 
 #include "general.h"
 #include "usbk_scsi.h"
-#include "lsusbk.h"
+#include "libusbk.h"
+
 
 void print_help(int exval);
 void scan_usb();
