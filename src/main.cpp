@@ -823,6 +823,7 @@ void usbk_show_show_dev_info(USBK_T *usbk) {
     printf("    logic name              %s\n", usbk->dev);
     printf("    back disk name          %s\n", usbk->backdisk_dev);
     printf("    product                 %s\n", usbk->info.product.s);
+    printf("    model                   %s\n", usbk->info.model.s);
     printf("    serial number           ");
     for(i=0; i<15; i++){
         printf("%2.2X", usbk->info.serial.u8[i]);
