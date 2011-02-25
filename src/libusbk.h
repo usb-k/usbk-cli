@@ -27,13 +27,17 @@
 typedef struct __USBK {
     char dev[1024];
     char backdisk_dev[1024];
+    char usb_serial_no[64];
     t_UIP_DEVINFO info;
     t_UIP_GETSTATUS status;
+    struct __USBK *next;
 } USBK_T;
 
 int usbk_list_devices(void);
+//TODO: int usbk_create_list_devices(USBK_T *usbk);
+//TODO: int usbk_realese_list_devices(USBK_T *usbk);
 int usbk_get_device_info(USBK_T *usbk);
-int usbk_get_backdisk(char *usbk_backdisk, char *usbk_serial, char *backdisk_vendor);
+int usbk_get_backdisk(USBK_T *usbk);
 int usbk_get_scsi_dev_info(USBK_T *usbk);
 
 

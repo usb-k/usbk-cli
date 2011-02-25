@@ -28,7 +28,7 @@
 #include "usbk_scsi.h"
 #include "usbk_sg_ctl.h"
 
-int usbk_get_backdisk(char *usbk_backdisk, char *usbk_serial, char *backdisk_vendor){
+int usbk_get_backdisk(struct __USBK *usbk){
     struct udev *udev;
     struct udev_enumerate *enumerate;
     struct udev_list_entry *devices, *dev_list_entry;
@@ -62,12 +62,13 @@ int usbk_get_backdisk(char *usbk_backdisk, char *usbk_serial, char *backdisk_ven
         if (dev_usb != NULL) {
             if(strncmp(USBK_USB_IDVENDOR, udev_device_get_sysattr_value(dev_usb,"idVendor"), strlen(USBK_USB_IDVENDOR)) == 0 ){
                 if(strncmp(USBK_USB_IDPRODUCT, udev_device_get_sysattr_value(dev_usb,"idProduct"), strlen(USBK_USB_IDPRODUCT)) == 0){
-                    if(strncmp(usbk_serial, udev_device_get_sysattr_value(dev_usb, "serial"), strlen(usbk_serial)) == 0 ){
+                    if(strncmp(usbk->usb_serial_no,
+                       udev_device_get_sysattr_value(dev_usb, "serial"), strlen(usbk->usb_serial_no)) == 0 ){
                         /* get scsi device */
                         dev_scsi = udev_device_get_parent_with_subsystem_devtype(dev, "scsi", "scsi_device");
                         if (dev_scsi != NULL) {
-                            if(strncmp(backdisk_vendor, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(backdisk_vendor)) == 0 ){
-                                strcpy(usbk_backdisk, udev_device_get_devnode(dev));
+                            if(strncmp(USBK_SCSI_BACKDISK_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_BACKDISK_VENDOR)) == 0 ){
+                                strcpy(usbk->backdisk_dev, udev_device_get_devnode(dev));
                             }
                         }
 
@@ -92,8 +93,6 @@ int usbk_get_device_info(struct __USBK *usbk){
     struct udev_device *dev = NULL;
     struct udev_device *dev_usb = NULL;
     struct udev_device *dev_scsi = NULL;
-    char usbk_serial[64];
-    //char usbk_backdisk[64];
     char devname[1024];
     size_t len;
     const char *str;
@@ -157,8 +156,8 @@ int usbk_get_device_info(struct __USBK *usbk){
                                   udev_device_get_sysattr_value(dev_usb, "serial"));
                         */
 
-                        strcpy(usbk_serial, udev_device_get_sysattr_value(dev_usb, "serial"));
-                        usbk_get_backdisk(usbk->backdisk_dev, usbk_serial, USBK_SCSI_BACKDISK_VENDOR);
+                        strncpy(usbk->usb_serial_no, udev_device_get_sysattr_value(dev_usb, "serial"), sizeof(usbk->usb_serial_no));
+                        usbk_get_backdisk(usbk);
                         strcpy(usbk->dev, devname);
                     }
                 }
@@ -182,7 +181,7 @@ int usbk_list_devices(void){
     struct udev_device *dev_usb = NULL;
     struct udev_device *dev_scsi = NULL;
     char usbk_serial[64];
-    char usbk_backdisk[64];
+    struct __USBK usbk;
 
     // Create the udev object
     udev = udev_new();
@@ -230,9 +229,9 @@ int usbk_list_devices(void){
                                     udev_device_get_sysattr_value(dev_usb,"product"));
                             printf("    serial: %s\n",
                                       udev_device_get_sysattr_value(dev_usb, "serial"));
-                            strcpy(usbk_serial, udev_device_get_sysattr_value(dev_usb, "serial"));
-                            usbk_get_backdisk(usbk_backdisk, usbk_serial, USBK_SCSI_BACKDISK_VENDOR);
-                            printf("    backdisk: %s\n\n", usbk_backdisk);
+                            strncpy(usbk.usb_serial_no, udev_device_get_sysattr_value(dev_usb, "serial"),sizeof(usbk.usb_serial_no));
+                            usbk_get_backdisk(&usbk);
+                            printf("    backdisk: %s\n\n", usbk.backdisk_dev);
                             //TODO: Get device info yapıp diğer bilgileri ekrana yaz.
                         }
                     }
