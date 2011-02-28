@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
     }
 
     if (vflag) {
-        printf("%s version %s\n", PACKAGE, VERSION);
+        print_version();
     }
 
     if (sflag) {
@@ -707,12 +707,13 @@ int main(int argc, char *argv[])
 }
 
 void print_help(int exval) {
+    print_version();
     printf("Usage: usbk [OPTION...]\n\n");
 
     printf("Examples:\n");
     printf("  usbk -s                       # Show device list\n");
-    printf("  usbk sdc -a -k 1 -p foo  # activate device with key 1\n");
-    printf("  usbk sdc -d              # deactivate device\n\n");
+    printf("  usbk sdc -a -k 1 -p foo       # activate device with key 1\n");
+    printf("  usbk sdc -d                   # deactivate device\n\n");
 
     printf(" Main operation mode:\n\n");
     printf("  -u, --dev                     device name\n");
@@ -941,5 +942,9 @@ int check_key_text(string str, U8 *key){
     }
     strncpy((char*)key, str.c_str(), 16);
     return 0;
+}
+
+void print_version(void){
+    printf("%s version %s\n", PACKAGE, VERSION);
 }
 
