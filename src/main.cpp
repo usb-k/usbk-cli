@@ -36,6 +36,13 @@ static int verbose_flag;
 
 USBK_T usbk;
 
+/*! \brief main function
+ *
+ * \param argc command line argument count
+ * \param argv argument list
+ * \return 0 normal exit
+ * \return 1 abnormal exit
+ */
 int main(int argc, char *argv[])
 {
     int c;
