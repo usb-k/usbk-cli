@@ -715,6 +715,7 @@ void print_help(int exval) {
     printf("  usbk sdc -d              # deactivate device\n\n");
 
     printf(" Main operation mode:\n\n");
+    printf("  -u, --dev                     device name\n");
     printf("  -a, --activate                activate device\n");
     printf("  -d, --deactivate              deactivate device\n");
     printf("  -c, --newpasswd=NEWPASS       change the password to NEWPASS\n");
