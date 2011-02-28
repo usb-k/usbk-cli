@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
     char opt_string_key[64];
 
     /* configs for cmd-args*/
+    int uflag = 0;
     int aflag = 0;
     int dflag = 0;
     int cflag = 0;
@@ -82,6 +83,7 @@ int main(int argc, char *argv[])
     while (1) {
         static struct option long_options[] = {
         /* These options set a flag. */
+        { "dev", required_argument, 0, 'u' },
         { "verbose", no_argument, &verbose_flag, 1 },
         { "brief", no_argument, &verbose_flag, 0 },
         /* These options don't set a flag. We distinguish them by their indices. */
@@ -106,7 +108,7 @@ int main(int argc, char *argv[])
         /* getopt_long stores the option index here. */
         int option_index = 0;
 
-        c = getopt_long(argc, argv, ":adc:n:m:x:tTlsk:p:f:iv?", long_options,
+        c = getopt_long(argc, argv, "u:adc:n:m:x:tTlsk:p:f:iv?", long_options,
                 &option_index);
 
         /* Detect the end of the options. */
@@ -124,6 +126,14 @@ int main(int argc, char *argv[])
             printf("\n");
             break;
 
+        case 'u':
+            uflag = 1;
+            if(strlen(optarg) > sizeof(usbk.dev)){
+                printf("Uyarı: Device name %d karakterden uzun olamaz.\n", sizeof(usbk.dev));
+                exit(0);
+            }
+            strcpy(usbk.dev, optarg);
+            break;
         case 'a':
             aflag = 1;
             main_operation++;
@@ -251,7 +261,11 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-    strcpy(usbk.dev, argv[argc - 1]);
+    if(uflag == 0){
+        printf("Uyarı: Device name parametresi eksik.\n");
+        exit(0);
+    }
+
     usbk_get_device_info(&usbk);
     usbk_get_scsi_dev_info(&usbk);
 
