@@ -643,23 +643,6 @@ main(int argc, char *argv[])
       printf("Done.\n");
     }
 
-  /* Instead of reporting ‘--verbose’
-   and ‘--brief’ as they are encountered,
-   we report the final status resulting from them. */
-  if (verbose_flag)
-    puts("verbose flag is set");
-
-  /* Print any remaining command line arguments (not options). */
-  /*
-   if (optind < argc)
-   {
-   printf ("non-option ARGV-elements: ");
-   while (optind < argc)
-   printf ("%s ", argv[optind++]);
-   putchar ('\n');
-   }
-   */
-
   exit(0);
 }
 
@@ -1085,6 +1068,24 @@ _parse_options(int *argc, char** argv[])
         break;
         }
     }
+
+  /* Instead of reporting ‘--verbose’
+   and ‘--brief’ as they are encountered,
+   we report the final status resulting from them. */
+  if (verbose_flag)
+    puts("verbose flag is set");
+
+  /* Print any remaining command line arguments (not options). */
+  /*
+   if (optind < argc)
+   {
+   printf ("non-option ARGV-elements: ");
+   while (optind < argc)
+   printf ("%s ", argv[optind++]);
+   putchar ('\n');
+   }
+   */
+
   return 1;
 }
 
