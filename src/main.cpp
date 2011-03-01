@@ -75,7 +75,6 @@ int xflag = 0;
 int tflag = 0;
 int Tflag = 0;
 int lflag = 0;
-int sflag = 0;
 int kflag = 0;
 int pflag = 0;
 int fflag = 1;
@@ -124,12 +123,6 @@ main(int argc, char *argv[])
     {
       printf("usbk: You may not specify more than one `-adcnmxtTls' option\n");
       printf("usbk: Try `usbk --help' for more information.\n");
-      exit(1);
-    }
-
-  if (sflag)
-    {
-      usbk_list_devices();
       exit(1);
     }
 
@@ -1039,8 +1032,8 @@ _parse_options(int *argc, char** argv[])
         break;
 
       case 's':
-        sflag = 1;
-        main_operation++;
+        usbk_list_devices();
+        exit(0);
         break;
 
       case 'k':
