@@ -62,7 +62,7 @@ static struct option long_options[] =
     { "help", no_argument, 0, '?' },
 
   /* Last element must be NULL */
-    { NULL, 0, NULL, 0, NULL } };
+    { NULL, 0, NULL, 0} };
 
 /* configs for cmd-args*/
 int uflag = 0;
@@ -80,7 +80,6 @@ int kflag = 0;
 int pflag = 0;
 int fflag = 1;
 int iflag = 0;
-int vflag = 0;
 
 int main_operation = 0;
 
@@ -126,11 +125,6 @@ main(int argc, char *argv[])
       printf("usbk: You may not specify more than one `-adcnmxtTls' option\n");
       printf("usbk: Try `usbk --help' for more information.\n");
       exit(1);
-    }
-
-  if (vflag)
-    {
-      print_version();
     }
 
   if (sflag)
@@ -1087,8 +1081,7 @@ _parse_options(int *argc, char** argv[])
         break;
 
       case 'v':
-        printf("ver\n");
-        vflag = 1;
+        print_version();
         break;
 
       case '?':
