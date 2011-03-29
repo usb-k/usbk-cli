@@ -98,6 +98,10 @@ char opt_string_key[64];
 
 USBK_T usbk;
 
+
+void linuxcli_show_devices(USBK_List* pusbk);
+
+
 /*! \brief main function
  *
  * \param argc command line argument count
@@ -706,8 +710,7 @@ print_help(int exval)
  *Done.
  *
  */
-void
-usbk_show_show_dev_info(USBK_T *usbk)
+void usbk_show_show_dev_info(USBK_T *usbk)
 {
   //UI_DEVINFO_T dev_info;
   int i;
@@ -1015,7 +1018,12 @@ _parse_options(int *argc, char** argv[])
         break;
 
       case 's':
-        usbk_list_devices();
+      {
+          USBK_List* pusbk;
+          usbk_list_devices(&pusbk);
+          linuxcli_show_devices(pusbk);
+          usbk_list_devices_release(&pusbk);
+      }
         exit(0);
         break;
 
@@ -1089,3 +1097,19 @@ _parse_options(int *argc, char** argv[])
   return 1;
 }
 
+
+void linuxcli_show_devices(USBK_List* pusbk)
+{
+    USBK_List *dummy_usbk;
+    for (dummy_usbk = pusbk;dummy_usbk!=NULL;dummy_usbk=dummy_usbk->next)
+    {
+        printf("Device Node Path: %s\n", dummy_usbk->dev_name);
+        printf("  usb device\n");
+        printf("    VID/PID: %s %s\n", dummy_usbk->vendor_id, dummy_usbk->product_id);
+        printf("    manufacturer: %s\n", dummy_usbk->manufacturer);
+        printf("    product: %s\n", dummy_usbk->product);
+        printf("    serial: %s\n", dummy_usbk->serial);
+        printf("    backdisk: %s\n\n", dummy_usbk->backdisk_name);
+        //TODO: Get device info yapıp diğer bilgileri ekrana yaz.
+    }
+}
