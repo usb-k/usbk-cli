@@ -170,7 +170,7 @@ main(int argc, char *argv[])
                 if (iflag)
                   {
                     usbk_get_scsi_dev_info(&usbk);
-                    usbk_show_show_dev_info(&usbk);
+                    linuxcli_show_dev_info(&usbk);
                   }
                 printf("Done.\n");
                 exit(0);
@@ -215,7 +215,7 @@ main(int argc, char *argv[])
         if (iflag)
           {
             usbk_get_scsi_dev_info(&usbk);
-            usbk_show_show_dev_info(&usbk);
+            linuxcli_show_dev_info(&usbk);
           }
         printf("Done.\n");
         exit(0);
@@ -265,7 +265,7 @@ main(int argc, char *argv[])
             if (iflag)
               {
                 usbk_get_scsi_dev_info(&usbk);
-                usbk_show_show_dev_info(&usbk);
+                linuxcli_show_dev_info(&usbk);
               }
             printf("Done.\n");
             exit(0);
@@ -286,7 +286,7 @@ main(int argc, char *argv[])
         if (iflag)
           {
             usbk_get_scsi_dev_info(&usbk);
-            usbk_show_show_dev_info(&usbk);
+            linuxcli_show_dev_info(&usbk);
           }
         printf("Done.\n");
         exit(0);
@@ -327,7 +327,7 @@ main(int argc, char *argv[])
             if (iflag)
               {
                 usbk_get_scsi_dev_info(&usbk);
-                usbk_show_show_dev_info(&usbk);
+                linuxcli_show_dev_info(&usbk);
               }
             printf("Done.\n");
             exit(0);
@@ -383,7 +383,7 @@ main(int argc, char *argv[])
                 if (iflag)
                   {
                     usbk_get_scsi_dev_info(&usbk);
-                    usbk_show_show_dev_info(&usbk);
+                    linuxcli_show_dev_info(&usbk);
                   }
                 printf("Done.\n");
                 exit(0);
@@ -479,7 +479,7 @@ main(int argc, char *argv[])
                 if (iflag)
                   {
                     usbk_get_scsi_dev_info(&usbk);
-                    usbk_show_show_dev_info(&usbk);
+                    linuxcli_show_dev_info(&usbk);
                   }
                 printf("Done.\n");
                 exit(0);
@@ -560,7 +560,7 @@ main(int argc, char *argv[])
                 if (iflag)
                   {
                     usbk_get_scsi_dev_info(&usbk);
-                    usbk_show_show_dev_info(&usbk);
+                    linuxcli_show_dev_info(&usbk);
                   }
                 printf("Done.\n");
                 exit(0);
@@ -616,7 +616,7 @@ main(int argc, char *argv[])
             if (iflag)
               {
                 usbk_get_scsi_dev_info(&usbk);
-                usbk_show_show_dev_info(&usbk);
+                linuxcli_show_dev_info(&usbk);
               }
             printf("Done.\n");
             exit(0);
@@ -643,7 +643,7 @@ main(int argc, char *argv[])
   if (iflag)
     {
       usbk_get_scsi_dev_info(&usbk);
-      usbk_show_show_dev_info(&usbk);
+      linuxcli_show_dev_info(&usbk);
       printf("Done.\n");
     }
 
@@ -710,7 +710,7 @@ print_help(int exval)
  *Done.
  *
  */
-void usbk_show_show_dev_info(USBK_T *usbk)
+void linuxcli_show_dev_info(USBK_T *usbk)
 {
   //UI_DEVINFO_T dev_info;
   int i;
@@ -1103,13 +1103,13 @@ void linuxcli_show_devices(USBK_List* pusbk)
     USBK_List *dummy_usbk;
     for (dummy_usbk = pusbk;dummy_usbk!=NULL;dummy_usbk=dummy_usbk->next)
     {
-        printf("Device Node Path: %s\n", dummy_usbk->dev_name);
+        printf("Device Name: %s\n", dummy_usbk->dev_name);
         printf("  usb device\n");
         printf("    VID/PID: %s %s\n", dummy_usbk->vendor_id, dummy_usbk->product_id);
         printf("    manufacturer: %s\n", dummy_usbk->manufacturer);
         printf("    product: %s\n", dummy_usbk->product);
         printf("    serial: %s\n", dummy_usbk->serial);
-        printf("    backdisk: %s\n\n", dummy_usbk->backdisk_name);
+        printf("    backdisk name: %s\n\n", dummy_usbk->backdisk_name);
         //TODO: Get device info yapıp diğer bilgileri ekrana yaz.
     }
 }

@@ -216,7 +216,7 @@ int usbk_get_backdisk(USBK_List *usbk){
                         dev_scsi = udev_device_get_parent_with_subsystem_devtype(dev, "scsi", "scsi_device");
                         if (dev_scsi != NULL) {
                             if(strncmp(USBK_SCSI_BACKDISK_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_BACKDISK_VENDOR)) == 0 ){
-                                strcpy(usbk->backdisk_name, udev_device_get_devnode(dev));
+                                strcpy(usbk->backdisk_name, udev_device_get_sysname(dev));
                             }
                         }
 
@@ -295,7 +295,7 @@ int usbk_get_backdisk(USBK_List *usbk){
 
                             memset (dummy_pusbk, 0, sizeof(*dummy_pusbk));
 
-                            strcpy(dummy_pusbk->dev_name, udev_device_get_devnode(dev));
+                            strcpy(dummy_pusbk->dev_name, udev_device_get_sysname(dev));
                             strcpy(dummy_pusbk->vendor_id, udev_device_get_sysattr_value(dev_usb,"idVendor"));
                             strcpy(dummy_pusbk->product_id, udev_device_get_sysattr_value(dev_usb, "idProduct"));
                             strcpy(dummy_pusbk->manufacturer, udev_device_get_sysattr_value(dev_usb,"manufacturer"));
