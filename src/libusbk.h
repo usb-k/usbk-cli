@@ -33,7 +33,24 @@ typedef struct __USBK {
     struct __USBK *next;
 } USBK_T;
 
-int usbk_list_devices(void);
+typedef struct __USBK_List {
+    char vendor_id [1024];
+    char product_id [1024];
+    char manufacturer [1024];
+    char product [1024];
+    char serial [1024];
+    char dev_name [1024];
+    char backdisk_name [1024];
+
+    t_UIP_DEVINFO info;
+    t_UIP_GETSTATUS status;
+
+    struct __USBK_List *next;
+} USBK_List;
+
+
+int usbk_list_devices(USBK_List** pusbk);
+void usbk_list_devices_release(USBK_List** pusbk);
 //TODO: int usbk_create_list_devices(USBK_T *usbk);
 //TODO: int usbk_realese_list_devices(USBK_T *usbk);
 int usbk_get_device_info(USBK_T *usbk);
