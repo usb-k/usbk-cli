@@ -34,13 +34,13 @@ typedef struct __USBK {
 } USBK_T;
 
 typedef struct __USBK_List {
-    char vendor_id [1024];
-    char product_id [1024];
-    char manufacturer [1024];
-    char product [1024];
-    char serial [1024];
-    char dev_name [1024];
-    char backdisk_name [1024];
+    char *vendor_id;
+    char *product_id;
+    char *manufacturer;
+    char *product;
+    char *serial;
+    char *dev_name;
+    char *backdisk_name;
 
     t_UIP_DEVINFO info;
     t_UIP_GETSTATUS status;
@@ -48,15 +48,23 @@ typedef struct __USBK_List {
     struct __USBK_List *next;
 } USBK_List;
 
+//USBK_List* pusbk = NULL;
 
-int usbk_list_devices(USBK_List** pusbk);
-void usbk_list_devices_release(USBK_List** pusbk);
+//int usbk_list_devices(USBK_List* pusbk);
+
 //TODO: int usbk_create_list_devices(USBK_T *usbk);
 //TODO: int usbk_realese_list_devices(USBK_T *usbk);
+//int usbk_get_list_devices(USBK_List** pusbk);
 int usbk_get_device_info(USBK_T *usbk);
 int usbk_get_backdisk(USBK_T *usbk);
 int usbk_get_scsi_dev_info(USBK_T *usbk);
 
+
+
+
+
+USBK_List* usbk_list_devices(void);
+void usbk_list_devices_release(USBK_List* p_usbk);
 
 #endif
 

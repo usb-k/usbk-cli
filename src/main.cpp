@@ -29,6 +29,11 @@
 #define MSG_FABRIC_DEFAULT   "Fabric default. Please first set your password."
 #define MSG_MUST_REMOVE      "Must remove. Please remove and re-plug the USBK."
 
+
+#define  ERROR_MALLOC()       {fprintf(stderr, "memory'de yer yok!\n\r");exit(1);}
+
+
+
 using namespace std;
 
 /* Flag set by ‘--verbose’. */
@@ -1019,10 +1024,10 @@ _parse_options(int *argc, char** argv[])
 
       case 's':
       {
-          USBK_List* pusbk;
-          usbk_list_devices(&pusbk);
-          linuxcli_show_devices(pusbk);
-          usbk_list_devices_release(&pusbk);
+          p_usbk = usbk_list_devices();
+          if (p_usbk == NULL) ERROR_MALLOC();
+          linuxcli_show_devices(p_usbk);
+          usbk_list_devices_release(p_usbk);
       }
         exit(0);
         break;
