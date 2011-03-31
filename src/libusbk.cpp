@@ -216,7 +216,7 @@ int usbk_get_backdisk(USBK_List *usbk){
                         dev_scsi = udev_device_get_parent_with_subsystem_devtype(dev, "scsi", "scsi_device");
                         if (dev_scsi != NULL) {
                             if(strncmp(USBK_SCSI_BACKDISK_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_BACKDISK_VENDOR)) == 0 ){
-                                strcpy(usbk->backdisk_name, udev_device_get_sysname(dev));
+                                usbk->backdisk_name = strdup(udev_device_get_sysname(dev));
                             }
                         }
 
@@ -234,7 +234,7 @@ int usbk_get_backdisk(USBK_List *usbk){
 }
 
 
- int usbk_list_devices(USBK_List** pusbk){
+USBK_List* usbk_list_devices(void){
     struct udev *udev;
     struct udev_enumerate *enumerate;
     struct udev_list_entry *devices, *dev_list_entry;
@@ -243,7 +243,8 @@ int usbk_get_backdisk(USBK_List *usbk){
     struct udev_device *dev_scsi = NULL;
     bool first = true;
 
-    USBK_List *dummy_pusbk = NULL;
+    USBK_List *current_usbk = NULL;
+    USBK_List *first_usbk = NULL;
 
     // Create the udev object
     udev = udev_new();
@@ -275,35 +276,27 @@ int usbk_get_backdisk(USBK_List *usbk){
                     if (dev_scsi != NULL) {
                         if(strncmp(USBK_SCSI_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_VENDOR)) == 0 ){
 
-                            if (first == true)
-                            {
-                            	*pusbk = (USBK_List*)malloc(sizeof(**pusbk));
-                            	dummy_pusbk = *pusbk;
-                            	first = false;
-                            }
-                            else
-                            {
-                            	dummy_pusbk->next = (USBK_List*)malloc(sizeof(*dummy_pusbk));
-                            	dummy_pusbk = dummy_pusbk->next;
-                            }
+                            current_usbk = (USBK_List*)calloc(1,sizeof(USBK_List));
 
-                            if (dummy_pusbk == NULL)
+                            if (current_usbk == NULL)
                             {
                             	fprintf(stderr, "USBK List is not malloced.");
                             	return 0;
                             }
 
-                            memset (dummy_pusbk, 0, sizeof(*dummy_pusbk));
+                            current_usbk->dev_name = strdup(udev_device_get_sysname(dev));
+                            current_usbk->vendor_id = strdup(udev_device_get_sysattr_value(dev_usb,"idVendor"));
+                            current_usbk->product_id = strdup(udev_device_get_sysattr_value(dev_usb, "idProduct"));
+                            current_usbk->manufacturer = strdup(udev_device_get_sysattr_value(dev_usb,"manufacturer"));
+                            current_usbk->product = strdup(udev_device_get_sysattr_value(dev_usb,"product"));
+                            current_usbk->serial = strdup(udev_device_get_sysattr_value(dev_usb, "serial"));
+                            usbk_get_backdisk(current_usbk);
 
-                            strcpy(dummy_pusbk->dev_name, udev_device_get_sysname(dev));
-                            strcpy(dummy_pusbk->vendor_id, udev_device_get_sysattr_value(dev_usb,"idVendor"));
-                            strcpy(dummy_pusbk->product_id, udev_device_get_sysattr_value(dev_usb, "idProduct"));
-                            strcpy(dummy_pusbk->manufacturer, udev_device_get_sysattr_value(dev_usb,"manufacturer"));
-                            strcpy(dummy_pusbk->product, udev_device_get_sysattr_value(dev_usb,"product"));
-                            strcpy(dummy_pusbk->serial, udev_device_get_sysattr_value(dev_usb, "serial"));
-                            usbk_get_backdisk(dummy_pusbk);
+                            current_usbk->next = first_usbk;
+                            first_usbk = current_usbk;
                         }
                     }
+
                 }
             }
 
@@ -316,24 +309,30 @@ int usbk_get_backdisk(USBK_List *usbk){
     udev_enumerate_unref(enumerate);
 
     udev_unref(udev);
-    return 0;
+    return first_usbk;
 }
 
-void usbk_list_devices_release(USBK_List** pusbk)
+void usbk_list_devices_release(USBK_List* p_usbk)
 {
     USBK_List *dummy_usbk;
-    USBK_List *next_dummy_usbk;
 
-    for (dummy_usbk = *pusbk;dummy_usbk!=NULL;dummy_usbk=next_dummy_usbk)
+    for (p_usbk;p_usbk!=NULL;p_usbk=dummy_usbk)
     {
-        next_dummy_usbk = dummy_usbk->next;
-        free(next_dummy_usbk);
+        dummy_usbk = p_usbk->next;
+        free(p_usbk->vendor_id);
+        free(p_usbk->product_id);
+        free(p_usbk->manufacturer);
+        free(p_usbk->product);
+        free(p_usbk->serial);
+        free(p_usbk->dev_name);
+        free(p_usbk->backdisk_name);
+        free(p_usbk);
     }
-    *pusbk = NULL;
 }
 
 
-int usbk_get_scsi_dev_info(USBK_T *usbk) {
+int usbk_get_scsi_dev_info(USBK_T *usbk)
+{
     send_scsi_command(usbk, (unsigned char*) &usbk->info, GET_DEV_INFO, sizeof(t_UIP_DEVINFO), READ_SCSI);
     //memcpy((char*) &usbk->info, buffer, sizeof(UI_DEVINFO_T));
     return 0;
