@@ -15,12 +15,14 @@
  */
 
 #include "usbk_sg_ctl.h"
+int deneme=4;
 
 static int sg_fd;
 
 int usbk_open(char* DevicePath)
 {
     sg_fd  = open(DevicePath , O_RDWR);// | O_EXCL)
+    if (deneme < 0) return 0;
 
     if (sg_fd < 0) {
         fprintf(stderr, "Not device!\n");

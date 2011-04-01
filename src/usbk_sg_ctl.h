@@ -23,10 +23,10 @@
 
 #include "general.h"
 
-extern int usbk_open(char* DevicePath);
-extern void usbk_close(void);
-extern int usbk_sg_tansfer(ST_PACKET_T *scsi_packet);
-extern void usbk_sg_show_packet(ST_PACKET_T *scsi_packet);
+int usbk_open(char* DevicePath);
+void usbk_close(void);
+int usbk_sg_tansfer(ST_PACKET_T *scsi_packet);
+void usbk_sg_show_packet(ST_PACKET_T *scsi_packet);
 
 #endif // USBK_SG_CTL_H_
 

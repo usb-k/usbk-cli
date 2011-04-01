@@ -29,7 +29,7 @@ ST_CMD_T scsi_cmd[][10] = {
   {0xFE, 0x00, GENERATE_KEY,    0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00},
   {0xFE, 0x00, GET_PUBLIC_KEY,  0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00} };
 
-int send_scsi_command(USBK_List* usbk, unsigned char *buff, int cmd_index, int len, char rw)
+int send_scsi_command(USBK* usbk, unsigned char *buff, int cmd_index, int len, char rw)
 {
     short int cmdlen = sizeof(ST_CMD_T);
     ST_PACKET_T packet;
