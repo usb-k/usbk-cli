@@ -29,17 +29,21 @@ ST_CMD_T scsi_cmd[][10] = {
   {0xFE, 0x00, GENERATE_KEY,    0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00},
   {0xFE, 0x00, GET_PUBLIC_KEY,  0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00} };
 
-int send_scsi_command(USBK_T *usbk, unsigned char *buff, int cmd_index, int len, char rw)
+int send_scsi_command(USBK_List* usbk, unsigned char *buff, int cmd_index, int len, char rw)
 {
     short int cmdlen = sizeof(ST_CMD_T);
     ST_PACKET_T packet;
     unsigned char buffer[512];
 
-    if(usbk_open(usbk->dev) == 1)
+    if(usbk_open(usbk->dev_path) == 1)
       {
         printf("Hata: device adi yanlis veya root yetkisine sahip degilsiniz.\n");
         exit(1);
       }
+    else
+    {
+        printf("basari ile device acildi.");
+    }
 
     memset(buffer,0,sizeof(buffer));
 
@@ -73,3 +77,6 @@ int send_scsi_command(USBK_T *usbk, unsigned char *buff, int cmd_index, int len,
     usbk_close();
     return 0;
 }
+
+
+
