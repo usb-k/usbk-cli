@@ -62,6 +62,7 @@ static struct option long_options[] =
         { "key-no", required_argument, 0, 'k' },
         { "passwd", required_argument, 0, 'p' },
         { "key-format", required_argument, 0, 'f' },
+        { "key-size", required_argument, 0, 'F' },
         { "show-info", no_argument, 0, 'i' },
         { "ver", no_argument, 0, 'v' },
         { "help", no_argument, 0, '?' },
@@ -84,6 +85,7 @@ int lflag = 0;
 int kflag = 0;
 int pflag = 0;
 int fflag = 1;
+int Fflag = 1;
 int iflag = 0;
 
 int main_operation = 0;
@@ -100,7 +102,11 @@ t_UIP_PAROLA opt_new_password;
 t_UIP_KEY opt_aes_key;
 t_UIP_SETAUTOACTIVATE set_auto;
 char opt_key_format;
-char opt_string_key[64];
+
+e_UIP_KEYSIZE opt_key_size;
+int opt_key_size_byte;
+
+char opt_string_key[128];
 
 USBK usbk;
 
@@ -151,6 +157,7 @@ int main(int argc, char *argv[]) {
 
     opt_key = 1; // default key no 1
     opt_key_format = 'd'; // default key format decimal
+    opt_key_size = KEYSIZE_256;
 
     if (!_parse_options(&argc, &argv)) {
         printf("Parse error\n");
@@ -419,93 +426,111 @@ int main(int argc, char *argv[]) {
     if (xflag | Xflag) {
         if (pflag) {
             if (kflag) {
-                switch (usbk.info.devstate.me) {
-                case ACTIVATE:
-                case ACTIVATE_WITH_BACKDISK:
-                    printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devlabel.s);
-                    exit(0);
-                    break;
-                case DEACTIVATE:
+                if (Fflag)
+                {
+                    switch (usbk.info.devstate.me) {
+                    case ACTIVATE:
+                    case ACTIVATE_WITH_BACKDISK:
+                        printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devlabel.s);
+                        exit(0);
+                        break;
+                    case DEACTIVATE:
+                        memset(&set_key, 0, sizeof(set_key));
+                        strncpy(set_key.password.s, opt_parola.s, sizeof(set_key.password.s));
+                        memcpy(&set_key.keyno, &opt_key, sizeof(set_key.keyno));
+                        memset(&set_key.options.me, SETKEY_NAME_AND_KEY, sizeof(set_key.options.me));
+                        set_key.keysize.me = opt_key_size;
 
-                    memset(&set_key, 0, sizeof(set_key));
-                    strncpy(set_key.password.s, opt_parola.s, sizeof(set_key.password.s));
-                    memcpy(&set_key.keyno, &opt_key, sizeof(set_key.keyno));
-                    memset(&set_key.options.me, SETKEY_NAME_AND_KEY, sizeof(set_key.options.me));
-
-                    set_key.keysize.me = KEYSIZE_128;
-
-                    if (mflag) {
-                        strncpy(set_key.keyname.s, opt_aes_name.s, sizeof(set_key.keyname.s));
-                    } else {
-                        strncpy(set_key.keyname.s, usbk.info.keyname[opt_key].s, sizeof(set_key.keyname.s));
-                    }
-
-
-                    if (xflag) {
-
-                        //printf("key:%s\n", opt_string_key);
-                        if (opt_key_format == 'd') {
-                            if (check_key_decimal((string) opt_string_key, opt_aes_key.u8)
-                                    == -1) {
-                                printf("Hata: key format yanlis.\n");
-                                exit(0);
-                            }
-                        } else if (opt_key_format == 't') {
-                            if (check_key_text((string) opt_string_key, set_key.key.u8)
-                                    == -1) {
-                                printf("Hata: key format yanlis.\n");
-                                exit(0);
-                            }
+                        if (mflag) {
+                            strncpy(set_key.keyname.s, opt_aes_name.s, sizeof(set_key.keyname.s));
                         } else {
-                            cout << "Beklenmeyen hata!" << endl;
+                            strncpy(set_key.keyname.s, usbk.info.keyname[opt_key].s, sizeof(set_key.keyname.s));
                         }
 
-                    }
-                    else if (Xflag) {
-                        t_UIP_SETKEY dummy_set_key;
-                        status = LibUSBK__GetRandomKey(&usbk, (unsigned char*) dummy_set_key.key.u8, sizeof(dummy_set_key.key));
+
+                        switch (opt_key_size)
+                        {
+                        case KEYSIZE_128:
+                            opt_key_size_byte = 16;
+                            break;
+                        case KEYSIZE_192:
+                            opt_key_size_byte = 24;
+                            break;
+                        case KEYSIZE_256:
+                        default:
+                            opt_key_size_byte = 32;
+                            break;
+
+                        }
+
+                        if (xflag) {
+
+                            //printf("key:%s\n", opt_string_key);
+                            if (opt_key_format == 'd') {
+                                if (check_key_decimal((string) opt_string_key, opt_aes_key.u8, opt_key_size_byte)
+                                        == -1) {
+                                    printf("Hata: key decimal format yanlis.\n");
+                                    exit(0);
+                                }
+                            } else if (opt_key_format == 't') {
+                                if (check_key_text((string) opt_string_key, set_key.key.u8, opt_key_size_byte)
+                                        == -1) {
+                                    printf("Hata: key text format yanlis.\n");
+                                    exit(0);
+                                }
+                            } else {
+                                cout << "Beklenmeyen hata!" << endl;
+                            }
+
+                        }
+                        else if (Xflag) {
+                            t_UIP_SETKEY dummy_set_key;
+                            status = LibUSBK__GetRandomKey(&usbk, (unsigned char*) dummy_set_key.key.u8, sizeof(dummy_set_key.key));
+                            if (StatusChecker(status) != true){
+                                fprintf (stderr, NOT_CREATE_RANDOM_KEY);
+                                exit(1);
+                            }
+                            memcpy (set_key.key.u8, dummy_set_key.key.u8, opt_key_size_byte);
+                        }
+
+                        status = LibUSBK__SetKey (&usbk, (unsigned char*) &set_key, sizeof(set_key));
                         if (StatusChecker(status) != true){
-                            fprintf (stderr, NOT_CREATE_RANDOM_KEY);
                             exit(1);
                         }
-                        memcpy (set_key.key.u8, dummy_set_key.key.u8, 16);
-                    }
 
-                    status = LibUSBK__SetKey (&usbk, (unsigned char*) &set_key, sizeof(set_key));
-                    if (StatusChecker(status) != true){
-                        exit(1);
-                    }
+                        if (Xflag) {
+                            int i;
+                            printf("Set Edilen Key : ");
+                            for (i=0; i<opt_key_size_byte; i++)
+                            {
+                                printf("%d",set_key.key.u8[i]);
 
-                    if (Xflag) {
-                        int i;
-                        printf("Set Edilen Key : ");
-                        for (i=0; i<16; i++)
-                        {
-                            printf("%d",set_key.key.u8[i]);
-
-                            if (i != 15) printf(".");
+                                if (i != (opt_key_size_byte-1)) printf(".");
+                            }
+                            printf ("\n");
                         }
-                        printf ("\n");
-                    }
 
-
-                    if (iflag) {
-                        LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
-                        linuxcli_show_dev_info(&usbk);
+                        if (iflag) {
+                            LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
+                            linuxcli_show_dev_info(&usbk);
+                        }
+                        printf("Done.\n");
+                        exit(0);
+                        break;
+                    case FABRIC_DEFAULT:
+                        printf("%s\n", MSG_FABRIC_DEFAULT);
+                        exit(0);
+                        break;
+                    case MUST_REMOVE:
+                        printf("%s\n", MSG_MUST_REMOVE);
+                        exit(0);
+                        break;
+                    default:
+                        break;
                     }
-                    printf("Done.\n");
+                } else {
+                    printf("%s%s\n", WARNING, MISSING_PARAMETER);
                     exit(0);
-                    break;
-                case FABRIC_DEFAULT:
-                    printf("%s\n", MSG_FABRIC_DEFAULT);
-                    exit(0);
-                    break;
-                case MUST_REMOVE:
-                    printf("%s\n", MSG_MUST_REMOVE);
-                    exit(0);
-                    break;
-                default:
-                    break;
                 }
             } else {
                 printf("%s%s\n", WARNING, MISSING_PARAMETER);
@@ -669,6 +694,7 @@ void print_help(int exval) {
     printf(" Setting options:\n\n");
     printf("  -k, --key-no=KEYNO            use KEYNO as key number\n");
     printf("  -p, --passwd=PASSWD           checks password with PASSWD\n");
+    printf("  -F, --key-size=KEY_SIZE       KEYSIZE is 128, 192 or 256\n");
     printf("  -f, --key-format=FORMAT       FORMAT=t for text or FORMAT=d for\n");
     printf("                                decimal input. default is decimal\n\n");
 
@@ -678,6 +704,7 @@ void print_help(int exval) {
     printf("  -?, --help                    give this help list\n\n");
 
     printf("defaults for options:\n");
+    printf("--key-size=256\n");
     printf("--key-format=d\n");
     printf("--key-no=1\n\n");
 
@@ -787,8 +814,8 @@ void linuxcli_show_dev_info(USBK *usbk) {
 // 5) string to integer islemini yap
 // 6) 16 adet sayı cikartabildin mi?
 // 7) sayılar 0 ile 255 arasinda mi?
-int check_key_decimal(string str, U8 *key) {
-    int ikey[16];
+int check_key_decimal(string str, U8 *key, int key_size_byte) {
+    int ikey[key_size_byte];
     size_t found;
     string::iterator it;
     int i;
@@ -806,7 +833,7 @@ int check_key_decimal(string str, U8 *key) {
         str[found] = ' ';
         found = str.find_first_of(".", found + 1);
     }
-    if (i != 15)
+    if (i != (key_size_byte-1))
         return -1;
     //cout << str << endl;
 
@@ -827,13 +854,13 @@ int check_key_decimal(string str, U8 *key) {
     // sayılar 0 ile 255 arasinda mi?
     istringstream iss(str, istringstream::in);
     i = 0;
-    for (int n = 0; n < 16; n++) {
+    for (int n = 0; n < key_size_byte; n++) {
         iss >> ikey[n];
 
         if (iss.fail() || iss.bad())
             return -1;
 
-        if (iss.eof() && n != 15)
+        if (iss.eof() && n != (key_size_byte-1))
             return -1;
 
         if (ikey[n] > 255 || ikey[n] < 0) {
@@ -849,11 +876,11 @@ int check_key_decimal(string str, U8 *key) {
     return 0;
 }
 
-int check_key_text(string str, U8 *key) {
-    if (str.size() > 16) {
+int check_key_text(string str, U8 *key, int key_size_byte) {
+    if (str.size() > key_size_byte) {
         return -1;
     }
-    strncpy((char*) key, str.c_str(), 16);
+    strncpy((char*) key, str.c_str(), key_size_byte);
     return 0;
 }
 
@@ -873,7 +900,7 @@ static int _parse_options(int *argc, char** argv[]) {
     else
     {
 
-        while (( opt = getopt_long(*argc, *argv, "u:adc:n:m:x:XtTlsk:p:f:iv?", long_options, &option_index)) != -1) {
+        while (( opt = getopt_long(*argc, *argv, "u:adc:n:m:x:XtTlsk:p:F:f:iv?", long_options, &option_index)) != -1) {
             switch (opt) {
             case 0:
                 /* If this option set a flag, do nothing else now. */
@@ -986,6 +1013,19 @@ static int _parse_options(int *argc, char** argv[]) {
                 }
                 break;
 
+            case 'F':
+                Fflag = 1;
+                if (!strcmp(optarg, "128")) {
+                    opt_key_size = KEYSIZE_128;
+                } else if (!strcmp(optarg, "192")) {
+                    opt_key_size = KEYSIZE_192;
+                } else if (!strcmp(optarg, "256")) {
+                    opt_key_size = KEYSIZE_256;
+                } else {
+                    printf("%s%s\n", WARNING, MISSING_PARAMETER);
+                    exit(1);
+                }
+                break;
             case 'i':
                 iflag = 1;
                 break;
