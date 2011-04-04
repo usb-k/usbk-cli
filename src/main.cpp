@@ -660,6 +660,7 @@ void print_help(int exval) {
     printf("  -n, --label=LABEL             change the label to LABEL\n");
     printf("  -m, --keyname=KEYNAME         change then key nameto NAME\n");
     printf("  -x, --change-key=NEWKEY       change the key to NEWKEY\n");
+    printf("  -X, --change-key-with-random  change the key to random key\n");
     printf("  -t, --enable-auto             enable auto activate\n");
     printf("  -T, --disable-auto            disable auto activate\n");
     printf("  -l, --gen-key                 generate and set random key\n");
