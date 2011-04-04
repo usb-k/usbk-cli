@@ -26,6 +26,16 @@
 
 #include "general.h"
 
+#define rtnLIBUSBK_PASS                      0
+#define rtnLIBUSBK_GENERAL_ERROR            -1
+#define rtnLIBUSBK_UDEV_NOT_CREATE          -2
+#define rtnLIBUSBK_UDEV_NOT_NODE            -3
+#define rtnLIBUSBK_UDEV_WRONG_FILE_TYPE     -4
+#define rtnLIBUSBK_UDEV_USBKLIST_NOT_CREATE -5
+#define rtnLIBUSBK_SCSI_COMMAND_ERROR       -6
+#define rtnLIBUSBK_GET_BACKDISK_ERROR       -7
+
+
 #define USBK_USB_IDVENDOR          "2384"
 #define USBK_USB_IDPRODUCT         "a103"
 #define USBK_SCSI_VENDOR           "USBK"
