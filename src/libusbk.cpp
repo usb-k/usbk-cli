@@ -132,7 +132,7 @@ int LibUSBK__GetDeviceInfo(USBK* usbk, unsigned char *buff, int len)
     libusbk_get_device_info(usbk);
     send_scsi_command(usbk, (unsigned char*) &usbk->info, GET_DEV_INFO,sizeof(t_UIP_DEVINFO), READ_SCSI);
     //return ((int)usbk->status.lastop.me);
-    return 0;
+    return OPRS_PASS;
 }
 
 int LibUSBK__GetStatus (USBK* usbk)
@@ -180,7 +180,8 @@ int LibUSBK__SetAutoAct (USBK* usbk, unsigned char *buff, int len)
 int LibUSBK__GetRandomKey (USBK* usbk, unsigned char *buff, int len)
 {
     send_scsi_command(usbk, buff, GENERATE_KEY, len, READ_SCSI);
-    return LibUSBK__GetStatus (usbk);
+    //return LibUSBK__GetStatus (usbk);
+    return OPRS_PASS;
 }
 
 
