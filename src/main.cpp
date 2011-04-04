@@ -1065,43 +1065,21 @@ static int _parse_options(int *argc, char** argv[]) {
 
 void linuxcli_show_devices(USBK_List* p_usbklink) {
     int i;
+    int counter = 0;
     USBK_List *dummy_usbklink;
 
     for (dummy_usbklink = p_usbklink; dummy_usbklink != NULL; dummy_usbklink = dummy_usbklink->next) {
-
-        /*
-        printf("Device Name: %s\n",             dummy_usbklink->usbk.dev);
-        printf("  usb device\n");
-        printf("    VID/PID: %s %s\n",          dummy_usbklink->usbk.vendor_id, dummy_usbklink->usbk.product_id);
-        printf("    manufacturer: %s\n",        dummy_usbklink->usbk.manufacturer);
-        printf("    product: %s\n",             dummy_usbklink->usbk.product);
-        printf("    serial: ");
-        for (i = 0; i < 15; i++) {
-            printf("%2.2X", dummy_usbklink->usbk.info.serial.u8[i]);
-        }
-        printf("\n");
-        printf("    backdisk name: %s\n\n",     dummy_usbklink->usbk.backdisk);
-
-        */
-
-        printf("+ %s\n",             dummy_usbklink->usbk.info.devlabel.s);
+        printf("  %s\n",             dummy_usbklink->usbk.info.devlabel.s);
         printf("    Device   : %s\n",             dummy_usbklink->usbk.dev);
         printf("    BackDisk : %s\n",             dummy_usbklink->usbk.backdisk);
         printf("    Product  : %s\n",             dummy_usbklink->usbk.info.product.s);
         printf("    Model    : %s\n",             dummy_usbklink->usbk.info.model.s);
         printf("    Serial   : "); for (i = 0; i < 15; i++) printf("%2.2X", dummy_usbklink->usbk.info.serial.u8[i]); printf("\n");
         printf("    Firmware : %s\n",             dummy_usbklink->usbk.info.firmware_ver.s);
-        printf("\n\n");
-
-
-
-
-
-
-
-
-
-
-        //TODO: Get device info yapıp diğer bilgileri ekrana yaz.
+        printf("\n");
+        counter++;
     }
+
+    (counter > 0) ? printf ("%d",counter):printf ("None");
+    printf (" USBK Found.\n\n");
 }
