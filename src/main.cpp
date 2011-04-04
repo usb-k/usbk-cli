@@ -865,155 +865,159 @@ static int _parse_options(int *argc, char** argv[]) {
     int option_index = 0;
     int opt;
 
-    while ((opt
-            = getopt_long(*argc, *argv, "u:adc:n:m:x:XtTlsk:p:f:iv?", long_options, &option_index))
-            != -1) {
-        switch (opt) {
-        case 0:
-            /* If this option set a flag, do nothing else now. */
-            if (long_options[option_index].flag != 0)
-                break;
-            printf("option %s", long_options[option_index].name);
-            if (optarg)
-                printf(" with arg %s", optarg);
-            printf("\n");
-            break;
-
-        case 'u':
-            uflag = 1;
-            usbk.dev = strdup(optarg);
-            break;
-        case 'a':
-            aflag = 1;
-            main_operation++;
-            break;
-
-        case 'd':
-            dflag = 1;
-            main_operation++;
-            break;
-
-        case 'c':
-            cflag = 1;
-            main_operation++;
-            if (strlen(optarg) > sizeof(opt_new_password.s)) {
-                printf("Uyarı: Parola %d karakterden uzun olamaz.\n", sizeof(opt_new_password.s));
-                exit(1);
-            }
-            strncpy(opt_new_password.s, optarg, sizeof(opt_new_password.s));
-            break;
-
-        case 'n':
-            nflag = 1;
-            main_operation++;
-            strncpy(opt_dev_name.s, optarg, sizeof(opt_dev_name.s));
-            break;
-
-        case 'm':
-            mflag = 1;
-            main_operation++;
-            if (strlen(optarg) > sizeof(opt_aes_name.s)) {
-                printf("Uyarı: Key adi %d karakterden uzun olamaz.\n", sizeof(opt_aes_name.s));
-                exit(1);
-            }
-            strncpy(opt_aes_name.s, optarg, sizeof(opt_aes_name.s));
-            break;
-
-        case 'x':
-            xflag = 1;
-            main_operation++;
-            sprintf(opt_string_key, "%s", optarg);
-            break;
-
-        case 'X':
-            Xflag = 1;
-            main_operation++;
-            break;
-
-        case 't':
-            tflag = 1;
-            main_operation++;
-            break;
-
-        case 'T':
-            Tflag = 1;
-            main_operation++;
-            break;
-
-        case 'l':
-            lflag = 1;
-            main_operation++;
-            break;
-
-        case 's': {
-            USBK_List* p_usbklink = NULL;
-            p_usbklink = LibUSBK__list_devices();
-            if (p_usbklink == NULL) ERROR_MALLOC();
-            linuxcli_show_devices(p_usbklink);
-            LibUSBK__list_devices_release(p_usbklink);
-        }
-            exit(0);
-            break;
-
-        case 'k':
-            kflag = 1;
-            opt_key = atoi(optarg);
-            break;
-
-        case 'p':
-            pflag = 1;
-            if (strlen(optarg) > sizeof(opt_parola.s)) {
-                printf("Uyarı: Parola %d karakterden uzun olamaz.\n", sizeof(opt_parola.s));
-                exit(1);
-            }
-            strncpy(opt_parola.s, optarg, sizeof(opt_parola.s));
-            break;
-
-        case 'f':
-            fflag = 1;
-            if (!strcmp(optarg, "d")) {
-                opt_key_format = 'd';
-            } else if (!strcmp(optarg, "t")) {
-                opt_key_format = 't';
-            } else {
-                printf("%s%s\n", WARNING, MISSING_PARAMETER);
-                exit(1);
-            }
-            break;
-
-        case 'i':
-            iflag = 1;
-            break;
-
-        case 'v':
-            print_version();
-            break;
-
-        case '?':
-            print_help(0);
-            break;
-
-        default:
-            break;
-        }
+    if (*argc == 1)
+    {
+        print_help(0);
     }
+    else
+    {
 
-    /* Instead of reporting ‘--verbose’
-     and ‘--brief’ as they are encountered,
-     we report the final status resulting from them. */
-    if (verbose_flag)
-        puts("verbose flag is set");
+        while (( opt = getopt_long(*argc, *argv, "u:adc:n:m:x:XtTlsk:p:f:iv?", long_options, &option_index)) != -1) {
+            switch (opt) {
+            case 0:
+                /* If this option set a flag, do nothing else now. */
+                if (long_options[option_index].flag != 0)
+                    break;
+                printf("option %s", long_options[option_index].name);
+                if (optarg) printf(" with arg %s", optarg);
+                printf("\n");
+                break;
 
-    /* Print any remaining command line arguments (not options). */
-    /*
-     if (optind < argc)
-     {
-     printf ("non-option ARGV-elements: ");
-     while (optind < argc)
-     printf ("%s ", argv[optind++]);
-     putchar ('\n');
-     }
-     */
+            case 'u':
+                uflag = 1;
+                usbk.dev = strdup(optarg);
+                break;
+            case 'a':
+                aflag = 1;
+                main_operation++;
+                break;
+
+            case 'd':
+                dflag = 1;
+                main_operation++;
+                break;
+
+            case 'c':
+                cflag = 1;
+                main_operation++;
+                if (strlen(optarg) > sizeof(opt_new_password.s)) {
+                    printf("Uyarı: Parola %d karakterden uzun olamaz.\n", sizeof(opt_new_password.s));
+                    exit(1);
+                }
+                strncpy(opt_new_password.s, optarg, sizeof(opt_new_password.s));
+                break;
+
+            case 'n':
+                nflag = 1;
+                main_operation++;
+                strncpy(opt_dev_name.s, optarg, sizeof(opt_dev_name.s));
+                break;
+
+            case 'm':
+                mflag = 1;
+                main_operation++;
+                if (strlen(optarg) > sizeof(opt_aes_name.s)) {
+                    printf("Uyarı: Key adi %d karakterden uzun olamaz.\n", sizeof(opt_aes_name.s));
+                    exit(1);
+                }
+                strncpy(opt_aes_name.s, optarg, sizeof(opt_aes_name.s));
+                break;
+
+            case 'x':
+                xflag = 1;
+                main_operation++;
+                sprintf(opt_string_key, "%s", optarg);
+                break;
+
+            case 'X':
+                Xflag = 1;
+                main_operation++;
+                break;
+
+            case 't':
+                tflag = 1;
+                main_operation++;
+                break;
+
+            case 'T':
+                Tflag = 1;
+                main_operation++;
+                break;
+
+            case 'l':
+                lflag = 1;
+                main_operation++;
+                break;
+
+            case 's': {
+                USBK_List* p_usbklink = NULL;
+                p_usbklink = LibUSBK__list_devices();
+                if (p_usbklink == NULL) ERROR_MALLOC();
+                linuxcli_show_devices(p_usbklink);
+                LibUSBK__list_devices_release(p_usbklink);
+            }
+                exit(0);
+                break;
+
+            case 'k':
+                kflag = 1;
+                opt_key = atoi(optarg);
+                break;
+
+            case 'p':
+                pflag = 1;
+                if (strlen(optarg) > sizeof(opt_parola.s)) {
+                    printf("Uyarı: Parola %d karakterden uzun olamaz.\n", sizeof(opt_parola.s));
+                    exit(1);
+                }
+                strncpy(opt_parola.s, optarg, sizeof(opt_parola.s));
+                break;
+
+            case 'f':
+                fflag = 1;
+                if (!strcmp(optarg, "d")) {
+                    opt_key_format = 'd';
+                } else if (!strcmp(optarg, "t")) {
+                    opt_key_format = 't';
+                } else {
+                    printf("%s%s\n", WARNING, MISSING_PARAMETER);
+                    exit(1);
+                }
+                break;
+
+            case 'i':
+                iflag = 1;
+                break;
+
+            case 'v':
+                print_version();
+                break;
+
+            case '?':
+                print_help(0);
+                break;
+            default:
+                break;
+            }
+        }
+
+        /* Instead of reporting ‘--verbose’
+         and ‘--brief’ as they are encountered,
+         we report the final status resulting from them. */
+        if (verbose_flag)
+            puts("verbose flag is set");
+
+        /* Print any remaining command line arguments (not options). */
+        /*
+         if (optind < argc)
+         {
+         printf ("non-option ARGV-elements: ");
+         while (optind < argc)
+         printf ("%s ", argv[optind++]);
+         putchar ('\n');
+         }
+         */
+    }
 
     return 1;
 }
