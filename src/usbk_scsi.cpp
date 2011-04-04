@@ -40,10 +40,6 @@ int send_scsi_command(USBK* usbk, unsigned char *buff, int cmd_index, int len, c
         printf("Hata: device adi yanlis veya root yetkisine sahip degilsiniz.\n");
         exit(1);
       }
-    else
-    {
-        printf("basari ile device acildi.");
-    }
 
     memset(buffer,0,sizeof(buffer));
 
