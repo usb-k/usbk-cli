@@ -179,7 +179,7 @@ int LibUSBK__SetAutoAct (USBK* usbk, unsigned char *buff, int len)
 
 int LibUSBK__GetRandomKey (USBK* usbk, unsigned char *buff, int len)
 {
-    send_scsi_command(usbk, (unsigned char*) &usbk->status, GENERATE_KEY, len, READ_SCSI);
+    send_scsi_command(usbk, buff, GENERATE_KEY, len, READ_SCSI);
     return LibUSBK__GetStatus (usbk);
 }
 
