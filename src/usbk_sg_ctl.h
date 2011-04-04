@@ -23,10 +23,70 @@
 
 #include "general.h"
 
-int usbk_open(char* DevicePath);
-void usbk_close(void);
+/*! \name Return Values of the Scsi Generic Layer
+ */
+//! @{
+#define rtnUSBK_SG_PASS                  0      //!< Pass
+#define rtnUSBK_SG_ERR_GENERAL          -1      //!< General Error
+#define rtnUSBK_SG_ERR_NOT_DEVICE       -2      //!< Device can not be found
+#define rtnUSBK_SG_ERR_IOCTL_SCSI       -3      //!< IOCTL Error
+#define rtnUSBK_SG_ERR_COMMAND_FAIL     -4      //!< SCSI Command Fail
+//! @}
+
+
+
+
+
+/**
+ * usbk_sg_ctl. h
+ * \brief Open Devices
+ * <pre>int usbk_sg_open(char* DevicePath);</pre>
+ *
+ * Open USBK-Host System Channel over USB&SCSI
+ *
+ * @param DevicePath : USBK device node path.
+ *
+ * \return \ref rtnUSBK_SG_PASS or \ref rtnUSBK_SG_ERR_NOT_DEVICE
+ *
+ * \page usbk_open usbk_open
+ * \ingroup ScsiGeneric
+ *
+ */
+int usbk_sg_open(char* DevicePath);
+
+
+/**
+ * usbk_sg_ctl. h
+ * \brief Close Device
+ * <pre>void usbk_sg_close(char* DevicePath);</pre>
+ *
+ * Close USBK-Host System Channel over USB&SCSI
+ *
+ * \page usbk_close usbk_close
+ * \ingroup ScsiGeneric
+ *
+ */
+void usbk_sg_close(void);
+
+/**
+ * usbk_sg_ctl. h
+ * \brief Data Transfer over SCSI
+ * <pre>int usbk_sg_tansfer(ST_PACKET_T *scsi_packet);</pre>
+ *
+ * Transfer packets over USBK-Host System Channel
+ *
+ * @param ST_PACKET_T *scsi_packet : Packet Structure.
+ *
+ * \return \ref rtnUSBK_SG_ERR_IOCTL_SCSI or \ref rtnUSBK_SG_ERR_COMMAND_FAIL
+ *
+ * \page usbk_sg_tansfer usbk_sg_tansfer
+ * \ingroup ScsiGeneric
+ *
+ */
 int usbk_sg_tansfer(ST_PACKET_T *scsi_packet);
-void usbk_sg_show_packet(ST_PACKET_T *scsi_packet);
+
+
+//void usbk_sg_show_packet(ST_PACKET_T *scsi_packet);
 
 #endif // USBK_SG_CTL_H_
 
