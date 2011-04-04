@@ -28,6 +28,7 @@
 #define WARNING              "Warning:"
 #define MSG_FABRIC_DEFAULT   "Fabric default. Please first set your password."
 #define MSG_MUST_REMOVE      "Must remove. Please remove and re-plug the USBK."
+#define NOT_CREATE_RANDOM_KEY "Key Random Olarak Uretilemiyor."
 
 #define  ERROR_MALLOC()       {fprintf(stderr, "memory'de yer yok!\n\r");exit(1);}
 
@@ -39,34 +40,34 @@ static int verbose_flag;
 static int
 _parse_options(int *argc, char** argv[]);
 
+
 static struct option long_options[] =
         {
         /* These options set a flag. */
-        { "dev", required_argument, 0, 'u' }, { "verbose", no_argument,
-                                                &verbose_flag, 1 },
-           { "brief", no_argument, &verbose_flag, 0 },
+        { "dev", required_argument, 0, 'u' },
+        { "verbose", no_argument, &verbose_flag, 1 },
+        { "brief", no_argument, &verbose_flag, 0 },
           /* These options don't set a flag. We distinguish them by their indices. */
-           { "activate", no_argument, 0, 'a' }, { "deactivate", no_argument, 0,
-                                                  'd' }, { "newpass",
-                                                           required_argument,
-                                                           0, 'c' },
-           { "label", required_argument, 0, 'n' },
-           { "keyname", required_argument, 0, 'm' }, { "change-key",
-                                                       required_argument, 0,
-                                                       'x' }, { "enable-auto",
-                                                                no_argument, 0,
-                                                                't' },
-           { "disable-auto", no_argument, 0, 'T' }, { "gen-key", no_argument,
-                                                      0, 'l' },
-           { "show-devices", no_argument, 0, 's' },
-           { "key-no", required_argument, 0, 'k' },
-           { "passwd", required_argument, 0, 'p' },
-           { "key-format", required_argument, 0, 'f' },
-           { "show-info", no_argument, 0, 'i' },
-           { "ver", no_argument, 0, 'v' }, { "help", no_argument, 0, '?' },
+        { "activate", no_argument, 0, 'a' },
+        { "deactivate", no_argument, 0, 'd' },
+        { "newpass", required_argument, 0, 'c' },
+        { "label", required_argument, 0, 'n' },
+        { "keyname", required_argument, 0, 'm' },
+        { "change-key", required_argument, 0, 'x' },
+        { "change-key-with-random", no_argument, 0, 'X' },
+        { "enable-auto", no_argument, 0, 't' },
+        { "disable-auto", no_argument, 0, 'T' },
+        { "gen-key", no_argument, 0, 'l' },
+        { "show-devices", no_argument, 0, 's' },
+        { "key-no", required_argument, 0, 'k' },
+        { "passwd", required_argument, 0, 'p' },
+        { "key-format", required_argument, 0, 'f' },
+        { "show-info", no_argument, 0, 'i' },
+        { "ver", no_argument, 0, 'v' },
+        { "help", no_argument, 0, '?' },
 
-          /* Last element must be NULL */
-           { NULL, 0, NULL, 0 } };
+        /* Last element must be NULL */
+        { NULL, 0, NULL, 0 } };
 
 /* configs for cmd-args*/
 int uflag = 0;
@@ -76,6 +77,7 @@ int cflag = 0;
 int nflag = 0;
 int mflag = 0;
 int xflag = 0;
+int Xflag = 0;
 int tflag = 0;
 int Tflag = 0;
 int lflag = 0;
@@ -133,7 +135,7 @@ bool StatusChecker(int status) {
         return false;
         break;
     default:
-        printf("Hata: Islem basarisiz. MSG_CODE:0x%02X RetryNum:%d\n", status, 0);//usbk->status.retry_num);
+        printf("Hata: Islem basarisiz. MSG_CODE:0x%02X RetryNum:%d\n", status, 0);//usbk->status.retry_num);    //todo
         return false;
         break;
     }
@@ -156,7 +158,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (main_operation > 1) {
-        printf("usbk: You may not specify more than one `-adcnmxtTls' option\n");
+        printf("usbk: You may not specify more than one `-adcnmxXtTls' option\n");
         printf("usbk: Try `usbk --help' for more information.\n");
         exit(1);
     }
@@ -361,7 +363,7 @@ int main(int argc, char *argv[]) {
     /////////////////////////////////////////////
     // SET KEY NAME ONLY
     /////////////////////////////////////////////
-    if (mflag && !xflag) {
+    if (mflag && !xflag && !Xflag) {
         if (kflag) {
             if (pflag) {
                 switch (usbk.info.devstate.me) {
@@ -414,7 +416,7 @@ int main(int argc, char *argv[]) {
     /////////////////////////////////////////////
     // SET KEY
     /////////////////////////////////////////////
-    if (xflag) {
+    if (xflag | Xflag) {
         if (pflag) {
             if (kflag) {
                 switch (usbk.info.devstate.me) {
@@ -424,37 +426,68 @@ int main(int argc, char *argv[]) {
                     exit(0);
                     break;
                 case DEACTIVATE:
+
                     memset(&set_key, 0, sizeof(set_key));
                     strncpy(set_key.password.s, opt_parola.s, sizeof(set_key.password.s));
                     memcpy(&set_key.keyno, &opt_key, sizeof(set_key.keyno));
                     memset(&set_key.options.me, SETKEY_NAME_AND_KEY, sizeof(set_key.options.me));
+
+                    set_key.keysize.me = KEYSIZE_128;
+
                     if (mflag) {
                         strncpy(set_key.keyname.s, opt_aes_name.s, sizeof(set_key.keyname.s));
                     } else {
                         strncpy(set_key.keyname.s, usbk.info.keyname[opt_key].s, sizeof(set_key.keyname.s));
                     }
 
-                    //printf("key:%s\n", opt_string_key);
-                    if (opt_key_format == 'd') {
-                        if (check_key_decimal((string) opt_string_key, opt_aes_key.u8)
-                                == -1) {
-                            printf("Hata: key format yanlis.\n");
-                            exit(0);
+
+                    if (xflag) {
+
+                        //printf("key:%s\n", opt_string_key);
+                        if (opt_key_format == 'd') {
+                            if (check_key_decimal((string) opt_string_key, opt_aes_key.u8)
+                                    == -1) {
+                                printf("Hata: key format yanlis.\n");
+                                exit(0);
+                            }
+                        } else if (opt_key_format == 't') {
+                            if (check_key_text((string) opt_string_key, set_key.key.u8)
+                                    == -1) {
+                                printf("Hata: key format yanlis.\n");
+                                exit(0);
+                            }
+                        } else {
+                            cout << "Beklenmeyen hata!" << endl;
                         }
-                    } else if (opt_key_format == 't') {
-                        if (check_key_text((string) opt_string_key, set_key.key.u8)
-                                == -1) {
-                            printf("Hata: key format yanlis.\n");
-                            exit(0);
+
+                    }
+                    else if (Xflag) {
+                        t_UIP_SETKEY dummy_set_key;
+                        status = LibUSBK__GetRandomKey(&usbk, (unsigned char*) dummy_set_key.key.u8, sizeof(dummy_set_key.key));
+                        if (StatusChecker(status) != true){
+                            fprintf (stderr, NOT_CREATE_RANDOM_KEY);
+                            exit(1);
                         }
-                    } else {
-                        cout << "Beklenmeyen hata!" << endl;
+                        memcpy (set_key.key.u8, dummy_set_key.key.u8, 16);
                     }
 
                     status = LibUSBK__SetKey (&usbk, (unsigned char*) &set_key, sizeof(set_key));
                     if (StatusChecker(status) != true){
                         exit(1);
                     }
+
+                    if (Xflag) {
+                        int i;
+                        printf("Set Edilen Key : ");
+                        for (i=0; i<16; i++)
+                        {
+                            printf("%d",set_key.key.u8[i]);
+
+                            if (i != 15) printf(".");
+                        }
+                        printf ("\n");
+                    }
+
 
                     if (iflag) {
                         LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
@@ -833,7 +866,7 @@ static int _parse_options(int *argc, char** argv[]) {
     int opt;
 
     while ((opt
-            = getopt_long(*argc, *argv, "u:adc:n:m:x:tTlsk:p:f:iv?", long_options, &option_index))
+            = getopt_long(*argc, *argv, "u:adc:n:m:x:XtTlsk:p:f:iv?", long_options, &option_index))
             != -1) {
         switch (opt) {
         case 0:
@@ -890,6 +923,11 @@ static int _parse_options(int *argc, char** argv[]) {
             xflag = 1;
             main_operation++;
             sprintf(opt_string_key, "%s", optarg);
+            break;
+
+        case 'X':
+            Xflag = 1;
+            main_operation++;
             break;
 
         case 't':
