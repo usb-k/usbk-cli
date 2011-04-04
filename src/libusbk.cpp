@@ -78,6 +78,7 @@ USBK_List* LibUSBK__list_devices(void){
                             	return 0;
                             }
 
+                            // get device information from UDEV
                             current_usbklink->usbk.dev_path = strdup(udev_device_get_devnode(dev));
                             current_usbklink->usbk.dev = strdup(udev_device_get_sysname(dev));
                             current_usbklink->usbk.vendor_id = strdup(udev_device_get_sysattr_value(dev_usb,"idVendor"));
@@ -85,6 +86,11 @@ USBK_List* LibUSBK__list_devices(void){
                             current_usbklink->usbk.manufacturer = strdup(udev_device_get_sysattr_value(dev_usb,"manufacturer"));
                             current_usbklink->usbk.product = strdup(udev_device_get_sysattr_value(dev_usb,"product"));
                             current_usbklink->usbk.serial = strdup(udev_device_get_sysattr_value(dev_usb, "serial"));
+
+                            // get device information from USBK
+                            send_scsi_command(&current_usbklink->usbk, (unsigned char*) &current_usbklink->usbk.info, GET_DEV_INFO, sizeof(t_UIP_DEVINFO), READ_SCSI);
+
+                            // get BackDisk information from UDEV
                             libusbk_get_backdisk(&current_usbklink->usbk);
 
                             current_usbklink->next = first_usbklink;
