@@ -15,24 +15,32 @@
  */
 
 #include "usbk_sg_ctl.h"
-int deneme=4;
+
+
+
+// Error Messages
+#define msgUSBK_SG_ERR_NOT_DEVICE          "Not device!\n"
+#define msgUSBK_SG_ERR_IOCTL_SCSI           "Error in IOCTL_SCSI\n"
+#define msgUSBK_SG_ERR_COMMAND_FAIL         "Command failed!\n"
+
 
 static int sg_fd;
 
-int usbk_open(char* DevicePath)
+int usbk_sg_open(char* DevicePath)
 {
-    sg_fd  = open(DevicePath , O_RDWR);// | O_EXCL)
-    if (deneme < 0) return 0;
+    int rtn = rtnUSBK_SG_PASS;
+
+    sg_fd  = open(DevicePath , O_RDWR);
 
     if (sg_fd < 0) {
-        fprintf(stderr, "Not device!\n");
-        return 1;
+        fprintf(stderr, msgUSBK_SG_ERR_NOT_DEVICE);
+        rtn = rtnUSBK_SG_ERR_NOT_DEVICE;
     }
 
-    return 0;
+    return rtn;
 }
 
-void usbk_close(void)
+void usbk_sg_close(void)
 {
     close(sg_fd);
 }
@@ -63,18 +71,11 @@ int usbk_sg_tansfer(ST_PACKET_T *scsi_packet)
     io_hdr.cmdp = (unsigned char*) (scsi_packet->cmd);
     io_hdr.timeout = 1000;
 
-//    printf("Sent CMD: ");
-//    for (i = 0; i < io_hdr.cmd_len; i++)
-//    {
-//        printf("0x%02X ", io_hdr.cmdp[i]);
-//    }
-//    printf("\n");
-
     if (ioctl(sg_fd, SG_IO, &io_hdr) < 0) {
-        fprintf(stderr, "Error in IOCTL_SCSI\n");
-        return 1;
+        fprintf(stderr, msgUSBK_SG_ERR_IOCTL_SCSI);
+        return rtnUSBK_SG_ERR_IOCTL_SCSI;
     } else if ((io_hdr.info & SG_INFO_OK_MASK) != SG_INFO_OK) {
-        fprintf(stderr, "Command failed!\n");
+
         if (io_hdr.sb_len_wr > 0) {
             i=0;
             printf("Sense data: \n");
@@ -100,15 +101,16 @@ int usbk_sg_tansfer(ST_PACKET_T *scsi_packet)
         }
 
         scsi_packet->datalen = 0;
-        return 1;
+        fprintf(stderr, msgUSBK_SG_ERR_COMMAND_FAIL);
+        return rtnUSBK_SG_ERR_COMMAND_FAIL;
     }
 
     //printf("ByteReturn :: %x\n", io_hdr.dxfer_len);
     scsi_packet->datalen = io_hdr.dxfer_len;
 
-    return 0;
+    return rtnUSBK_SG_PASS;
 }
-
+/*
 void usbk_sg_show_packet(ST_PACKET_T *scsi_packet)
 {
     int i=0;
@@ -136,4 +138,4 @@ void usbk_sg_show_packet(ST_PACKET_T *scsi_packet)
         printf("\n\n");
     }
 }
-
+*/

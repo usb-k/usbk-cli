@@ -203,10 +203,12 @@ int main(int argc, char *argv[]) {
                         exit(1);
                     }
                     if (iflag) {
-                        LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
-                        linuxcli_show_dev_info(&usbk);
+                        if (LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info)) >= 0)
+                        {
+                            linuxcli_show_dev_info(&usbk);
+                            printf("Done.\n");
+                        }
                     }
-                    printf("Done.\n");
                     exit(0);
                     break;
                 case FABRIC_DEFAULT:
@@ -242,10 +244,12 @@ int main(int argc, char *argv[]) {
                 exit(1);
             }
             if (iflag) {
-                LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
-                linuxcli_show_dev_info(&usbk);
+                if (LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info))>=0)
+                {
+                    linuxcli_show_dev_info(&usbk);
+                    printf("Done.\n");
+                }
             }
-            printf("Done.\n");
             exit(0);
             break;
         case DEACTIVATE:
@@ -287,10 +291,11 @@ int main(int argc, char *argv[]) {
                 }
 
                 if (iflag) {
-                    LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
-                    linuxcli_show_dev_info(&usbk);
+                    if (LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info))>=0){
+                        linuxcli_show_dev_info(&usbk);
+                        printf("Done.\n");
+                    }
                 }
-                printf("Done.\n");
                 exit(0);
             } else {
                 printf("%s%s\n", WARNING, MISSING_PARAMETER);
@@ -307,10 +312,12 @@ int main(int argc, char *argv[]) {
             }
 
             if (iflag) {
-                LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
-                linuxcli_show_dev_info(&usbk);
+                if (LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info))>=0){
+                    linuxcli_show_dev_info(&usbk);
+                    printf("Done.\n");
+                }
             }
-            printf("Done.\n");
+
             exit(0);
             break;
         case MUST_REMOVE:
@@ -344,10 +351,12 @@ int main(int argc, char *argv[]) {
                 }
 
                 if (iflag) {
-                    LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
-                    linuxcli_show_dev_info(&usbk);
+                    if (LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info))>=0)
+                    {
+                        linuxcli_show_dev_info(&usbk);
+                        printf("Done.\n");
+                    }
                 }
-                printf("Done.\n");
                 exit(0);
                 break;
             case FABRIC_DEFAULT:
@@ -392,10 +401,12 @@ int main(int argc, char *argv[]) {
                     }
 
                     if (iflag) {
-                        LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
-                        linuxcli_show_dev_info(&usbk);
+                        if (LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info))>=0){
+                            linuxcli_show_dev_info(&usbk);
+                            printf("Done.\n");
+                        }
                     }
-                    printf("Done.\n");
+
                     exit(0);
                     break;
                 case FABRIC_DEFAULT:
@@ -511,10 +522,12 @@ int main(int argc, char *argv[]) {
                         }
 
                         if (iflag) {
-                            LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
-                            linuxcli_show_dev_info(&usbk);
+                            if (LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info))>=0){
+                                linuxcli_show_dev_info(&usbk);
+                                printf("Done.\n");
+                            }
                         }
-                        printf("Done.\n");
+
                         exit(0);
                         break;
                     case FABRIC_DEFAULT:
@@ -587,10 +600,12 @@ int main(int argc, char *argv[]) {
                     }
 
                     if (iflag) {
-                        LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
-                        linuxcli_show_dev_info(&usbk);
+                        if (LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info))>=0){
+                            linuxcli_show_dev_info(&usbk);
+                            printf("Done.\n");
+                        }
                     }
-                    printf("Done.\n");
+
                     exit(0);
                     break;
                 case FABRIC_DEFAULT:
@@ -636,10 +651,12 @@ int main(int argc, char *argv[]) {
                 }
 
                 if (iflag) {
-                    LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
-                    linuxcli_show_dev_info(&usbk);
+                    if (LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info))>=0){
+                        linuxcli_show_dev_info(&usbk);
+                        printf("Done.\n");
+                    }
                 }
-                printf("Done.\n");
+
                 exit(0);
                 break;
             case FABRIC_DEFAULT:
@@ -660,9 +677,11 @@ int main(int argc, char *argv[]) {
     }
 
     if (iflag) {
-        LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info));
-        linuxcli_show_dev_info(&usbk);
-        printf("Done.\n");
+        if (LibUSBK__GetDeviceInfo(&usbk, (unsigned char*) &usbk.info, sizeof(usbk.info))>=0){
+            linuxcli_show_dev_info(&usbk);
+            printf("Done.\n");
+        }
+
     }
 
     exit(0);
