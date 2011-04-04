@@ -33,9 +33,9 @@
 
 void print_help(int exval);
 void print_version(void);
-void usbk_show_show_dev_info(USBK_T *usbk);
-int usbk_get_dev_info(USBK_T *usbk);
-int usbk_check_last_opr(USBK_T *usbk);
+void linuxcli_show_dev_info(USBK *usbk);
+//int usbk_get_dev_info(USBK_T *usbk);
+//int usbk_check_last_opr(USBK_T *usbk);
 int check_key_decimal(std::string str, U8 *key);
 int check_key_text(std::string str, U8 *key);
 #endif // USBK_H_

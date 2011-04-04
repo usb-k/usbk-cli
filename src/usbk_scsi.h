@@ -38,8 +38,8 @@
 #include "usbk_sg_ctl.h"
 #include "libusbk.h"
 
-extern int send_scsi_command(USBK_T *usbk, unsigned char *buff, int cmd_index, int len, char rw);
-extern ST_CMD_T scsi_cmd[][10];
+int send_scsi_command(USBK* usbk, unsigned char *buff, int cmd_index, int len, char rw);
+//extern ST_CMD_T scsi_cmd[][10];
 
 #endif
 

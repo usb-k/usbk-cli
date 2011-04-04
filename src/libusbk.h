@@ -17,6 +17,13 @@
 #ifndef LIBUSBK_H_
 #define LIBUSBK_H_
 
+#include <libudev.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+#include <unistd.h>
+#include <string.h>
+
 #include "general.h"
 
 #define USBK_USB_IDVENDOR          "2384"
@@ -25,20 +32,37 @@
 #define USBK_SCSI_BACKDISK_VENDOR  "BackDisk"
 
 typedef struct __USBK {
-    char dev[1024];
-    char backdisk_dev[1024];
-    char usb_serial_no[64];
+    char *dev_path;
+    char *dev;
+    char *vendor_id;
+    char *product_id;
+    char *manufacturer;
+    char *product;
+    char *serial;
+    char *backdisk_path;
+    char *backdisk;
+
     t_UIP_DEVINFO info;
     t_UIP_GETSTATUS status;
-    struct __USBK *next;
-} USBK_T;
+} USBK;
 
-int usbk_list_devices(void);
-//TODO: int usbk_create_list_devices(USBK_T *usbk);
-//TODO: int usbk_realese_list_devices(USBK_T *usbk);
-int usbk_get_device_info(USBK_T *usbk);
-int usbk_get_backdisk(USBK_T *usbk);
-int usbk_get_scsi_dev_info(USBK_T *usbk);
+typedef struct __USBK_List {
+    struct __USBK_List  *next;
+    USBK                usbk;
+} USBK_List;
+
+USBK_List* LibUSBK__list_devices(void);
+void LibUSBK__list_devices_release(USBK_List* p_usbklink);
+
+int LibUSBK__GetDeviceInfo(USBK* usbk, unsigned char *buff, int len);
+int LibUSBK__ActivateKey (USBK* usbk, unsigned char *buff, int len);
+int LibUSBK__DeActivateKey (USBK* usbk);
+int LibUSBK__ChangePassword (USBK* usbk, unsigned char *buff, int len);
+int LibUSBK__SetKey (USBK* usbk, unsigned char *buff, int len);
+int LibUSBK__SetAutoAct (USBK* usbk, unsigned char *buff, int len);
+int LibUSBK__SetDeviceName (USBK* usbk, unsigned char *buff, int len);
+int LibUSBK__GetRandomKey (USBK* usbk, unsigned char *buff, int len);
+
 
 
 #endif
