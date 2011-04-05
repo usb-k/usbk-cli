@@ -239,10 +239,10 @@ int LibUSBK__SetAutoAct (USBK* usbk, unsigned char *buff, int len)
     return LibUSBK__GetStatus (usbk->dev_path);
 }
 
-int LibUSBK__GetRandomKey (USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__GetRandomKey (const char *usbk_path, unsigned char *random_key)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, buff, GENERATE_KEY, len, READ_SCSI);
+    rtn = send_scsi_command_new(usbk_path, random_key, GENERATE_KEY, 32, READ_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
     return OPRS_PASS;
 }

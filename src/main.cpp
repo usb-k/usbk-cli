@@ -478,7 +478,7 @@ int main(int argc, char *argv[]) {
                         }
                         else if (Xflag) {
                             t_UIP_SETKEY dummy_set_key;
-                            status = LibUSBK__GetRandomKey(&usbk, (unsigned char*) dummy_set_key.key.u8, sizeof(dummy_set_key.key));
+                            status = LibUSBK__GetRandomKey (usbk.dev_path, dummy_set_key.key.u8);
                             if (StatusChecker(status) != true){
                                 fprintf (stderr, NOT_CREATE_RANDOM_KEY);
                                 exit(1);
