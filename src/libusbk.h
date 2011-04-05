@@ -67,7 +67,7 @@ void LibUSBK__list_devices_release(USBK_List* p_usbklink);
 int LibUSBK__GetDeviceInfo(USBK* usbk, unsigned char *buff, int len);
 int LibUSBK__ActivateKey (const char *usbk_path, const char *password, const int key_no);
 int LibUSBK__DeActivateKey (const char *usbk_path);
-int LibUSBK__ChangePassword (USBK* usbk, unsigned char *buff, int len);
+int LibUSBK__ChangePassword (const char *usbk_path, const char *old_pass, const char *new_pass);
 int LibUSBK__SetKey (USBK* usbk, unsigned char *buff, int len);
 int LibUSBK__SetAutoAct (USBK* usbk, unsigned char *buff, int len);
 int LibUSBK__SetDeviceName (USBK* usbk, unsigned char *buff, int len);
