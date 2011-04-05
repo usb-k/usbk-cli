@@ -234,7 +234,7 @@ int main(int argc, char *argv[]) {
         switch (usbk.info.devstate.me) {
         case ACTIVATE:
         case ACTIVATE_WITH_BACKDISK:
-            status = LibUSBK__DeActivateKey(&usbk);
+            status = LibUSBK__DeActivateKey(usbk.dev_path);
             if (StatusChecker(status) != true){
                 exit(1);
             }

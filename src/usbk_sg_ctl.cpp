@@ -26,7 +26,7 @@
 
 static int sg_fd;
 
-int usbk_sg_open(char* DevicePath)
+int usbk_sg_open(const char* DevicePath)
 {
     int rtn = rtnUSBK_SG_PASS;
 
