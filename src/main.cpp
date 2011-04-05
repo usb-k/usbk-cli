@@ -571,12 +571,7 @@ int main(int argc, char *argv[]) {
                     exit(0);
                     break;
                 case DEACTIVATE:
-                    memset(&set_auto, 0, sizeof(set_auto));
-                    strncpy(set_auto.password.s, opt_parola.s, sizeof(set_auto.password.s));
-                    memcpy(&set_auto.keyno, &opt_key, sizeof(set_auto.keyno));
-                    //set_auto.keyno = 3;
-
-                    status = LibUSBK__SetAutoAct(&usbk, (unsigned char*) &set_dev_name, sizeof(set_dev_name));
+                    status = LibUSBK__SetAutoAct(usbk.dev_path, opt_parola.s, true, opt_key);
                     if (StatusChecker(status) != true){
                         exit(1);
                     }
@@ -623,11 +618,7 @@ int main(int argc, char *argv[]) {
                 exit(0);
                 break;
             case DEACTIVATE:
-                memset(&set_auto, 0, sizeof(set_auto));
-                strncpy(set_auto.password.s, opt_parola.s, sizeof(set_auto.password.s));
-                memset(&set_auto.keyno, 0, sizeof(set_auto.keyno));
-
-                status = LibUSBK__SetAutoAct(&usbk, (unsigned char*) &set_dev_name, sizeof(set_dev_name));
+                status = LibUSBK__SetAutoAct(usbk.dev_path, opt_parola.s, false, 0);
                 if (StatusChecker(status) != true){
                     exit(1);
                 }

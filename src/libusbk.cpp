@@ -231,12 +231,17 @@ int LibUSBK__SetKey (USBK* usbk, unsigned char *buff, int len)
     return LibUSBK__GetStatus (usbk->dev_path);
 }
 
-int LibUSBK__SetAutoAct (USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__SetAutoAct (const char *usbk_path, const char *pass, int enable, int key_no)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, buff, SET_AUTO_ACTIVE, len, WRITE_SCSI);
+    t_UIP_SETAUTOACTIVATE autoact;
+
+    strncpy(autoact.password.s, pass, sizeof(autoact.password.s));
+    autoact.keyno = (enable == true)?0:key_no;
+
+    rtn = send_scsi_command_new(usbk_path, (unsigned char*)&autoact, SET_AUTO_ACTIVE, sizeof(autoact), WRITE_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
-    return LibUSBK__GetStatus (usbk->dev_path);
+    return LibUSBK__GetStatus (usbk_path);
 }
 
 int LibUSBK__GetRandomKey (const char *usbk_path, unsigned char *random_key)
