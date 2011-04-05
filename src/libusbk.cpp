@@ -223,12 +223,39 @@ int LibUSBK__SetDeviceName (const char *usbk_path, const char *pass, const char 
     return LibUSBK__GetStatus (usbk_path);
 }
 
-int LibUSBK__SetKey (USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__SetKey (const char *usbk_path, const char *pass, int key_no, int name_only, const char* key_name, const char* key_size, const unsigned char* key)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, buff, SET_KEY, len, WRITE_SCSI);
+    t_UIP_SETKEY setkey;
+    memset (&setkey, 0, sizeof (setkey));
+
+    strncpy(setkey.password.s, pass, sizeof(setkey.password.s));
+    setkey.keyno = key_no;
+    strncpy(setkey.keyname.s, key_name, sizeof(setkey.keyname.s));
+
+    if (name_only == true){
+        setkey.options.me = SETKEY_NAMEONLY;
+    }
+    else{
+        setkey.options.me = SETKEY_NAME_AND_KEY;
+        if (!strcmp(key_size, "128")) {
+            setkey.keysize.me = KEYSIZE_128;
+            memcpy(setkey.key.u8,key,16);
+        } else if (!strcmp(key_size, "192")) {
+            setkey.keysize.me = KEYSIZE_192;
+            memcpy(setkey.key.u8,key,24);
+        } else if (!strcmp(key_size, "256")) {
+            setkey.keysize.me = KEYSIZE_256;
+            memcpy(setkey.key.u8,key,32);
+        } else {
+            setkey.keysize.me = KEYSIZE_256;    // if not defined, default is 256-Bit Key
+            memcpy(setkey.key.u8,key,32);
+        }
+    }
+
+    rtn = send_scsi_command_new(usbk_path, (unsigned char*)&setkey, SET_KEY, sizeof(setkey), WRITE_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
-    return LibUSBK__GetStatus (usbk->dev_path);
+    return LibUSBK__GetStatus (usbk_path);
 }
 
 int LibUSBK__SetAutoAct (const char *usbk_path, const char *pass, int enable, int key_no)

@@ -99,8 +99,8 @@ t_UIP_SETAUTOACTIVATE set_auto;
 char opt_key_format;
 
 e_UIP_KEYSIZE opt_key_size;
+char opt_key_size_str[16];
 int opt_key_size_byte;
-
 char opt_string_key[128];
 
 USBK usbk;
@@ -371,13 +371,7 @@ int main(int argc, char *argv[]) {
                     exit(0);
                     break;
                 case DEACTIVATE:
-                    memset(&set_key, 0, sizeof(set_key));
-                    strncpy(set_key.password.s, opt_parola.s, sizeof(set_key.password.s));
-                    memcpy(&set_key.keyno, &opt_key, sizeof(set_key.keyno));
-                    strncpy(set_key.keyname.s, opt_aes_name.s, sizeof(set_key.keyname.s));
-                    memset(&set_key.options.me, SETKEY_NAMEONLY, sizeof(set_key.options.me));
-
-                    status = LibUSBK__SetKey (&usbk, (unsigned char*) &set_key, sizeof(set_key));
+                    status = LibUSBK__SetKey (usbk.dev_path, opt_parola.s, opt_key, true, opt_aes_name.s, NULL, NULL);
                     if (StatusChecker(status) != true){
                         exit(1);
                     }
@@ -428,32 +422,26 @@ int main(int argc, char *argv[]) {
                         exit(0);
                         break;
                     case DEACTIVATE:
-                        memset(&set_key, 0, sizeof(set_key));
-                        strncpy(set_key.password.s, opt_parola.s, sizeof(set_key.password.s));
-                        memcpy(&set_key.keyno, &opt_key, sizeof(set_key.keyno));
-                        memset(&set_key.options.me, SETKEY_NAME_AND_KEY, sizeof(set_key.options.me));
-                        set_key.keysize.me = opt_key_size;
 
-                        if (mflag) {
-                            strncpy(set_key.keyname.s, opt_aes_name.s, sizeof(set_key.keyname.s));
-                        } else {
-                            strncpy(set_key.keyname.s, usbk.info.keyname[opt_key].s, sizeof(set_key.keyname.s));
+                        if (!mflag) {
+                            strncpy(opt_aes_name.s, usbk.info.keyname[opt_key].s, sizeof(opt_aes_name.s));
                         }
-
 
                         switch (opt_key_size)
                         {
                         case KEYSIZE_128:
                             opt_key_size_byte = 16;
+                            strcpy(opt_key_size_str, "128");
                             break;
                         case KEYSIZE_192:
                             opt_key_size_byte = 24;
+                            strcpy(opt_key_size_str, "192");
                             break;
                         case KEYSIZE_256:
                         default:
                             opt_key_size_byte = 32;
+                            strcpy(opt_key_size_str, "256");
                             break;
-
                         }
 
                         if (xflag) {
@@ -466,7 +454,7 @@ int main(int argc, char *argv[]) {
                                     exit(0);
                                 }
                             } else if (opt_key_format == 't') {
-                                if (check_key_text((string) opt_string_key, set_key.key.u8, opt_key_size_byte)
+                                if (check_key_text((string) opt_string_key, opt_aes_key.u8, opt_key_size_byte)
                                         == -1) {
                                     printf("Hata: key text format yanlis.\n");
                                     exit(0);
@@ -486,7 +474,7 @@ int main(int argc, char *argv[]) {
                             memcpy (set_key.key.u8, dummy_set_key.key.u8, opt_key_size_byte);
                         }
 
-                        status = LibUSBK__SetKey (&usbk, (unsigned char*) &set_key, sizeof(set_key));
+                        status = LibUSBK__SetKey (usbk.dev_path, opt_parola.s, opt_key, false, opt_aes_name.s, opt_key_size_str, opt_aes_key.u8);
                         if (StatusChecker(status) != true){
                             exit(1);
                         }
