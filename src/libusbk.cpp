@@ -166,7 +166,7 @@ int LibUSBK__GetDeviceInfo(USBK* usbk, unsigned char *buff, int len)
     return rtn;
 }
 
-int LibUSBK__GetStatus (char *usbk_path)
+int LibUSBK__GetStatus (const char *usbk_path)
 {
     t_UIP_GETSTATUS status;
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
@@ -183,12 +183,12 @@ int LibUSBK__ActivateKey (USBK* usbk, unsigned char *buff, int len)
     return LibUSBK__GetStatus (usbk->dev_path);
 }
 
-int LibUSBK__DeActivateKey (USBK* usbk)
+int LibUSBK__DeActivateKey (const char *usbk_path)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, (unsigned char*) NULL, DEACTIVATE_KEY, 0, WRITE_SCSI);
+    rtn = send_scsi_command_new(usbk_path, (unsigned char*) NULL, DEACTIVATE_KEY, 0, WRITE_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
-    return LibUSBK__GetStatus (usbk->dev_path);
+    return LibUSBK__GetStatus (usbk_path);
 }
 
 int LibUSBK__ChangePassword (USBK* usbk, unsigned char *buff, int len)
