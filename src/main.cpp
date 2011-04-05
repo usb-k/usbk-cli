@@ -15,13 +15,9 @@
  *
  */
 
-//TODO: BackDisk in mount noktasını bul ve 'Show device list' de göster. 'Device info'da BackDisk sutunu kaldir.
 //TODO: BackDisk mount edilmiş ise deactive işlemi sırasında kullanıcıya uyarı ver ve emin misin diye sor.
 
 #include "usbk.h"
-
-#define USBK_PRODUCT_ID       0xa100
-#define USBK_VENDOR_ID        0x2384
 
 //Msgs of DeviceControl
 #define MISSING_PARAMETER    "Missing parameter"
@@ -29,8 +25,7 @@
 #define MSG_FABRIC_DEFAULT   "Fabric default. Please first set your password."
 #define MSG_MUST_REMOVE      "Must remove. Please remove and re-plug the USBK."
 #define NOT_CREATE_RANDOM_KEY "Key Random Olarak Uretilemiyor."
-
-#define  ERROR_MALLOC()       {fprintf(stderr, "memory'de yer yok!\n\r");exit(1);}
+#define NOT_MALLOC            "memory'de yer yok!\n"
 
 using namespace std;
 
@@ -999,7 +994,10 @@ static int _parse_options(int *argc, char** argv[]) {
             case 's': {
                 USBK_List* p_usbklink = NULL;
                 p_usbklink = LibUSBK__list_devices();
-                if (p_usbklink == NULL) ERROR_MALLOC();
+                if (p_usbklink == NULL){
+                    fprintf(stderr, NOT_MALLOC);
+                    exit(1);
+                }
                 linuxcli_show_devices(p_usbklink);
                 LibUSBK__list_devices_release(p_usbklink);
             }
