@@ -175,12 +175,18 @@ int LibUSBK__GetStatus (const char *usbk_path)
     return ((int)status.lastop.me);
 }
 
-int LibUSBK__ActivateKey (USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__ActivateKey (const char *usbk_path, const char *password, const int key_no)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, buff, ACTIVATE_KEY, len, WRITE_SCSI);
+    t_UIP_ACTIVATE activate;
+    memset (&activate, 0, sizeof (activate));
+
+    strcpy(activate.password.s, password);
+    activate.keyno = key_no;
+
+    rtn = send_scsi_command_new(usbk_path, (unsigned char *)&activate, ACTIVATE_KEY, sizeof(activate), WRITE_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
-    return LibUSBK__GetStatus (usbk->dev_path);
+    return LibUSBK__GetStatus (usbk_path);
 }
 
 int LibUSBK__DeActivateKey (const char *usbk_path)

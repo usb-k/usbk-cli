@@ -189,11 +189,8 @@ int main(int argc, char *argv[]) {
                     printf("%s [%s] cihazı zaten aktif.\n", usbk.dev, usbk.info.devlabel.s);
                     break;
                 case DEACTIVATE:
-                    memset(&act, 0, sizeof(act));
-                    strncpy(act.password.s, opt_parola.s, sizeof(act.password.s));
-                    memcpy(&act.keyno, &opt_key, sizeof(act.keyno));
+                    status = LibUSBK__ActivateKey(usbk.dev_path, opt_parola.s, (int)opt_key);
 
-                    status = LibUSBK__ActivateKey(&usbk, (unsigned char*) &act, sizeof(act));
                     if (StatusChecker(status) != true){
                         exit(1);
                     }
