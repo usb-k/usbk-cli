@@ -75,3 +75,44 @@ int send_scsi_command(USBK* usbk, unsigned char *buff, int cmd_index, int len, c
     usbk_sg_close();
     return rtnUSBK_SCSI_PASS;
 }
+
+
+
+
+int send_scsi_command_new(char *usbk_path, unsigned char *buff, int cmd_index, int len, char rw) {
+    short int cmdlen = sizeof(ST_CMD_T);
+    ST_PACKET_T packet;
+    unsigned char buffer[512];
+
+    if (usbk_sg_open(usbk_path) < 0) {
+        fprintf(stderr, msgUSBK_SCSI_OPEN_FAIL);
+        return rtnUSBK_SCSI_OPEN_FAIL;
+    }
+
+    memset(buffer, 0, sizeof(buffer));
+
+    if (rw == WRITE_SCSI) {
+        if (len != 0) {
+            memcpy(buffer, buff, len);
+        }
+    }
+
+    packet.cmd = scsi_cmd[cmd_index - 1];
+    packet.cmdlen = cmdlen;
+    packet.cmddir = (rw == WRITE_SCSI) ? OUTDIR : INDIR;
+    packet.data = buffer;
+    packet.datalen = 512;
+
+    if (usbk_sg_tansfer(&packet) < 0) {
+        fprintf(stderr, msgUSBK_SCSI_TRANSFER_FAIL);
+        return rtnUSBK_SCSI_TRANSFER_FAIL;
+    }
+
+    if (rw == READ_SCSI) {
+        if (len != 0) {
+            memcpy(buff, buffer, len);
+        }
+    }
+    usbk_sg_close();
+    return rtnUSBK_SCSI_PASS;
+}
