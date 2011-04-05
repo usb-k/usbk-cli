@@ -74,5 +74,7 @@
  */
 int send_scsi_command(USBK* usbk, unsigned char *buff, int cmd_index, int len, char rw);
 
+int send_scsi_command_new(const char *usbk_path, unsigned char *buff, int cmd_index, int len, char rw);
+
 #endif
 
