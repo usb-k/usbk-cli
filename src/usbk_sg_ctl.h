@@ -52,7 +52,7 @@
  * \ingroup ScsiGeneric
  *
  */
-int usbk_sg_open(char* DevicePath);
+int usbk_sg_open(const char* DevicePath);
 
 
 /**
