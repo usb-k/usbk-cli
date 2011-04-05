@@ -327,11 +327,7 @@ int main(int argc, char *argv[]) {
                 exit(0);
                 break;
             case DEACTIVATE:
-                memset(&set_dev_name, 0, sizeof(set_dev_name));
-                strncpy(set_dev_name.password.s, opt_parola.s, sizeof(set_dev_name.password.s));
-                strncpy(set_dev_name.devlabel.s, opt_dev_name.s, sizeof(set_dev_name.devlabel.s));
-
-                status = LibUSBK__SetDeviceName(&usbk, (unsigned char*) &set_dev_name, sizeof(set_dev_name));
+                status = LibUSBK__SetDeviceName(usbk.dev_path, opt_parola.s, opt_dev_name.s);
                 if (StatusChecker(status) != true){
                     exit(1);
                 }

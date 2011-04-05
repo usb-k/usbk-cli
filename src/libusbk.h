@@ -70,7 +70,7 @@ int LibUSBK__DeActivateKey (const char *usbk_path);
 int LibUSBK__ChangePassword (const char *usbk_path, const char *old_pass, const char *new_pass);
 int LibUSBK__SetKey (USBK* usbk, unsigned char *buff, int len);
 int LibUSBK__SetAutoAct (USBK* usbk, unsigned char *buff, int len);
-int LibUSBK__SetDeviceName (USBK* usbk, unsigned char *buff, int len);
+int LibUSBK__SetDeviceName (const char *usbk_path, const char *pass, const char *device_label);
 int LibUSBK__GetRandomKey (USBK* usbk, unsigned char *buff, int len);
 
 
