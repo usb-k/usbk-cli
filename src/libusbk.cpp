@@ -210,12 +210,17 @@ int LibUSBK__ChangePassword (const char *usbk_path, const char *old_pass, const 
     return LibUSBK__GetStatus (usbk_path);
 }
 
-int LibUSBK__SetDeviceName (USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__SetDeviceName (const char *usbk_path, const char *pass, const char *device_label)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, buff, SET_DEV_NAME, len, WRITE_SCSI);
+    t_UIP_SETDEVICELABEL devlabel;
+
+    strncpy(devlabel.password.s, pass, sizeof(devlabel.password.s));
+    strncpy(devlabel.devlabel.s, device_label, sizeof(devlabel.devlabel.s));
+
+    rtn = send_scsi_command_new(usbk_path, (unsigned char*)&devlabel, SET_DEV_NAME, sizeof(devlabel), WRITE_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
-    return LibUSBK__GetStatus (usbk->dev_path);
+    return LibUSBK__GetStatus (usbk_path);
 }
 
 int LibUSBK__SetKey (USBK* usbk, unsigned char *buff, int len)
