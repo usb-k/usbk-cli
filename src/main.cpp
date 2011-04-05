@@ -273,11 +273,7 @@ int main(int argc, char *argv[]) {
             break;
         case DEACTIVATE:
             if (pflag) {
-                memset(&change_pas, 0, sizeof(change_pas));
-                strncpy(change_pas.old_password.s, opt_parola.s, sizeof(change_pas.old_password.s));
-                strncpy(change_pas.new_password.s, opt_new_password.s, sizeof(change_pas.new_password.s));
-
-                status = LibUSBK__ChangePassword(&usbk, (unsigned char*) &change_pas, sizeof(change_pas));
+                status = LibUSBK__ChangePassword(usbk.dev_path, opt_parola.s, opt_new_password.s);
                 if (StatusChecker(status) != true){
                     exit(1);
                 }
@@ -295,10 +291,8 @@ int main(int argc, char *argv[]) {
             }
             break;
         case FABRIC_DEFAULT:
-            memset(&change_pas, 0, sizeof(change_pas));
-            strncpy(change_pas.new_password.s, opt_new_password.s, sizeof(change_pas.new_password.s));
 
-            status = LibUSBK__ChangePassword(&usbk, (unsigned char*) &change_pas, sizeof(change_pas));
+            status = LibUSBK__ChangePassword(usbk.dev_path, NULL, opt_new_password.s);
             if (StatusChecker(status) != true){
                 exit(1);
             }

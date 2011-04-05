@@ -197,12 +197,17 @@ int LibUSBK__DeActivateKey (const char *usbk_path)
     return LibUSBK__GetStatus (usbk_path);
 }
 
-int LibUSBK__ChangePassword (USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__ChangePassword (const char *usbk_path, const char *old_pass, const char *new_pass)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, buff, CHANGE_PASS, len, WRITE_SCSI);
+    t_UIP_CHPASS chpass;
+
+    strncpy(chpass.new_password.s, new_pass, sizeof (chpass.new_password.s));
+    strncpy(chpass.old_password.s, old_pass, sizeof (chpass.old_password.s));
+
+    rtn = send_scsi_command_new(usbk_path, (unsigned char*)&chpass, CHANGE_PASS, sizeof(chpass), WRITE_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
-    return LibUSBK__GetStatus (usbk->dev_path);
+    return LibUSBK__GetStatus (usbk_path);
 }
 
 int LibUSBK__SetDeviceName (USBK* usbk, unsigned char *buff, int len)
