@@ -16,6 +16,9 @@
  */
 
 #include "usbk_scsi.h"
+#include "usbk_sg_ctl.h"
+
+// Vender Specific SCSI Command
 
 ST_CMD_T scsi_cmd[][10] = {
   {0xFE, 0x00, GET_STATUS,      0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00},
@@ -26,67 +29,49 @@ ST_CMD_T scsi_cmd[][10] = {
   {0xFE, 0x00, SET_DEV_NAME,    0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00},
   {0xFE, 0x00, SET_AUTO_ACTIVE, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00},
   {0xFE, 0x00, SET_KEY,         0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00},
-  {0xFE, 0x00, GENERATE_KEY,    0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00},
-  {0xFE, 0x00, GET_PUBLIC_KEY,  0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00} };
+  {0xFE, 0x00, GENERATE_KEY,    0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00}
+};
 
-int send_scsi_command(USBK* usbk, unsigned char *buff, int cmd_index, int len, char rw)
-{
+
+// Error Messages
+#define msgUSBK_SCSI_OPEN_FAIL      "Hata: device adi yanlis veya root yetkisine sahip degilsiniz.\n"
+#define msgUSBK_SCSI_TRANSFER_FAIL  "Hata: SCSI okuma hatasi.\n"
+
+
+int send_scsi_command(USBK* usbk, unsigned char *buff, int cmd_index, int len, char rw) {
     short int cmdlen = sizeof(ST_CMD_T);
     ST_PACKET_T packet;
     unsigned char buffer[512];
 
-<<<<<<< HEAD
-    if(usbk_open(usbk->dev) == 1)
-=======
-    if(usbk_open(usbk->dev_path) == 1)
->>>>>>> gho/master
-      {
-        printf("Hata: device adi yanlis veya root yetkisine sahip degilsiniz.\n");
-        exit(1);
-      }
-<<<<<<< HEAD
-=======
-    else
-    {
-        printf("basari ile device acildi.");
+    if (usbk_sg_open(usbk->dev_path) < 0) {
+        fprintf(stderr, msgUSBK_SCSI_OPEN_FAIL);
+        return rtnUSBK_SCSI_OPEN_FAIL;
     }
->>>>>>> gho/master
 
-    memset(buffer,0,sizeof(buffer));
+    memset(buffer, 0, sizeof(buffer));
 
-    if (rw == WRITE_SCSI)
-      {
-        if(len != 0)
-          {
+    if (rw == WRITE_SCSI) {
+        if (len != 0) {
             memcpy(buffer, buff, len);
-          }
-      }
+        }
+    }
 
-    packet.cmd = scsi_cmd[cmd_index-1];
+    packet.cmd = scsi_cmd[cmd_index - 1];
     packet.cmdlen = cmdlen;
     packet.cmddir = (rw == WRITE_SCSI) ? OUTDIR : INDIR;
     packet.data = buffer;
     packet.datalen = 512;
 
-    if (usbk_sg_tansfer(&packet) == 1)
-      {
-        printf("Hata: SCSI okuma hatasi.\n");
-        exit(1);
-      }
+    if (usbk_sg_tansfer(&packet) < 0) {
+        fprintf(stderr, msgUSBK_SCSI_TRANSFER_FAIL);
+        return rtnUSBK_SCSI_TRANSFER_FAIL;
+    }
 
-    if (rw == READ_SCSI)
-      {
-        if(len != 0)
-          {
+    if (rw == READ_SCSI) {
+        if (len != 0) {
             memcpy(buff, buffer, len);
-          }
-      }
-    usbk_close();
-    return 0;
+        }
+    }
+    usbk_sg_close();
+    return rtnUSBK_SCSI_PASS;
 }
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> gho/master
