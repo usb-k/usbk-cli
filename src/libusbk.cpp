@@ -175,12 +175,18 @@ int LibUSBK__GetStatus (const char *usbk_path)
     return ((int)status.lastop.me);
 }
 
-int LibUSBK__ActivateKey (USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__ActivateKey (const char *usbk_path, const char *password, const int key_no)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, buff, ACTIVATE_KEY, len, WRITE_SCSI);
+    t_UIP_ACTIVATE activate;
+    memset (&activate, 0, sizeof (activate));
+
+    strcpy(activate.password.s, password);
+    activate.keyno = key_no;
+
+    rtn = send_scsi_command_new(usbk_path, (unsigned char *)&activate, ACTIVATE_KEY, sizeof(activate), WRITE_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
-    return LibUSBK__GetStatus (usbk->dev_path);
+    return LibUSBK__GetStatus (usbk_path);
 }
 
 int LibUSBK__DeActivateKey (const char *usbk_path)
@@ -191,43 +197,90 @@ int LibUSBK__DeActivateKey (const char *usbk_path)
     return LibUSBK__GetStatus (usbk_path);
 }
 
-int LibUSBK__ChangePassword (USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__ChangePassword (const char *usbk_path, const char *old_pass, const char *new_pass)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, buff, CHANGE_PASS, len, WRITE_SCSI);
+    t_UIP_CHPASS chpass;
+
+    strncpy(chpass.new_password.s, new_pass, sizeof (chpass.new_password.s));
+    strncpy(chpass.old_password.s, old_pass, sizeof (chpass.old_password.s));
+
+    rtn = send_scsi_command_new(usbk_path, (unsigned char*)&chpass, CHANGE_PASS, sizeof(chpass), WRITE_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
-    return LibUSBK__GetStatus (usbk->dev_path);
+    return LibUSBK__GetStatus (usbk_path);
 }
 
-int LibUSBK__SetDeviceName (USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__SetDeviceName (const char *usbk_path, const char *pass, const char *device_label)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, buff, SET_DEV_NAME, len, WRITE_SCSI);
+    t_UIP_SETDEVICELABEL devlabel;
+
+    strncpy(devlabel.password.s, pass, sizeof(devlabel.password.s));
+    strncpy(devlabel.devlabel.s, device_label, sizeof(devlabel.devlabel.s));
+
+    rtn = send_scsi_command_new(usbk_path, (unsigned char*)&devlabel, SET_DEV_NAME, sizeof(devlabel), WRITE_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
-    return LibUSBK__GetStatus (usbk->dev_path);
+    return LibUSBK__GetStatus (usbk_path);
 }
 
-int LibUSBK__SetKey (USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__SetKey (const char *usbk_path, const char *pass, int key_no, int name_only, const char* key_name, const char* key_size, const unsigned char* key)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, buff, SET_KEY, len, WRITE_SCSI);
+    t_UIP_SETKEY setkey;
+    memset (&setkey, 0, sizeof (setkey));
+
+    strncpy(setkey.password.s, pass, sizeof(setkey.password.s));
+    setkey.keyno = key_no;
+    strncpy(setkey.keyname.s, key_name, sizeof(setkey.keyname.s));
+
+    if (name_only == true){
+        setkey.options.me = SETKEY_NAMEONLY;
+    }
+    else{
+        setkey.options.me = SETKEY_NAME_AND_KEY;
+        if (!strcmp(key_size, "128")) {
+            setkey.keysize.me = KEYSIZE_128;
+            memcpy(setkey.key.u8,key,16);
+        } else if (!strcmp(key_size, "192")) {
+            setkey.keysize.me = KEYSIZE_192;
+            memcpy(setkey.key.u8,key,24);
+        } else if (!strcmp(key_size, "256")) {
+            setkey.keysize.me = KEYSIZE_256;
+            memcpy(setkey.key.u8,key,32);
+        } else {
+            setkey.keysize.me = KEYSIZE_256;    // if not defined, default is 256-Bit Key
+            memcpy(setkey.key.u8,key,32);
+        }
+    }
+
+    rtn = send_scsi_command_new(usbk_path, (unsigned char*)&setkey, SET_KEY, sizeof(setkey), WRITE_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
-    return LibUSBK__GetStatus (usbk->dev_path);
+    return LibUSBK__GetStatus (usbk_path);
 }
 
-int LibUSBK__SetAutoAct (USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__SetAutoAct (const char *usbk_path, const char *pass, int enable, int key_no)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, buff, SET_AUTO_ACTIVE, len, WRITE_SCSI);
+    t_UIP_SETAUTOACTIVATE autoact;
+
+    strncpy(autoact.password.s, pass, sizeof(autoact.password.s));
+    autoact.keyno = (enable == true)?0:key_no;
+
+    rtn = send_scsi_command_new(usbk_path, (unsigned char*)&autoact, SET_AUTO_ACTIVE, sizeof(autoact), WRITE_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
-    return LibUSBK__GetStatus (usbk->dev_path);
+    return LibUSBK__GetStatus (usbk_path);
 }
 
-int LibUSBK__GetRandomKey (USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__GetRandomKey (const char *usbk_path, unsigned char *random_key)
 {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    rtn = send_scsi_command(usbk, buff, GENERATE_KEY, len, READ_SCSI);
+    t_UIP_GENERATEKEY genkey;
+
+    rtn = send_scsi_command_new(usbk_path, (unsigned char*)&genkey, GENERATE_KEY, sizeof(genkey), READ_SCSI);
     if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
+
+    memcpy(random_key, genkey, sizeof(genkey));
+
     return OPRS_PASS;
 }
 
