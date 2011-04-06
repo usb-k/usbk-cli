@@ -103,31 +103,40 @@ char opt_key_size_str[16];
 int opt_key_size_byte;
 char opt_string_key[128];
 
-USBK usbk;
+
+char usbk_dev[1024];
 USBK_INFO *usbk_info;
 
-void linuxcli_show_devices(USBK_List* p_usbklink);
+void linuxcli_show_devices(void);
 
 
-//usbk_get_device_info(&usbk);
-e_UIP_DEVSTATE linuxcli_GetDevState(void)
+e_UIP_DEVSTATE linuxcli_GetDevState(const char *usbk_dev)
 {
     USBK_INFO *usbk_infos;
-    if (LibUSBK__GetDeviceInfo(usbk.dev, &usbk_infos)<0) fprintf(stderr,"device yok");
+    if (LibUSBK__GetDeviceInfo(usbk_dev, &usbk_infos)<0) fprintf(stderr,"device yok");
     e_UIP_DEVSTATE dev_state = usbk_infos->dev_state;
     LibUSBK__GetDeviceInfo_Release(usbk_infos);
     return dev_state;
 }
 
+int linuxcli_GetRetryNumber(const char *usbk_dev)
+{
+    USBK_INFO *usbk_infos;
+    if (LibUSBK__GetDeviceInfo(usbk_dev, &usbk_infos)<0) fprintf(stderr,"device yok");
+    int retry_number = usbk_infos->retry_num;
+    LibUSBK__GetDeviceInfo_Release(usbk_infos);
+    return retry_number;
+}
 
 
-bool StatusChecker(int status) {
+
+bool StatusChecker(const char *usbk_dev, int status) {
     switch ((e_UIP_OPRSTATUS) status) {
     case OPRS_PASS:
         return true;
         break;
     case OPRS_INVALID_PASS:
-        printf("Hata: Parola yanlis. RetryNum:%d\n", 0);//usbk->status.retry_num);
+        printf("Hata: Parola yanlis. RetryNum:%d\n", linuxcli_GetRetryNumber(usbk_dev));
         return false;
         break;
     case OPRS_FABRIC_RESET:
@@ -142,7 +151,7 @@ bool StatusChecker(int status) {
         return false;
         break;
     default:
-        printf("Hata: Islem basarisiz. MSG_CODE:0x%02X RetryNum:%d\n", status, 0);//usbk->status.retry_num);    //todo
+        printf("Hata: Islem basarisiz. MSG_CODE:0x%02X RetryNum:%d\n", status, linuxcli_GetRetryNumber(usbk_dev));
         return false;
         break;
     }
@@ -161,7 +170,7 @@ int main(int argc, char *argv[]) {
     int c;
     int status;
 
-    USBK_List* p_usbk = NULL;
+
 
     opt_key = 1; // default key no 1
     opt_key_format = 'd'; // default key format decimal
@@ -187,8 +196,7 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
-    //usbk_get_device_info(&usbk);
-    e_UIP_DEVSTATE dev_state = linuxcli_GetDevState();
+    e_UIP_DEVSTATE dev_state = linuxcli_GetDevState(usbk_dev);
 
     /////////////////////////////////////////////
     // ACTIVATE
@@ -199,16 +207,16 @@ int main(int argc, char *argv[]) {
                 switch (dev_state) {
                 case ACTIVATE:
                 case ACTIVATE_WITH_BACKDISK:
-                    printf("%s [%s] cihazı zaten aktif.\n", usbk.dev, usbk.info.devlabel.s);
+                    printf("%s [%s] cihazı zaten aktif.\n", abcde.dev, abcde.info.devlabel.s);
                     break;
                 case DEACTIVATE:
-                    status = LibUSBK__ActivateKey(usbk.dev_path, opt_parola.s, (int)opt_key);
+                    status = LibUSBK__ActivateKey(abcde.dev_path, opt_parola.s, (int)opt_key);
 
                     if (StatusChecker(status) != true){
                         exit(1);
                     }
                     if (iflag) {
-                        linuxcli_show_dev_info(usbk.dev);
+                        linuxcli_show_dev_info(abcde.dev);
                     }
                     printf("Done.\n");
                     exit(0);
@@ -241,18 +249,18 @@ int main(int argc, char *argv[]) {
         switch (dev_state) {
         case ACTIVATE:
         case ACTIVATE_WITH_BACKDISK:
-            status = LibUSBK__DeActivateKey(usbk.dev_path);
+            status = LibUSBK__DeActivateKey(abcde.dev_path);
             if (StatusChecker(status) != true){
                 exit(1);
             }
             if (iflag) {
-                linuxcli_show_dev_info(usbk.dev);
+                linuxcli_show_dev_info(abcde.dev);
             }
             exit(0);
             printf("Done.\n");
             break;
         case DEACTIVATE:
-            printf("%s [%s] cihazı zaten deaktif.\n", usbk.dev, usbk.info.devlabel.s);
+            printf("%s [%s] cihazı zaten deaktif.\n", abcde.dev, abcde.info.devlabel.s);
             exit(0);
             break;
         case FABRIC_DEFAULT:
@@ -275,18 +283,18 @@ int main(int argc, char *argv[]) {
         switch (dev_state) {
         case ACTIVATE:
         case ACTIVATE_WITH_BACKDISK:
-            printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devlabel.s);
+            printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", abcde.dev, abcde.info.devlabel.s);
             exit(0);
             break;
         case DEACTIVATE:
             if (pflag) {
-                status = LibUSBK__ChangePassword(usbk.dev_path, opt_parola.s, opt_new_password.s);
+                status = LibUSBK__ChangePassword(abcde.dev_path, opt_parola.s, opt_new_password.s);
                 if (StatusChecker(status) != true){
                     exit(1);
                 }
 
                 if (iflag) {
-                    linuxcli_show_dev_info(usbk.dev);
+                    linuxcli_show_dev_info(abcde.dev);
                 }
                 printf("Done.\n");
                 exit(0);
@@ -298,13 +306,13 @@ int main(int argc, char *argv[]) {
         case FABRIC_DEFAULT:
 
             // FIXME null olmuyor boş bir ptr ver
-            status = LibUSBK__ChangePassword(usbk.dev_path, NULL, opt_new_password.s);
+            status = LibUSBK__ChangePassword(abcde.dev_path, NULL, opt_new_password.s);
             if (StatusChecker(status) != true){
                 exit(1);
             }
 
             if (iflag) {
-                linuxcli_show_dev_info(usbk.dev);
+                linuxcli_show_dev_info(abcde.dev);
             }
             printf("Done.\n");
             exit(0);
@@ -326,17 +334,17 @@ int main(int argc, char *argv[]) {
             switch (dev_state) {
             case ACTIVATE:
             case ACTIVATE_WITH_BACKDISK:
-                printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devlabel.s);
+                printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", abcde.dev, abcde.info.devlabel.s);
                 exit(0);
                 break;
             case DEACTIVATE:
-                status = LibUSBK__SetDeviceName(usbk.dev_path, opt_parola.s, opt_dev_name.s);
+                status = LibUSBK__SetDeviceName(abcde.dev_path, opt_parola.s, opt_dev_name.s);
                 if (StatusChecker(status) != true){
                     exit(1);
                 }
 
                 if (iflag) {
-                    linuxcli_show_dev_info(usbk.dev);
+                    linuxcli_show_dev_info(abcde.dev);
                 }
                 printf("Done.\n");
                 exit(0);
@@ -367,17 +375,17 @@ int main(int argc, char *argv[]) {
                 switch (dev_state) {
                 case ACTIVATE:
                 case ACTIVATE_WITH_BACKDISK:
-                    printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devlabel.s);
+                    printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", abcde.dev, abcde.info.devlabel.s);
                     exit(0);
                     break;
                 case DEACTIVATE:
-                    status = LibUSBK__SetKey (usbk.dev_path, opt_parola.s, opt_key, true, opt_aes_name.s, NULL, NULL);
+                    status = LibUSBK__SetKey (abcde.dev_path, opt_parola.s, opt_key, true, opt_aes_name.s, NULL, NULL);
                     if (StatusChecker(status) != true){
                         exit(1);
                     }
 
                     if (iflag) {
-                        linuxcli_show_dev_info(usbk.dev);
+                        linuxcli_show_dev_info(abcde.dev);
                     }
                     printf("Done.\n");
                     exit(0);
@@ -415,13 +423,13 @@ int main(int argc, char *argv[]) {
                     switch (dev_state) {
                     case ACTIVATE:
                     case ACTIVATE_WITH_BACKDISK:
-                        printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devlabel.s);
+                        printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", abcde.dev, abcde.info.devlabel.s);
                         exit(0);
                         break;
                     case DEACTIVATE:
 
                         if (!mflag) {
-                            strncpy(opt_aes_name.s, usbk.info.keyname[opt_key].s, sizeof(opt_aes_name.s));
+                            strncpy(opt_aes_name.s, abcde.info.keyname[opt_key].s, sizeof(opt_aes_name.s));
                         }
 
                         switch (opt_key_size)
@@ -463,7 +471,7 @@ int main(int argc, char *argv[]) {
                         }
                         else if (Xflag) {
                             t_UIP_SETKEY dummy_set_key;
-                            status = LibUSBK__GetRandomKey (usbk.dev_path, dummy_set_key.key.u8);
+                            status = LibUSBK__GetRandomKey (abcde.dev_path, dummy_set_key.key.u8);
                             if (StatusChecker(status) != true){
                                 fprintf (stderr, NOT_CREATE_RANDOM_KEY);
                                 exit(1);
@@ -471,7 +479,7 @@ int main(int argc, char *argv[]) {
                             memcpy (set_key.key.u8, dummy_set_key.key.u8, opt_key_size_byte);
                         }
 
-                        status = LibUSBK__SetKey (usbk.dev_path, opt_parola.s, opt_key, false, opt_aes_name.s, opt_key_size_str, opt_aes_key.u8);
+                        status = LibUSBK__SetKey (abcde.dev_path, opt_parola.s, opt_key, false, opt_aes_name.s, opt_key_size_str, opt_aes_key.u8);
                         if (StatusChecker(status) != true){
                             exit(1);
                         }
@@ -489,7 +497,7 @@ int main(int argc, char *argv[]) {
                         }
 
                         if (iflag) {
-                            linuxcli_show_dev_info(usbk.dev);
+                            linuxcli_show_dev_info(abcde.dev);
                         }
                         printf("Done.\n");
                         exit(0);
@@ -549,17 +557,17 @@ int main(int argc, char *argv[]) {
                 switch (dev_state) {
                 case ACTIVATE:
                 case ACTIVATE_WITH_BACKDISK:
-                    printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devlabel.s);
+                    printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", abcde.dev, abcde.info.devlabel.s);
                     exit(0);
                     break;
                 case DEACTIVATE:
-                    status = LibUSBK__SetAutoAct(usbk.dev_path, opt_parola.s, true, opt_key);
+                    status = LibUSBK__SetAutoAct(abcde.dev_path, opt_parola.s, true, opt_key);
                     if (StatusChecker(status) != true){
                         exit(1);
                     }
 
                     if (iflag) {
-                        linuxcli_show_dev_info(usbk.dev);
+                        linuxcli_show_dev_info(abcde.dev);
                     }
                     printf("Done.\n");
                     exit(0);
@@ -593,17 +601,17 @@ int main(int argc, char *argv[]) {
             switch (dev_state) {
             case ACTIVATE:
             case ACTIVATE_WITH_BACKDISK:
-                printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk.dev, usbk.info.devlabel.s);
+                printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", abcde.dev, abcde.info.devlabel.s);
                 exit(0);
                 break;
             case DEACTIVATE:
-                status = LibUSBK__SetAutoAct(usbk.dev_path, opt_parola.s, false, 0);
+                status = LibUSBK__SetAutoAct(abcde.dev_path, opt_parola.s, false, 0);
                 if (StatusChecker(status) != true){
                     exit(1);
                 }
 
                 if (iflag) {
-                    linuxcli_show_dev_info(usbk.dev);
+                    linuxcli_show_dev_info(abcde.dev);
                 }
                 printf("Done.\n");
                 exit(0);
@@ -626,7 +634,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (iflag) {
-        linuxcli_show_dev_info(usbk.dev);
+        linuxcli_show_dev_info(abcde.dev);
         printf("Done.\n");
     }
 
@@ -678,7 +686,7 @@ void print_help(int exval) {
 
 /*!
  *
- *murat@Murat:~/Tamara/Projeler/USB-K/linux/workspace/usbk-1.2/build$ sudo src/usbk /dev/sdd -i
+ *murat@Murat:~/Tamara/Projeler/USB-K/linux/workspace/abcde-1.2/build$ sudo src/abcde /dev/sdd -i
  * logic name              /dev/sdd
  * model                   CryptoBridge
  * revision                Beta
@@ -711,7 +719,7 @@ void linuxcli_show_dev_info(const char* dev) {
     char autoactive[64];
     char model[32];
 
-    //sprintf(model, "%s %s", usbk->model, usbk->rev);
+    //sprintf(model, "%s %s", abcde->model, abcde->rev);
 
     sprintf(backdisk, "-");
 
@@ -769,11 +777,11 @@ void linuxcli_show_dev_info(const char* dev) {
      //                                                 active [1                 key 1
      printf(
      "%-12.12s %-16.16s %-4.4s %-11.11s %-6.6s %-8.8s %-10.10s %-5d %-8.8s %-9.9s [1] %-12s\n",
-     usbk->dev, usbk->model, usbk->rev, usbk->info.devlabel.s,
-     usbk->info.serial.u8, usbk->info.firmware_ver.s, status,
-     usbk->info.retry_num, backdisk, autoactive, usbk->info.keyname[0].s);
-     for (i = 1; i < usbk->info.multikeycap; i++)
-     printf("%99.s[%d] %-12s\n", " ", i + 1, usbk->info.keyname[i].s);
+     abcde->dev, abcde->model, abcde->rev, abcde->info.devlabel.s,
+     abcde->info.serial.u8, abcde->info.firmware_ver.s, status,
+     abcde->info.retry_num, backdisk, autoactive, abcde->info.keyname[0].s);
+     for (i = 1; i < abcde->info.multikeycap; i++)
+     printf("%99.s[%d] %-12s\n", " ", i + 1, abcde->info.keyname[i].s);
 
      */
 
@@ -888,7 +896,7 @@ static int _parse_options(int *argc, char** argv[]) {
 
             case 'u':
                 uflag = 1;
-                usbk.dev = strdup(optarg);
+                abcde.dev = strdup(optarg);
                 break;
             case 'a':
                 aflag = 1;
@@ -953,15 +961,7 @@ static int _parse_options(int *argc, char** argv[]) {
                 break;
 
             case 's': {
-
-                USBK_List* p_usbklink = NULL;
-                p_usbklink = LibUSBK__list_devices();
-                if (p_usbklink == NULL){
-                    fprintf(stderr, NOT_MALLOC);
-                    exit(1);
-                }
-                linuxcli_show_devices(p_usbklink);
-                LibUSBK__list_devices_release(p_usbklink);
+                linuxcli_show_devices();
             }
                 exit(0);
                 break;
@@ -1042,23 +1042,37 @@ static int _parse_options(int *argc, char** argv[]) {
     return 1;
 }
 
-void linuxcli_show_devices(USBK_List* p_usbklink) {
+void linuxcli_show_devices(void) {
     int i;
     int counter = 0;
-    USBK_List *dummy_usbklink;
 
+
+    USBK_List2* p_usbklink = NULL;
+    p_usbklink = LibUSBK__list_devices();
+    if (p_usbklink == NULL){
+        fprintf(stderr, NOT_MALLOC "veya device yok");
+        exit(1);
+    }
+
+    USBK_List2 *dummy_usbklink;
     for (dummy_usbklink = p_usbklink; dummy_usbklink != NULL; dummy_usbklink = dummy_usbklink->next) {
-        printf("  %s\n",             dummy_usbklink->usbk.info.devlabel.s);
-        printf("    Device   : %s\n",             dummy_usbklink->usbk.dev);
-        printf("    BackDisk : %s\n",             dummy_usbklink->usbk.backdisk);
-        printf("    Product  : %s\n",             dummy_usbklink->usbk.info.product.s);
-        printf("    Model    : %s\n",             dummy_usbklink->usbk.info.model.s);
-        printf("    Serial   : "); for (i = 0; i < 15; i++) printf("%2.2X", dummy_usbklink->usbk.info.serial.u8[i]); printf("\n");
-        printf("    Firmware : %s\n",             dummy_usbklink->usbk.info.firmware_ver.s);
+        printf("  %s\n",                            dummy_usbklink->usbk_info.dev_label);
+        printf("    Device   : %s\n",               dummy_usbklink->dev);
+        printf("    BackDisk : %s\n",               dummy_usbklink->usbk_info.backdisk);
+        printf("    Product  : %s\n",               dummy_usbklink->usbk_info.product);
+        printf("    Model    : %s\n",               dummy_usbklink->usbk_info.model);
+        printf("    Serial   : %s\n",               dummy_usbklink->usbk_info.serial);
+        printf("    Firmware : %s\n",               dummy_usbklink->usbk_info.firmware_ver);
         printf("\n");
         counter++;
     }
 
     (counter > 0) ? printf ("%d",counter):printf ("None");
     printf (" USBK Found.\n\n");
+
+    LibUSBK__list_devices_release(p_usbklink);
 }
+
+
+
+

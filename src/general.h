@@ -11,7 +11,7 @@
  * See http://www.gnu.org/licenses/ for more information
  *
  ****************************************************************************
- * General headers and definitions of usbk.
+ * General headers and definitions of abcde.
  *
  */
 

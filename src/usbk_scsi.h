@@ -56,11 +56,11 @@
 /**
  * usbk_scsi. h
  * \brief Send Scsi Command
- * <pre>int send_scsi_command(USBK* usbk, unsigned char *buff, int cmd_index, int len, char rw);</pre>
+ * <pre>int send_scsi_command(USBK* abcde, unsigned char *buff, int cmd_index, int len, char rw);</pre>
  *
  * Send Scsi Command to USBK.
  *
- * @param *usbk         : usbk structure pointer
+ * @param *abcde         : abcde structure pointer
  * @param *buff         : Transfer buffer
  * @param cmd_index     : Scsi Command OpCode
  * @param len           : Transfer Len
@@ -72,9 +72,7 @@
  * \ingroup Scsi
  *
  */
-int send_scsi_command(USBK* usbk, unsigned char *buff, int cmd_index, int len, char rw);
-
-int send_scsi_command_new(const char *usbk_path, unsigned char *buff, int cmd_index, int len, char rw);
+int send_scsi_command(const char *usbk_path, unsigned char *buff, int cmd_index, int len, char rw);
 
 #endif
 
