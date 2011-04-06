@@ -61,10 +61,34 @@ typedef struct __USBK_List {
     USBK                usbk;
 } USBK_List;
 
+
+typedef struct __USBK_INFO {
+    char *dev_path;
+    char *backdisk_path;
+    char *backdisk;
+
+    char    *product;
+    char    *model;
+    char    *serial;
+    char    *usb_serial;
+    char    *firmware_ver;
+    int     multikey_cap;
+    char    *dev_label;
+    e_UIP_DEVSTATE     dev_state;
+    int     current_key;
+    int     autoact_keyno;
+    int     retry_num;
+    char    **key_names;
+} USBK_INFO;
+
+
 USBK_List* LibUSBK__list_devices(void);
 void LibUSBK__list_devices_release(USBK_List* p_usbklink);
 
-int LibUSBK__GetDeviceInfo(USBK* usbk, unsigned char *buff, int len);
+int LibUSBK__GetDeviceInfo(const char *usbk_path, USBK_INFO** usbk_infos);
+int LibUSBK__GetDeviceInfo_Release(USBK_INFO* usbk_infos);
+
+
 int LibUSBK__ActivateKey (const char *usbk_path, const char *password, const int key_no);
 int LibUSBK__DeActivateKey (const char *usbk_path);
 int LibUSBK__ChangePassword (const char *usbk_path, const char *old_pass, const char *new_pass);

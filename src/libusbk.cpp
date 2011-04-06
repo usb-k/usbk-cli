@@ -22,16 +22,20 @@
 #include "usbk_scsi.h"
 
 #define msgLIBUSBK_UDEV_NOT_CREATE              "Can't create udev\n"
-#define msgLIBUSBK_UDEV_NOT_NODE                "%s device node not found\n", usbk->dev
-#define msgLIBUSBK_UDEV_WRONG_FILE_TYPE         "%s device node has wrong file type\n", usbk->dev
+#define msgLIBUSBK_UDEV_NOT_NODE                "device node not found\n"
+#define msgLIBUSBK_UDEV_WRONG_FILE_TYPE         "device node has wrong file type\n"
 #define msgLIBUSBK_UDEV_USBKLIST_NOT_CREATE     "USBK List is not malloced\n."
 #define msgLIBUSBK_SCSI_COMMAND_ERROR           "Scsi Command Sent Error\n"
 #define msgLIBUSBK_GET_BACKDISK_ERROR           "BackDisk Get Error"
 
 
 
-static int libusbk_get_device_info(USBK* usbk);
 static int libusbk_get_backdisk(USBK *usbk);
+
+static int libusbk_get_device_info(const char *usbk_dev, USBK_INFO* usbk_infos);
+static int libusbk_get_backdisk_new(const char *usbk_dev, USBK_INFO* usbk_infos);
+
+
 
 USBK_List* LibUSBK__list_devices(void){
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
@@ -93,6 +97,7 @@ USBK_List* LibUSBK__list_devices(void){
 
                             // get device information from USBK
                             rtn = send_scsi_command(&current_usbklink->usbk, (unsigned char*) &current_usbklink->usbk.info, GET_DEV_INFO, sizeof(t_UIP_DEVINFO), READ_SCSI);
+
                             if (rtn < 0)
                             {
                                 LibUSBK__list_devices_release(current_usbklink);
@@ -140,6 +145,8 @@ void LibUSBK__list_devices_release(USBK_List* p_usbklink)
     for (p_usbklink;p_usbklink!=NULL;p_usbklink=dummy_usbklink)
     {
         dummy_usbklink = p_usbklink->next;
+
+
         free(p_usbklink->usbk.vendor_id);
         free(p_usbklink->usbk.product_id);
         free(p_usbklink->usbk.manufacturer);
@@ -153,17 +160,69 @@ void LibUSBK__list_devices_release(USBK_List* p_usbklink)
     }
 }
 
-int LibUSBK__GetDeviceInfo(USBK* usbk, unsigned char *buff, int len)
+int LibUSBK__GetDeviceInfo(const char *usbk_dev, USBK_INFO** usbk_infos)
 {
+
+    t_UIP_DEVINFO usbk_info;
+    USBK usbk;
+    int i;
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
-    if (libusbk_get_device_info(usbk)>=0)
+
+    usbk.dev = (char*)usbk_dev;
+
+    *usbk_infos = (USBK_INFO*) calloc(1, sizeof(USBK_INFO));
+    if (*usbk_infos == NULL) return -1;
+
+    if (libusbk_get_device_info(usbk_dev, *usbk_infos)>=0)
     {
-        if (send_scsi_command(usbk, (unsigned char*) &usbk->info, GET_DEV_INFO,sizeof(t_UIP_DEVINFO), READ_SCSI) >= 0)
+        usbk.dev_path = (*usbk_infos)->dev_path;
+        if (send_scsi_command(&usbk, (unsigned char*) &usbk.info, GET_DEV_INFO,sizeof(t_UIP_DEVINFO), READ_SCSI) >= 0)
         {
+            (*usbk_infos)->multikey_cap = usbk.info.multikeycap;
+            (*usbk_infos)->current_key = usbk.info.current_keyno;
+            (*usbk_infos)->autoact_keyno = usbk.info.autoactivate_keyno;
+            (*usbk_infos)->retry_num = usbk.info.retry_num;
+            (*usbk_infos)->dev_state = usbk.info.devstate.me;
+
+            (*usbk_infos)->product = strdup(usbk.info.product.s);
+            (*usbk_infos)->model = strdup(usbk.info.model.s);
+            (*usbk_infos)->firmware_ver = strdup(usbk.info.firmware_ver.s);
+            (*usbk_infos)->dev_label = strdup(usbk.info.devlabel.s);
+
+            (*usbk_infos)->serial = (char*)calloc((sizeof(usbk.info.serial) * 2)+2, sizeof(char));
+            for (i = 0; i < 15; i++)
+                sprintf(((*usbk_infos)->serial+i*2), "%2.2X", usbk.info.serial.u8[i]);
+
+            (*usbk_infos)->key_names = (char**) calloc((*usbk_infos)->multikey_cap, sizeof(char*));
+            for (i = 0; i < (*usbk_infos)->multikey_cap; i++)
+                (*usbk_infos)->key_names[i] = strdup(usbk.info.keyname[i].s);
+
             rtn = rtnLIBUSBK_PASS;
         }
     }
     return rtn;
+}
+
+
+int LibUSBK__GetDeviceInfo_Release(USBK_INFO* usbk_infos)
+{
+
+    int i;
+    for (i = 0; i < usbk_infos->multikey_cap; i++) free(usbk_infos->key_names[i]);
+    free(usbk_infos->key_names);
+
+    free(usbk_infos->dev_path);
+    free(usbk_infos->backdisk_path);
+    free(usbk_infos->backdisk);
+    free(usbk_infos->product);
+    free(usbk_infos->model);
+    free(usbk_infos->firmware_ver);
+    free(usbk_infos->dev_label);
+    free(usbk_infos->serial);
+
+    free(usbk_infos);
+
+    return rtnLIBUSBK_PASS;
 }
 
 int LibUSBK__GetStatus (const char *usbk_path)
@@ -279,7 +338,7 @@ int LibUSBK__GetRandomKey (const char *usbk_path, unsigned char *random_key)
     return OPRS_PASS;
 }
 
-static int libusbk_get_device_info(USBK* usbk) {
+static int libusbk_get_device_info(const char *usbk_dev, USBK_INFO* usbk_infos) {
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
     struct udev *udev;
     struct udev_enumerate *enumerate;
@@ -301,10 +360,10 @@ static int libusbk_get_device_info(USBK* usbk) {
     }
 
     char devname[1024];
-    sprintf(devname, "%s/%s", udev_get_dev_path(udev), usbk->dev);
+    sprintf(devname, "%s/%s", udev_get_dev_path(udev), usbk_dev);
 
     if (stat(devname, &statbuf) < 0) {
-        fprintf(stderr, msgLIBUSBK_UDEV_NOT_NODE);
+        fprintf(stderr, "%s "msgLIBUSBK_UDEV_NOT_NODE, usbk_dev);
         return rtnLIBUSBK_UDEV_NOT_NODE;
     } else {
         char type;
@@ -321,7 +380,7 @@ static int libusbk_get_device_info(USBK* usbk) {
         dev = udev_device_new_from_devnum(udev, type, statbuf.st_rdev);
 
         if (dev == NULL) {
-            fprintf(stderr, msgLIBUSBK_UDEV_NOT_NODE);
+            fprintf(stderr, "%s "msgLIBUSBK_UDEV_NOT_NODE, usbk_dev);
             return rtnLIBUSBK_UDEV_NOT_NODE;
         }
     }
@@ -334,10 +393,9 @@ static int libusbk_get_device_info(USBK* usbk) {
                 dev_scsi = udev_device_get_parent_with_subsystem_devtype(dev, "scsi", "scsi_device");
                 if (dev_scsi != NULL) {
                     if (strncmp(USBK_SCSI_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_VENDOR)) == 0) {
-                        usbk->dev_path = strdup(udev_device_get_devnode(dev));
-                        usbk->dev = strdup(udev_device_get_sysname(dev));
-                        usbk->serial = strdup(udev_device_get_sysattr_value(dev_usb, "serial"));
-                        rtn = libusbk_get_backdisk(usbk);
+                        usbk_infos->dev_path = strdup(udev_device_get_devnode(dev));
+                        usbk_infos->usb_serial = strdup(udev_device_get_sysattr_value(dev_usb, "serial"));
+                        rtn = libusbk_get_backdisk_new(usbk_dev, usbk_infos);
                         if (rtn < 0)
                         {
                             udev_device_unref(dev);
@@ -356,6 +414,8 @@ static int libusbk_get_device_info(USBK* usbk) {
     udev_unref(udev);
     return rtn;
 }
+
+
 
 static int libusbk_get_backdisk(USBK *usbk){
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
@@ -395,6 +455,57 @@ static int libusbk_get_backdisk(USBK *usbk){
                             if(strncmp(USBK_SCSI_BACKDISK_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_BACKDISK_VENDOR)) == 0 ){
                                 usbk->backdisk = strdup(udev_device_get_sysname(dev));
                                 usbk->backdisk_path = strdup(udev_device_get_devnode(dev));
+                                rtn = rtnLIBUSBK_PASS;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        udev_device_unref(dev);
+    }
+    udev_enumerate_unref(enumerate);
+    udev_unref(udev);
+    return rtn;
+}
+
+static int libusbk_get_backdisk_new(const char *usbk_dev, USBK_INFO* usbk_infos) {
+    int rtn = rtnLIBUSBK_GENERAL_ERROR;
+    struct udev *udev;
+    struct udev_enumerate *enumerate;
+    struct udev_list_entry *devices, *dev_list_entry;
+    struct udev_device *dev;
+    struct udev_device *dev_usb = NULL;
+    struct udev_device *dev_scsi;
+
+    // Create the udev object
+    udev = udev_new();
+    if (!udev) {
+        fprintf(stderr, msgLIBUSBK_UDEV_NOT_CREATE);
+        return rtnLIBUSBK_UDEV_NOT_CREATE;
+    }
+
+    // Create a list of the devices in the 'usbk' subsystem.
+    enumerate = udev_enumerate_new(udev);
+    udev_enumerate_add_match_subsystem(enumerate, "block");
+    udev_enumerate_scan_devices(enumerate);
+    devices = udev_enumerate_get_list_entry(enumerate);
+
+    udev_list_entry_foreach(dev_list_entry, devices) {
+        const char *path;
+        path = udev_list_entry_get_name(dev_list_entry);
+        dev = udev_device_new_from_syspath(udev, path);
+        // usb device directory
+        dev_usb = udev_device_get_parent_with_subsystem_devtype( dev, "usb", "usb_device");
+        if (dev_usb != NULL) {
+            if(strncmp(USBK_USB_IDVENDOR, udev_device_get_sysattr_value(dev_usb,"idVendor"), strlen(USBK_USB_IDVENDOR)) == 0 ){
+                if(strncmp(USBK_USB_IDPRODUCT, udev_device_get_sysattr_value(dev_usb,"idProduct"), strlen(USBK_USB_IDPRODUCT)) == 0){
+                    if(strcmp(usbk_infos->usb_serial, udev_device_get_sysattr_value(dev_usb, "serial")) == 0 ){
+                        dev_scsi = udev_device_get_parent_with_subsystem_devtype(dev, "scsi", "scsi_device");
+                        if (dev_scsi != NULL) {
+                            if(strncmp(USBK_SCSI_BACKDISK_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_BACKDISK_VENDOR)) == 0 ){
+                                usbk_infos->backdisk = strdup(udev_device_get_sysname(dev));
+                                usbk_infos->backdisk_path = strdup(udev_device_get_devnode(dev));
                                 rtn = rtnLIBUSBK_PASS;
                             }
                         }
