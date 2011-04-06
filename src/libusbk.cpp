@@ -28,14 +28,9 @@
 #define msgLIBUSBK_SCSI_COMMAND_ERROR           "Scsi Command Sent Error\n"
 #define msgLIBUSBK_GET_BACKDISK_ERROR           "BackDisk Get Error"
 
-
-
 static int libusbk_get_backdisk(USBK *usbk);
-
 static int libusbk_get_device_info(const char *usbk_dev, USBK_INFO* usbk_infos);
 static int libusbk_get_backdisk_new(const char *usbk_dev, USBK_INFO* usbk_infos);
-
-
 
 USBK_List* LibUSBK__list_devices(void){
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
@@ -202,7 +197,6 @@ int LibUSBK__GetDeviceInfo(const char *usbk_dev, USBK_INFO** usbk_infos)
     }
     return rtn;
 }
-
 
 int LibUSBK__GetDeviceInfo_Release(USBK_INFO* usbk_infos)
 {
@@ -414,8 +408,6 @@ static int libusbk_get_device_info(const char *usbk_dev, USBK_INFO* usbk_infos) 
     udev_unref(udev);
     return rtn;
 }
-
-
 
 static int libusbk_get_backdisk(USBK *usbk){
     int rtn = rtnLIBUSBK_GENERAL_ERROR;
