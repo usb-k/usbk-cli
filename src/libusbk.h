@@ -83,21 +83,18 @@ typedef struct __USBK_INFO {
 
 
 typedef struct __USBK_List2 {
-    struct __USBK_List  *next;
+    struct __USBK_List2  *next;
     char                *dev;
     USBK_INFO           usbk_info;
 } USBK_List2;
 
 
-USBK_List* LibUSBK__list_devices(void);
-void LibUSBK__list_devices_release(USBK_List* p_usbklink);
 
-USBK_List2* LibUSBK__list_devices2(void);
-void LibUSBK__list_devices_release2(USBK_List2* p_usbklink);
+USBK_List2* LibUSBK__list_devices(void);
+void LibUSBK__list_devices_release(USBK_List2* p_usbklink);
 
 int LibUSBK__GetDeviceInfo(const char *usbk_path, USBK_INFO** usbk_infos);
 int LibUSBK__GetDeviceInfo_Release(USBK_INFO* usbk_infos);
-
 
 int LibUSBK__ActivateKey (const char *usbk_path, const char *password, const int key_no);
 int LibUSBK__DeActivateKey (const char *usbk_path);

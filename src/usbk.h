@@ -1,5 +1,5 @@
 /*
- * @file usbk.h
+ * @file abcde.h
  *
  * Copyright (C) 2010 USB-K Team
  *
@@ -34,8 +34,8 @@
 void print_help(int exval);
 void print_version(void);
 void linuxcli_show_dev_info(const char* dev);
-//int usbk_get_dev_info(USBK_T *usbk);
-//int usbk_check_last_opr(USBK_T *usbk);
+//int usbk_get_dev_info(USBK_T *abcde);
+//int usbk_check_last_opr(USBK_T *abcde);
 int check_key_decimal(std::string str, U8 *key, int key_size_byte);
 int check_key_text(std::string str, U8 *key, int key_size_byte);
 #endif // USBK_H_
