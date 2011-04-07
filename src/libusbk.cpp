@@ -17,20 +17,20 @@
  *
  */
 
-//LOCAL HEADERS
+//PRIVATE HEADERS
 #include <libudev.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <locale.h>
-#include <unistd.h>
 #include <string.h>
+
+#include "general.h"
+#include "uip.h"
 
 #include "libusbk.h"
 #include "usbk_scsi.h"
-#include "uip.h"
 
 
-//LOCAL DEFINES
+//PRIVATE DEFINES
 //-ERROR MESSAGES
 #define msgLIBUSBK_UDEV_NOT_MALLOC              "libusbk: memory'de yer yok!\n"
 #define msgLIBUSBK_UDEV_NOT_CREATE              "libusbk: Can't create udev\n"
@@ -47,14 +47,14 @@
 #define USBK_SCSI_BACKDISK_VENDOR  "BackDisk"
 
 
-//LOCAL FUNCTION DECLERATIONS
+//PRIVATE FUNCTION DECLERATIONS
 static int libusbk_get_device_info(const char *usbk_dev, USBK_INFO* usbk_infos);
 static int libusbk_get_backdisk(USBK_INFO* usbk_infos);
 static LIBSUBK_DEVSTATE libusbk_getdevstate(e_UIP_DEVSTATE devstate_from_usbk);
 
 
 //ALL FUNCTIONS
-//-GLOBAL FUNCTIONS
+//-PUBLIC FUNCTIONS
 USBK_List* LibUSBK__list_devices(void){
     int rtn = LIBUSBK_RTN_GENERAL_ERROR;
     int i;
@@ -395,7 +395,7 @@ int LibUSBK__GetRandomKey_Release(unsigned char **random_key)
     *random_key = NULL;
 }
 
-//-LOCAL FUNCTIONS
+//-PRIVATE FUNCTIONS
 static int libusbk_get_device_info(const char *usbk_dev, USBK_INFO* usbk_infos) {
     int rtn = LIBUSBK_RTN_GENERAL_ERROR;
     struct udev *udev;

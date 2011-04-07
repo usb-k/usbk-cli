@@ -14,17 +14,27 @@
  *
  */
 
+//PRIVATE HEADERS
+#include <sys/types.h>
+#include <scsi/sg.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+
 #include "usbk_sg_ctl.h"
 
-
-
-// Error Messages
+//PRIVATE DEFINES
+//-ERROR MESSAGES
 #define msgUSBK_SG_ERR_NOT_DEVICE          "Not device!\n"
 #define msgUSBK_SG_ERR_IOCTL_SCSI           "Error in IOCTL_SCSI\n"
 #define msgUSBK_SG_ERR_COMMAND_FAIL         "Command failed!\n"
 
-
+//PRIVATE VARIABLES;
 static int sg_fd;
+
+//PUBLIC FUNCTIONS
 
 int usbk_sg_open(const char* DevicePath)
 {
@@ -111,6 +121,7 @@ int usbk_sg_tansfer(ST_PACKET_T *scsi_packet)
     return rtnUSBK_SG_PASS;
 }
 /*
+// FOR DEBUB
 void usbk_sg_show_packet(ST_PACKET_T *scsi_packet)
 {
     int i=0;
