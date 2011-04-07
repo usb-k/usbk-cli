@@ -17,10 +17,7 @@
 #ifndef LIBUSBK_H_
 #define LIBUSBK_H_
 
-//GLOBAL HEADERS
-#include "general.h"
-
-//GLOBAL STRUCTURES
+//PUBLIC STRUCTURES
 //-LIBUSK OPERATION STATUS
 typedef enum __LIBUSBK_OPRSTATUS
 {
@@ -80,7 +77,7 @@ typedef struct __USBK_List {
     USBK_INFO           usbk_info;
 } USBK_List;
 
-//GLOBAL FUNCTIONS
+//PUBLIC FUNCTIONS
 //-LIST ALL USBK'S ON HOST SYSTEM
 USBK_List* LibUSBK__list_devices(void);
 void LibUSBK__list_devices_release(USBK_List* p_usbklink);

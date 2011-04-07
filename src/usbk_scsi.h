@@ -18,15 +18,16 @@
 #define USBK_SCSI_H_
 
 
-#include "general.h"
-#include "libusbk.h"
+//PUBLIC DEFINES
+//-DIRECTIONS
+#define INDIR             0X01
+#define OUTDIR            0X00
 
-// SCSI CMD DIRECTION
+//-SCSI CMD DIRECTION
 #define WRITE_SCSI           OUTDIR
 #define READ_SCSI            INDIR
 
-/*! \name Vendor Specific Scsi Command for USBK
- */
+//!\name VENDOR SPECIFIC SCSI COMMAND FOR USBK
 //! @{
 #define GET_STATUS           0x01      //!< Get Status of Current Command
 #define GET_DEV_INFO         0x02      //!< Get Detail Information about USBK
@@ -37,13 +38,10 @@
 #define SET_AUTO_ACTIVE      0x07      //!< Change AutoActivation Setting (Enable with Selected Key / Disable)
 #define SET_KEY              0x08      //!< Set Key
 #define GENERATE_KEY         0x09      //!< Generate 256-Bit Random Key
-//#define GET_PUBLIC_KEY       0x0A      //!< Pass
-//#define EXIT                 0x30      //!< Device Open Error
 //! @}
 
 
-/*! \name Return Values of the Scsi Layer
- */
+//!\name -RETURN VALUES OF SCSI LAYER
 //! @{
 #define rtnUSBK_SCSI_PASS            0      //!< Pass
 #define rtnUSBK_SCSI_OPEN_FAIL      -1      //!< Device Open Error
@@ -51,8 +49,7 @@
 //! @}
 
 
-
-
+//PUBLIC FUNCTIONS DECLERATIONS
 /**
  * usbk_scsi. h
  * \brief Send Scsi Command
