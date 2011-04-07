@@ -26,59 +26,56 @@
 
 #include "general.h"
 
-#define rtnLIBUSBK_PASS                      0
-#define rtnLIBUSBK_GENERAL_ERROR            -1
-#define rtnLIBUSBK_UDEV_NOT_CREATE          -2
-#define rtnLIBUSBK_UDEV_NOT_NODE            -3
-#define rtnLIBUSBK_UDEV_WRONG_FILE_TYPE     -4
-#define rtnLIBUSBK_UDEV_USBKLIST_NOT_CREATE -5
-#define rtnLIBUSBK_SCSI_COMMAND_ERROR       -6
-#define rtnLIBUSBK_GET_BACKDISK_ERROR       -7
-
-
 #define USBK_USB_IDVENDOR          "2384"
 #define USBK_USB_IDPRODUCT         "a103"
 #define USBK_SCSI_VENDOR           "USBK"
 #define USBK_SCSI_BACKDISK_VENDOR  "BackDisk"
 
-typedef struct __USBK {
-    char *dev_path;
-    char *dev;
-    char *vendor_id;
-    char *product_id;
-    char *manufacturer;
-    char *product;
-    char *serial;
-    char *backdisk_path;
-    char *backdisk;
+typedef enum __LIBUSBK_OPRSTATUS
+{
+    LIBUSBK_OPRS_PASS           = 1,
+    LIBUSBK_OPRS_GEN_FAIL       = 2,
+    LIBUSBK_OPRS_INVALID_PASS   = 3,
+    LIBUSBK_OPRS_FABRIC_RESET   = 4,
+    LIBUSBK_OPRS_USBK_UNPLUGING = 5,
 
-    t_UIP_DEVINFO info;
-    t_UIP_GETSTATUS status;
-} USBK;
+    LIBUSBK_RTN_PASS                     =  0,
+    LIBUSBK_RTN_GENERAL_ERROR            = -1,
+    LIBUSBK_RTN_UDEV_NOT_CREATE          = -2,
+    LIBUSBK_RTN_UDEV_NOT_NODE            = -3,
+    LIBUSBK_RTN_UDEV_WRONG_FILE_TYPE     = -4,
+    LIBUSBK_RTN_UDEV_USBKLIST_NOT_CREATE = -5,
+    LIBUSBK_RTN_SCSI_COMMAND_ERROR       = -6,
+    LIBUSBK_RTN_GET_BACKDISK_ERROR       = -7,
+}LIBUSBK_OPRSTATUS;
 
-typedef struct __USBK_List {
-    struct __USBK_List  *next;
-    USBK                usbk;
-} USBK_List;
+typedef enum __LIBSUBK_DEVSTATE
+{
+    LIBSUBK_DEVSTATE_ACTIVATE                = 1,
+    LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK  = 2,
+    LIBSUBK_DEVSTATE_DEACTIVATE              = 3,
+    LIBSUBK_DEVSTATE_FABRIC_DEFAULT          = 4,
+    LIBSUBK_DEVSTATE_MUST_REMOVE             = 5,
+}LIBSUBK_DEVSTATE;
 
 
 typedef struct __USBK_INFO {
-    char *dev_path;
-    char *backdisk_path;
-    char *backdisk;
+    char                *dev_path;
+    char                *backdisk_path;
+    char                *backdisk;
 
-    char    *product;
-    char    *model;
-    char    *serial;
-    char    *usb_serial;
-    char    *firmware_ver;
-    int     multikey_cap;
-    char    *dev_label;
-    e_UIP_DEVSTATE     dev_state;
-    int     current_key;
-    int     autoact_keyno;
-    int     retry_num;
-    char    **key_names;
+    char                *product;
+    char                *model;
+    char                *serial;
+    char                *usb_serial;
+    char                *firmware_ver;
+    int                 multikey_cap;
+    char                *dev_label;
+    LIBSUBK_DEVSTATE    dev_state;
+    int                 current_key;
+    int                 autoact_keyno;
+    int                 retry_num;
+    char                **key_names;
 } USBK_INFO;
 
 
@@ -87,7 +84,6 @@ typedef struct __USBK_List2 {
     char                *dev;
     USBK_INFO           usbk_info;
 } USBK_List2;
-
 
 
 USBK_List2* LibUSBK__list_devices(void);
