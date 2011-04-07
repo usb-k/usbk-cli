@@ -35,8 +35,6 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#include "uip.h"
-
 #define MAX_STR_LEN          32
 
 
