@@ -47,6 +47,9 @@ typedef enum __LIBUSBK_OPRSTATUS
     LIBUSBK_RTN_UDEV_USBKLIST_NOT_CREATE = -5,
     LIBUSBK_RTN_SCSI_COMMAND_ERROR       = -6,
     LIBUSBK_RTN_GET_BACKDISK_ERROR       = -7,
+    LIBUSBK_RTN_NOT_MALLOC               = -8,
+
+    LIBUSBK_RTN_SHORT_GENERATEDKEY       = 10,
 }LIBUSBK_OPRSTATUS;
 
 typedef enum __LIBSUBK_DEVSTATE
@@ -92,13 +95,16 @@ void LibUSBK__list_devices_release(USBK_List2* p_usbklink);
 int LibUSBK__GetDeviceInfo(const char *usbk_path, USBK_INFO** usbk_infos);
 int LibUSBK__GetDeviceInfo_Release(USBK_INFO* usbk_infos);
 
+int LibUSBK__GetRandomKey (const char *usbk_path, unsigned char **random_key, int get_key_size_byte);
+int LibUSBK__GetRandomKey_Release(unsigned char **random_key);
+
+
 int LibUSBK__ActivateKey (const char *usbk_path, const char *password, const int key_no);
 int LibUSBK__DeActivateKey (const char *usbk_path);
 int LibUSBK__ChangePassword (const char *usbk_path, const char *old_pass, const char *new_pass);
 int LibUSBK__SetKey (const char *usbk_path, const char *pass, int key_no, int name_only, const char* key_name, const char* key_size, const unsigned char* key);
 int LibUSBK__SetAutoAct (const char *usbk_path, const char *pass, int enable, int key_no);
 int LibUSBK__SetDeviceName (const char *usbk_path, const char *pass, const char *device_label);
-int LibUSBK__GetRandomKey (const char *usbk_path, unsigned char *random_key);
 
 
 

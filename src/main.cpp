@@ -20,10 +20,10 @@
 #include "usbk.h"
 
 //Msgs of DeviceControl
-#define MISSING_PARAMETER    "Missing parameter"
-#define WARNING              "Warning:"
-#define MSG_FABRIC_DEFAULT   "Fabric default. Please first set your password."
-#define MSG_MUST_REMOVE      "Must remove. Please remove and re-plug the USBK."
+#define MISSING_PARAMETER     "Missing parameter"
+#define WARNING               "Warning:"
+#define MSG_FABRIC_DEFAULT    "Fabric default. Please first set your password."
+#define MSG_MUST_REMOVE       "Must remove. Please remove and re-plug the USBK."
 #define NOT_CREATE_RANDOM_KEY "Key Random Olarak Uretilemiyor."
 #define NOT_MALLOC            "memory'de yer yok!\n"
 
@@ -121,10 +121,11 @@ int linuxcli_GetRetryNumber(const char *usbk_dev)
 
 
 
-bool StatusChecker(const char *usbk_dev, int status) {
+int StatusChecker(const char *usbk_dev, int status) {
     switch ((LIBUSBK_OPRSTATUS) status) {
     case LIBUSBK_OPRS_PASS:
-        return true;
+    case LIBUSBK_RTN_PASS:
+        return LIBUSBK_OPRS_PASS;
         break;
     case LIBUSBK_OPRS_INVALID_PASS:
         printf("Hata: Parola yanlis. RetryNum:%d\n", linuxcli_GetRetryNumber(usbk_dev));
@@ -142,11 +143,13 @@ bool StatusChecker(const char *usbk_dev, int status) {
         return false;
         break;
     default:
-        printf("Hata: Islem basarisiz. MSG_CODE:0x%02X RetryNum:%d\n", status, linuxcli_GetRetryNumber(usbk_dev));
-        return false;
+        if (status < 0 ){
+            printf("Hata: Islem basarisiz. MSG_CODE:0x%02X RetryNum:%d\n", status, linuxcli_GetRetryNumber(usbk_dev));
+        }
+        return status;
         break;
     }
-    return false;
+    return status;
 }
 
 /*! \brief main function
@@ -202,7 +205,7 @@ int main(int argc, char *argv[]) {
                 case LIBSUBK_DEVSTATE_DEACTIVATE:
                     status = LibUSBK__ActivateKey(usbk_infos->dev_path, opt_parola, (int)opt_key);
 
-                    if (StatusChecker(usbk_dev ,status) != true){
+                    if (StatusChecker(usbk_dev ,status) < 0){
                         exit(1);
                     }
                     if (iflag) {
@@ -240,7 +243,7 @@ int main(int argc, char *argv[]) {
         case LIBSUBK_DEVSTATE_ACTIVATE:
         case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
             status = LibUSBK__DeActivateKey(usbk_infos->dev_path);
-            if (StatusChecker(usbk_dev ,status) != true){
+            if (StatusChecker(usbk_dev ,status) < 0){
                 exit(1);
             }
             if (iflag) {
@@ -279,7 +282,7 @@ int main(int argc, char *argv[]) {
         case LIBSUBK_DEVSTATE_DEACTIVATE:
             if (pflag) {
                 status = LibUSBK__ChangePassword(usbk_infos->dev_path, opt_parola, opt_new_password);
-                if (StatusChecker(usbk_dev ,status) != true){
+                if (StatusChecker(usbk_dev ,status) < 0){
                     exit(1);
                 }
 
@@ -297,7 +300,7 @@ int main(int argc, char *argv[]) {
 
             // FIXME null olmuyor boş bir ptr ver
             status = LibUSBK__ChangePassword(usbk_infos->dev_path, NULL, opt_new_password);
-            if (StatusChecker(usbk_dev ,status) != true){
+            if (StatusChecker(usbk_dev ,status) < 0){
                 exit(1);
             }
 
@@ -329,7 +332,7 @@ int main(int argc, char *argv[]) {
                 break;
             case LIBSUBK_DEVSTATE_DEACTIVATE:
                 status = LibUSBK__SetDeviceName(usbk_infos->dev_path, opt_parola, opt_dev_label);
-                if (StatusChecker(usbk_dev ,status) != true){
+                if (StatusChecker(usbk_dev ,status) < 0){
                     exit(1);
                 }
 
@@ -370,7 +373,7 @@ int main(int argc, char *argv[]) {
                     break;
                 case LIBSUBK_DEVSTATE_DEACTIVATE:
                     status = LibUSBK__SetKey (usbk_infos->dev_path, opt_parola, opt_key, true, opt_aes_name, NULL, NULL);
-                    if (StatusChecker(usbk_dev ,status) != true){
+                    if (StatusChecker(usbk_dev ,status) < 0){
                         exit(1);
                     }
 
@@ -452,17 +455,30 @@ int main(int argc, char *argv[]) {
 
                         }
                         else if (Xflag) {
-                            unsigned char dummy_set_key[1024];
-                            status = LibUSBK__GetRandomKey (usbk_infos->dev_path, dummy_set_key);
-                            if (StatusChecker(usbk_dev ,status) != true){
+                            unsigned char *dummy_set_key;
+                            status = LibUSBK__GetRandomKey (usbk_infos->dev_path, &dummy_set_key, opt_key_size_byte);
+
+                            switch (StatusChecker(usbk_dev ,status))
+                            {
+                            case LIBUSBK_OPRS_PASS:
+                                memcpy (set_key, dummy_set_key, opt_key_size_byte);
+                                break;
+                            case LIBUSBK_RTN_SHORT_GENERATEDKEY:
+                                printf("key is short. So, remain part is filled with '0'.\n");
+                                memcpy (set_key, dummy_set_key, opt_key_size_byte);
+                                break;
+                            default:
                                 fprintf (stderr, NOT_CREATE_RANDOM_KEY);
+                                LibUSBK__GetRandomKey_Release(&dummy_set_key);
                                 exit(1);
+                                break;
                             }
-                            memcpy (set_key, dummy_set_key, opt_key_size_byte);
+
+                            LibUSBK__GetRandomKey_Release(&dummy_set_key);
                         }
 
                         status = LibUSBK__SetKey (usbk_infos->dev_path, opt_parola, opt_key, false, opt_aes_name, opt_key_size_str, opt_aes_key);
-                        if (StatusChecker(usbk_dev ,status) != true){
+                        if (StatusChecker(usbk_dev ,status) < 0 ){
                             exit(1);
                         }
 
@@ -544,7 +560,7 @@ int main(int argc, char *argv[]) {
                     break;
                 case LIBSUBK_DEVSTATE_DEACTIVATE:
                     status = LibUSBK__SetAutoAct(usbk_infos->dev_path, opt_parola, true, opt_key);
-                    if (StatusChecker(usbk_dev ,status) != true){
+                    if (StatusChecker(usbk_dev ,status) < 0){
                         exit(1);
                     }
 
@@ -588,7 +604,7 @@ int main(int argc, char *argv[]) {
                 break;
             case LIBSUBK_DEVSTATE_DEACTIVATE:
                 status = LibUSBK__SetAutoAct(usbk_infos->dev_path, opt_parola, false, 0);
-                if (StatusChecker(usbk_dev ,status) != true){
+                if (StatusChecker(usbk_dev ,status) < 0){
                     exit(1);
                 }
 
