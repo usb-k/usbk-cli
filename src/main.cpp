@@ -1025,14 +1025,14 @@ void linuxcli_show_devices(void) {
     int counter = 0;
 
 
-    USBK_List2* p_usbklink = NULL;
+    USBK_List* p_usbklink = NULL;
     p_usbklink = LibUSBK__list_devices();
     if (p_usbklink == NULL){
         fprintf(stderr, NOT_MALLOC "veya device yok");
         exit(1);
     }
 
-    USBK_List2 *dummy_usbklink;
+    USBK_List *dummy_usbklink;
     for (dummy_usbklink = p_usbklink; dummy_usbklink != NULL; dummy_usbklink = dummy_usbklink->next) {
         printf("  %s\n",                            dummy_usbklink->usbk_info.dev_label);
         printf("    Device   : %s\n",               dummy_usbklink->dev);
