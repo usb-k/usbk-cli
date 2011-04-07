@@ -15,11 +15,20 @@
  *
  */
 
+//PRIVATE HEADER
+#include <stdio.h>
+#include <string.h>
 #include "usbk_scsi.h"
 #include "usbk_sg_ctl.h"
 
-// Vender Specific SCSI Command
+//PRIVATE DEFINES
+//-ERROR MESSAGES
+#define msgUSBK_SCSI_OPEN_FAIL      "Hata: device adi yanlis veya root yetkisine sahip degilsiniz.\n"
+#define msgUSBK_SCSI_TRANSFER_FAIL  "Hata: SCSI okuma hatasi.\n"
 
+
+//PRIVATE VARIABLES
+//-VENDOR SPECIFIC CMD COMMAND
 ST_CMD_T scsi_cmd[][10] = {
   {0xFE, 0x00, GET_STATUS,      0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00},
   {0xFE, 0x00, GET_DEV_INFO,    0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00},
@@ -32,11 +41,7 @@ ST_CMD_T scsi_cmd[][10] = {
   {0xFE, 0x00, GENERATE_KEY,    0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00}
 };
 
-
-// Error Messages
-#define msgUSBK_SCSI_OPEN_FAIL      "Hata: device adi yanlis veya root yetkisine sahip degilsiniz.\n"
-#define msgUSBK_SCSI_TRANSFER_FAIL  "Hata: SCSI okuma hatasi.\n"
-
+//PUBLIC FUNCTIONS
 int send_scsi_command(const char *usbk_path, unsigned char *buff, int cmd_index, int len, char rw) {
     short int cmdlen = sizeof(ST_CMD_T);
     ST_PACKET_T packet;
