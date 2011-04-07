@@ -22,12 +22,13 @@
 #include "usbk_scsi.h"
 #include "uip.h"
 
-#define msgLIBUSBK_UDEV_NOT_CREATE              "Can't create udev\n"
-#define msgLIBUSBK_UDEV_NOT_NODE                "device node not found\n"
-#define msgLIBUSBK_UDEV_WRONG_FILE_TYPE         "device node has wrong file type\n"
-#define msgLIBUSBK_UDEV_USBKLIST_NOT_CREATE     "USBK List is not malloced\n."
-#define msgLIBUSBK_SCSI_COMMAND_ERROR           "Scsi Command Sent Error\n"
-#define msgLIBUSBK_GET_BACKDISK_ERROR           "BackDisk Get Error"
+#define msgLIBUSBK_UDEV_NOT_MALLOC              "libusbk: memory'de yer yok!\n"
+#define msgLIBUSBK_UDEV_NOT_CREATE              "libusbk: Can't create udev\n"
+#define msgLIBUSBK_UDEV_NOT_NODE                "libusbk: device node not found\n"
+#define msgLIBUSBK_UDEV_WRONG_FILE_TYPE         "libusbk: device node has wrong file type\n"
+#define msgLIBUSBK_UDEV_USBKLIST_NOT_CREATE     "libusbk: USBK List is not malloced\n."
+#define msgLIBUSBK_SCSI_COMMAND_ERROR           "libusbk: Scsi Command Sent Error\n"
+#define msgLIBUSBK_GET_BACKDISK_ERROR           "libusbk: BackDisk Get Error"
 
 static int libusbk_get_device_info(const char *usbk_dev, USBK_INFO* usbk_infos);
 static int libusbk_get_backdisk(USBK_INFO* usbk_infos);
@@ -72,7 +73,7 @@ int LibUSBK__GetDeviceInfo(const char *usbk_dev, USBK_INFO** usbk_infos)
             for (i = 0; i < (*usbk_infos)->multikey_cap; i++)
                 (*usbk_infos)->key_names[i] = strdup(real_usbk_info.keyname[i].s);
 
-            rtn = LIBUSBK_RTN_PASS;
+            rtn = LIBUSBK_OPRS_PASS;
         }
     }
     return rtn;
@@ -96,7 +97,7 @@ int LibUSBK__GetDeviceInfo_Release(USBK_INFO* usbk_infos)
     free(usbk_infos->dev_label);
     free(usbk_infos->serial);
 
-    return LIBUSBK_RTN_PASS;
+    return LIBUSBK_OPRS_PASS;
 }
 
 int LibUSBK__GetStatus (const char *usbk_path)
@@ -204,17 +205,44 @@ int LibUSBK__SetAutoAct (const char *usbk_path, const char *pass, int enable, in
     return LibUSBK__GetStatus (usbk_path);
 }
 
-int LibUSBK__GetRandomKey (const char *usbk_path, unsigned char *random_key)
+int LibUSBK__GetRandomKey (const char *usbk_path, unsigned char **random_key, int get_key_size_byte)
 {
-    int rtn = rtnLIBUSBK_GENERAL_ERROR;
+    // request key len is checked. If request key len is larger than generated key, return  warning and random number is generated.
+    // The app. will decide whether the key is used or not.
+    // Maybe, give the len of generated key.
+    // Also, the key is generated as 32 byte. Maybe, the key will be requested len.
+
+    int rtn = LIBUSBK_RTN_GENERAL_ERROR;
     t_UIP_GENERATEKEY genkey;
 
-    rtn = send_scsi_command_new(usbk_path, (unsigned char*)&genkey, GENERATE_KEY, sizeof(genkey), READ_SCSI);
-    if (rtn < 0) return rtnLIBUSBK_GENERAL_ERROR;
 
-    memcpy(random_key, genkey, sizeof(genkey));
+    rtn = send_scsi_command(usbk_path, (unsigned char*)&genkey, GENERATE_KEY, sizeof(genkey), READ_SCSI);
+    if (rtn < 0)
+    {
+        *random_key = NULL;
+        return LIBUSBK_RTN_GENERAL_ERROR;
+    }
 
-    return OPRS_PASS;
+    *random_key = (unsigned char*)calloc(1, sizeof(genkey.key.u8));
+    if (*random_key == NULL)
+    {
+        fprintf(stderr, msgLIBUSBK_UDEV_NOT_MALLOC);
+        return LIBUSBK_RTN_NOT_MALLOC;
+    }
+
+    memcpy(*random_key, genkey.key.u8, sizeof(genkey.key.u8));
+
+    if (get_key_size_byte > sizeof(genkey.key.u8))      rtn = LIBUSBK_RTN_SHORT_GENERATEDKEY;
+    else                                                rtn = LIBUSBK_OPRS_PASS;
+
+    return rtn;
+}
+
+int LibUSBK__GetRandomKey_Release(unsigned char **random_key)
+{
+    memset (*random_key, 0, sizeof (random_key));    // This memory space is filled with NULL before releasing because of security.
+    free(*random_key);
+    *random_key = NULL;
 }
 
 static int libusbk_get_device_info(const char *usbk_dev, USBK_INFO* usbk_infos) {
@@ -283,7 +311,7 @@ static int libusbk_get_device_info(const char *usbk_dev, USBK_INFO* usbk_infos) 
                             fprintf(stderr, msgLIBUSBK_GET_BACKDISK_ERROR);
                             return LIBUSBK_RTN_GET_BACKDISK_ERROR;
                         }
-                        rtn = LIBUSBK_RTN_PASS;
+                        rtn = LIBUSBK_OPRS_PASS;
                     }
                 }
             }
@@ -331,7 +359,7 @@ static int libusbk_get_backdisk(USBK_INFO* usbk_infos) {
                             if(strncmp(USBK_SCSI_BACKDISK_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_BACKDISK_VENDOR)) == 0 ){
                                 usbk_infos->backdisk = strdup(udev_device_get_sysname(dev));
                                 usbk_infos->backdisk_path = strdup(udev_device_get_devnode(dev));
-                                rtn = LIBUSBK_RTN_PASS;
+                                rtn = LIBUSBK_OPRS_PASS;
                             }
                         }
                     }
