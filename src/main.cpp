@@ -782,8 +782,8 @@ void linuxcli_show_devices(void) {
         counter++;
     }
 
-    (counter > 0) ? printf ("%d",counter):printf ("None");
-    printf (" USBK Found.\n\n");
+    (counter > 0) ? printf ("total %d",counter):printf ("None");
+    printf (" USBK Found.\n");
 
     LibUSBK__list_devices_release(p_usbklink);
 }
