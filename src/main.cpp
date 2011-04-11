@@ -144,7 +144,6 @@ int main(int argc, char *argv[]) {
         superuser_privileges = false;
     }
 
-
     if (!_parse_options(&argc, &argv)) {
         printf("Parse error\n");
         exit(0);
@@ -802,8 +801,8 @@ void linuxcli_show_devices(void) {
         counter++;
     }
 
-    (counter > 0) ? printf ("%d",counter):printf ("None");
-    printf (" USBK Found.\n\n");
+    (counter > 0) ? printf ("total %d",counter):printf ("None");
+    printf (" USBK Found.\n");
 
     LibUSBK__list_devices_release(p_usbklink);
 }
@@ -1059,8 +1058,6 @@ static void print_help(int exval) {
 static void print_version(void) {
     printf("%s version %s\n", PACKAGE, VERSION);
 }
-
-
 
 static bool check_superuser(void){
     if(geteuid() == 0){
