@@ -52,6 +52,7 @@ static int check_key_text(string str, unsigned char *key, int key_size_byte);
 
 static void print_help(int exval);
 static void print_version(void);
+static bool check_superuser(void);
 
 
 //PRIVATE VARIABLES
@@ -89,7 +90,7 @@ char opt_string_key[128];
 unsigned char opt_aes_key[1024];
 unsigned char set_key[1024];
 USBK_INFO *usbk_info;
-bool root_privileges = false;
+bool superuser_privileges = false;
 
 static struct option long_options[] =
         {
@@ -136,17 +137,13 @@ int main(int argc, char *argv[]) {
     opt_key_format = 'd'; // default key format decimal
     opt_key_size_str = strdup("256");
 
-    if(geteuid() == 0){
-        root_privileges = true;
+    if (check_superuser() == true){
+        superuser_privileges = true;
     }
     else{
-        root_privileges = false;
+        superuser_privileges = false;
     }
 
-    if (root_privileges == false){
-        fprintf(stderr,"You must be superuser for this. (sudo usbk ....)\n");
-        exit (0);
-    }
 
     if (!_parse_options(&argc, &argv)) {
         printf("Parse error\n");
@@ -161,6 +158,11 @@ int main(int argc, char *argv[]) {
 
     if (!iflag && main_operation == 0) {
         exit(0);
+    }
+
+    if (superuser_privileges == false){
+        fprintf(stderr,"You must be superuser for this.\n");
+        exit (0);
     }
 
     if (sflag) {
@@ -1056,4 +1058,14 @@ static void print_help(int exval) {
 
 static void print_version(void) {
     printf("%s version %s\n", PACKAGE, VERSION);
+}
+
+
+
+static bool check_superuser(void){
+    if(geteuid() == 0){
+        return true;
+    }else{
+        return false;
+    }
 }
