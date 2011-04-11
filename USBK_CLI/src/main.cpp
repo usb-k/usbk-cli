@@ -88,6 +88,7 @@ char opt_string_key[128];
 unsigned char opt_aes_key[1024];
 unsigned char set_key[1024];
 USBK_INFO *usbk_info;
+bool root_privileges = false;
 
 static struct option long_options[] =
         {
@@ -133,6 +134,18 @@ int main(int argc, char *argv[]) {
     opt_key = 1; // default key no 1
     opt_key_format = 'd'; // default key format decimal
     opt_key_size_str = strdup("256");
+
+    if(geteuid() == 0){
+        root_privileges = true;
+    }
+    else{
+        root_privileges = false;
+    }
+
+    if (root_privileges == false){
+        fprintf(stderr,"You must be superuser for this. (sudo usbk ....)\n");
+        exit (0);
+    }
 
     if (!_parse_options(&argc, &argv)) {
         printf("Parse error\n");
