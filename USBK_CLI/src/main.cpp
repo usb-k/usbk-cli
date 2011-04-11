@@ -68,6 +68,7 @@ int Xflag = 0;
 int tflag = 0;
 int Tflag = 0;
 int lflag = 0;
+int sflag = 0;
 int kflag = 0;
 int pflag = 0;
 int fflag = 1;
@@ -159,6 +160,11 @@ int main(int argc, char *argv[]) {
     }
 
     if (!iflag && main_operation == 0) {
+        exit(0);
+    }
+
+    if (sflag) {
+        linuxcli_show_devices();
         exit(0);
     }
 
@@ -702,10 +708,9 @@ static int _parse_options(int *argc, char** argv[]) {
                 main_operation++;
                 break;
 
-            case 's': {
-                linuxcli_show_devices();
-            }
-                exit(0);
+            case 's':
+                sflag = 1;
+                main_operation++;
                 break;
 
             case 'k':
