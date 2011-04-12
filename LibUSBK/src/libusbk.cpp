@@ -55,7 +55,11 @@ static LIBSUBK_DEVSTATE libusbk_getdevstate(e_UIP_DEVSTATE devstate_from_usbk);
 
 //ALL FUNCTIONS
 //-PUBLIC FUNCTIONS
-USBK_List* LibUSBK__list_devices(void){
+
+
+//ALL FUNCTIONS
+//-PUBLIC FUNCTIONS
+int LibUSBK__list_devices(USBK_List** usbk_list){
     int rtn = LIBUSBK_RTN_GENERAL_ERROR;
     int i;
     struct udev *udev;
@@ -66,6 +70,8 @@ USBK_List* LibUSBK__list_devices(void){
     struct udev_device *dev_scsi = NULL;
     bool first = true;
 
+    *usbk_list = NULL;
+
     USBK_List *current_usbklink = NULL;
     USBK_List *first_usbklink = NULL;
 
@@ -73,7 +79,7 @@ USBK_List* LibUSBK__list_devices(void){
     udev = udev_new();
     if (!udev) {
         fprintf(stderr, msgLIBUSBK_UDEV_NOT_CREATE);
-        return NULL;
+        return LIBUSBK_RTN_UDEV_NOT_CREATE;
     }
     enumerate = udev_enumerate_new(udev);
     udev_enumerate_add_match_subsystem(enumerate, "block");
@@ -96,7 +102,7 @@ USBK_List* LibUSBK__list_devices(void){
                             current_usbklink = (USBK_List*)calloc(1,sizeof(USBK_List));
                             if (current_usbklink == NULL)
                             {
-                                LibUSBK__list_devices_release(first_usbklink);
+                                LibUSBK__list_devices_release(&first_usbklink);
                                 udev_device_unref(dev);
                                 udev_enumerate_unref(enumerate);
                                 udev_unref(udev);
@@ -123,7 +129,7 @@ USBK_List* LibUSBK__list_devices(void){
 
                             if (rtn < 0)
                             {
-                                LibUSBK__list_devices_release(current_usbklink);
+                                LibUSBK__list_devices_release(&current_usbklink);
                                 udev_device_unref(dev);
                                 udev_enumerate_unref(enumerate);
                                 udev_unref(udev);
@@ -156,7 +162,7 @@ USBK_List* LibUSBK__list_devices(void){
 
                             if (rtn < 0)
                             {
-                                LibUSBK__list_devices_release(current_usbklink);
+                                LibUSBK__list_devices_release(&current_usbklink);
                                 udev_device_unref(dev);
                                 udev_enumerate_unref(enumerate);
                                 udev_unref(udev);
@@ -177,19 +183,22 @@ USBK_List* LibUSBK__list_devices(void){
     }
     udev_enumerate_unref(enumerate);
     udev_unref(udev);
-    return first_usbklink;
+
+    *usbk_list = first_usbklink;
+    return LIBUSBK_OPRS_PASS;
 }
 
-void LibUSBK__list_devices_release(USBK_List* p_usbklink)
+void LibUSBK__list_devices_release(USBK_List** p_usbklink)
 {
     USBK_List *dummy_usbklink;
 
-    for (p_usbklink;p_usbklink!=NULL;p_usbklink=dummy_usbklink)
+    for (*p_usbklink;*p_usbklink!=NULL;*p_usbklink=dummy_usbklink)
     {
-        dummy_usbklink = p_usbklink->next;
-        free (p_usbklink->dev);
-        LibUSBK__GetDeviceInfo_Release(&p_usbklink->usbk_info);
-        free(p_usbklink);
+        dummy_usbklink = (*p_usbklink)->next;
+        free ((*p_usbklink)->dev);
+        LibUSBK__GetDeviceInfo_Release(&(*p_usbklink)->usbk_info);
+        free(*p_usbklink);
+        *p_usbklink = NULL;
     }
 }
 

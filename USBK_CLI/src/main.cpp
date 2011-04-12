@@ -796,8 +796,7 @@ void linuxcli_show_devices(void) {
     int counter = 0;
 
     USBK_List* p_usbklink = NULL;
-    p_usbklink = LibUSBK__list_devices();
-    if (p_usbklink == NULL){
+    if (LibUSBK__list_devices(&p_usbklink) < 0){
         fprintf(stderr, NOT_MALLOC "veya device yok");
         exit(1);
     }
@@ -818,7 +817,7 @@ void linuxcli_show_devices(void) {
     (counter > 0) ? printf ("%d",counter):printf ("None");
     printf (" USBK Found.\n\n");
 
-    LibUSBK__list_devices_release(p_usbklink);
+    LibUSBK__list_devices_release(&p_usbklink);
 }
 
 void linuxcli_show_dev_info(const char* dev) {

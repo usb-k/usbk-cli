@@ -79,8 +79,8 @@ typedef struct __USBK_List {
 
 //PUBLIC FUNCTIONS
 //-LIST ALL USBK'S ON HOST SYSTEM
-USBK_List* LibUSBK__list_devices(void);
-void LibUSBK__list_devices_release(USBK_List* p_usbklink);
+int LibUSBK__list_devices(USBK_List** usbk_list);
+void LibUSBK__list_devices_release(USBK_List** p_usbklink);
 
 //-SET AND GET USBK'S INFORMATION
 int LibUSBK__GetDeviceInfo(const char *usbk_dev, USBK_INFO** usbk_infos);
