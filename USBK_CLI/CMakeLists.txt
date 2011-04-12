@@ -42,7 +42,7 @@ INCLUDE_DIRECTORIES (
 LINK_DIRECTORIES (
     "/usr/local/lib/"
     "/usr/X11R6/lib/"
-    "${usbk_SOURCE_DIR}/build"
+    "${usbk_SOURCE_DIR}/build/LibUSBK/"
 )
 
 
@@ -51,15 +51,15 @@ FIND_PATH( LIBUSBK_INCLUDE_DIR NAMES libusbk.h)
 MARK_AS_ADVANCED( LIBUSBK_INCLUDE_DIR )
 
 IF(NOT LIBUSBK_INCLUDE_DIR)
-#    message(FATAL_ERROR "libusbk.h is not found!!!")
+    message(FATAL_ERROR "libusbk.h is not found!!!")
 ENDIF(NOT LIBUSBK_INCLUDE_DIR)
 
 # Look for the library
-FIND_LIBRARY( LIBUSBK_LIBRARY NAMES usbk )
+FIND_LIBRARY( LIBUSBK_LIBRARY NAMES USBK )
 MARK_AS_ADVANCED( LIBUSBK_LIBRARY )
 
 IF(NOT LIBUSBK_LIBRARY)
-#    message(FATAL_ERROR "libusbk.co is not found!!!")
+    message(FATAL_ERROR "libusbk.co is not found!!!")
 ENDIF(NOT LIBUSBK_LIBRARY)
 
 
@@ -67,7 +67,7 @@ ENDIF(NOT LIBUSBK_LIBRARY)
 ADD_EXECUTABLE (${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
 
 # These are the symbols for the linker
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} usbk)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} USBK)
 
 # Install project
 INSTALL(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
