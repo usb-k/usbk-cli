@@ -75,6 +75,9 @@ int pflag = 0;
 int fflag = 1;
 int Fflag = 1;
 int iflag = 0;
+int vflag = 0;
+int question_flag = 0;
+
 int main_operation = 0;
 //-OTHERS
 int opt_key;
@@ -147,6 +150,16 @@ int main(int argc, char *argv[]) {
 
     if (!_parse_options(&argc, &argv)) {
         printf("Parse error\n");
+        exit(0);
+    }
+
+    if (question_flag) {
+        print_help(0);
+        exit(0);
+    }
+
+    if (vflag) {
+        print_version();
         exit(0);
     }
 
@@ -636,7 +649,7 @@ static int _parse_options(int *argc, char** argv[]) {
 
     if (*argc == 1)
     {
-        print_help(0);
+        question_flag = 1;
     }
     else
     {
@@ -746,11 +759,11 @@ static int _parse_options(int *argc, char** argv[]) {
                 break;
 
             case 'v':
-                print_version();
+                vflag = 1;
                 break;
 
             case '?':
-                print_help(0);
+                question_flag = 1;
                 break;
             default:
                 break;
