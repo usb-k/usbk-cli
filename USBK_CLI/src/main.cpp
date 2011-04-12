@@ -460,7 +460,7 @@ int main(int argc, char *argv[]) {
 
                             switch (StatusChecker(usbk_dev ,status))
                             {
-                            case LIBUSBK_OPRS_PASS:
+                            case LIBUSBK_RTN_OPRS_PASS:
                                 memcpy (set_key, dummy_set_key, opt_key_size_byte);
                                 break;
                             case LIBUSBK_RTN_SHORT_GENERATEDKEY:
@@ -909,25 +909,22 @@ void linuxcli_show_dev_info(const char* dev) {
 
 int StatusChecker(const char *usbk_dev, int status) {
     switch ((LIBUSBK_OPRSTATUS) status) {
-    case LIBUSBK_OPRS_PASS:
-    case LIBUSBK_RTN_PASS:
-        return LIBUSBK_OPRS_PASS;
-        break;
-    case LIBUSBK_OPRS_INVALID_PASS:
+    case LIBUSBK_RTN_OPRS_INVALID_PASS:
         printf("Hata: Parola yanlis. RetryNum:%d\n", linuxcli_GetRetryNumber(usbk_dev));
         return false;
         break;
-    case LIBUSBK_OPRS_FABRIC_RESET:
+    case LIBUSBK_RTN_OPRS_FABRIC_RESET:
         printf("\n*********************************************\n");
         printf(" Uyari: USBK cihazinizdaki bilgiler silindi. \n");
         printf(" Lutfen cihazinizi tekrar konfigure ediniz.  \n");
         printf("*********************************************\n\n");
         return true;
         break;
-    case LIBUSBK_OPRS_USBK_UNPLUGING:
+    case LIBUSBK_RTN_OPRS_USBK_UNPLUGING:
         printf("%s\n", MSG_MUST_REMOVE);
         return false;
         break;
+    case LIBUSBK_RTN_OPRS_PASS:
     default:
         if (status < 0 ){
             printf("Hata: Islem basarisiz. MSG_CODE:0x%02X RetryNum:%d\n", status, linuxcli_GetRetryNumber(usbk_dev));
