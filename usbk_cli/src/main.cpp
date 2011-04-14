@@ -32,12 +32,27 @@ using namespace std;
 
 //PRIVATE DEFINES
 //-MESSAGES OF LINUX CLI
-#define MISSING_PARAMETER     "Missing parameter"
-#define WARNING               "Warning:"
-#define MSG_FABRIC_DEFAULT    "Fabric default. Please first set your password."
-#define MSG_MUST_REMOVE       "Must remove. Please remove and re-plug the USBK."
-#define NOT_CREATE_RANDOM_KEY "Key Random Olarak Uretilemiyor."
-#define NOT_MALLOC            "memory'de yer yok!\n"
+#define MSG_FABRIC_DEFAULT                  "Fabric default. Please first set your password.\n"
+#define MSG_MUST_REMOVE                     "Must remove. Please remove and re-plug the USBK.\n"
+#define NOT_CREATE_RANDOM_KEY               "Random Key is unable to created.\n"
+#define NOT_MALLOC                          "invalid space of memory\n"
+#define ARG_PARSE_ERROR                     "Parse error\n"
+#define MISSING_PARAMETER                   "Missing parameter(s)\n"
+#define MAIN_OPERTAION_MORE                 "You may not specify more than one `-adcnmxXtTls' option\n"
+#define TRY_HELP                            "Try `usbk --help' for more information.\n"
+#define MUST_SUPERUSER                      "requested operation requires superuser privilege\n"
+#define MISSING_PARAM_DEV                   "Dev paramter missing\n"
+#define NO_DEVICE                           "No Device\n"
+#define COMMAND_DONE                        "Done.\n"
+#define DEVICE_IN_ACTIVATE                  "%s [%s] in activate.\n"
+#define COMMAND_ERROR_AS_ACTIVATE           "This command is not done becuase %s [%s] is in activate.\n"
+#define KEY_LEN_INCORRECT                   "The length of key is incorrect.\n"
+#define KEY_DECIMAL_FORMAT_INCORRECT        "The format of decimal key is incorrect.\n"
+#define KEY_TEXT_FORMAT_INCORRECT           "The format of text key is incorrect.\n"
+#define UNKOWN_ERROR                        "Unknown Error!!!\n"
+#define RANDOMKEY_SHORT                     "Random key is short. So, remain part is filled with '0'.\n"
+#define SET_RANDOM_KEY                      "Set Random Key: "
+
 
 //PRIVATE FUNCTIONS
 static int _parse_options(int *argc, char** argv[]);
@@ -149,7 +164,7 @@ int main(int argc, char *argv[]) {
 
 
     if (!_parse_options(&argc, &argv)) {
-        printf("Parse error\n");
+        fprintf(stderr, ARG_PARSE_ERROR);
         exit(0);
     }
 
@@ -164,8 +179,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (main_operation > 1) {
-        printf("usbk: You may not specify more than one `-adcnmxXtTls' option\n");
-        printf("usbk: Try `usbk --help' for more information.\n");
+        fprintf(stderr, MAIN_OPERTAION_MORE);
+        fprintf(stderr, TRY_HELP);
         exit(1);
     }
 
@@ -174,7 +189,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (superuser_privileges == false){
-        fprintf(stderr,"You must be superuser for this.\n");
+        fprintf(stderr,MUST_SUPERUSER);
         exit (0);
     }
 
@@ -184,12 +199,16 @@ int main(int argc, char *argv[]) {
     }
 
     if (uflag == 0) {
-        printf("Uyarı: Device name parametresi eksik.\n");
+        fprintf(stderr, MISSING_PARAM_DEV);
+        fprintf(stderr, TRY_HELP);
         exit(0);
     }
 
     USBK_INFO *usbk_infos;
-    if (LibUSBK__GetDeviceInfo(usbk_dev, &usbk_infos)<0) fprintf(stderr,"device yok");
+    if (LibUSBK__GetDeviceInfo(usbk_dev, &usbk_infos)<0){
+        fprintf(stderr,NO_DEVICE);
+        exit(0);
+    }
 
     /////////////////////////////////////////////
     // ACTIVATE
@@ -200,7 +219,7 @@ int main(int argc, char *argv[]) {
                 switch (usbk_infos->dev_state) {
                 case LIBSUBK_DEVSTATE_ACTIVATE:
                 case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-                    printf("%s [%s] cihazı zaten aktif.\n", usbk_dev, usbk_infos->dev_label);
+                    fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
                     break;
                 case LIBSUBK_DEVSTATE_DEACTIVATE:
                     status = LibUSBK__ActivateKey(usbk_infos->dev_path, opt_parola, (int)opt_key);
@@ -211,26 +230,30 @@ int main(int argc, char *argv[]) {
                     if (iflag) {
                         linuxcli_show_dev_info(usbk_dev);
                     }
-                    printf("Done.\n");
+                    fprintf(stdout, COMMAND_DONE);
                     exit(0);
                     break;
                 case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-                    printf("%s\n", MSG_FABRIC_DEFAULT);
+                    fprintf(stderr, MSG_FABRIC_DEFAULT);
                     exit(0);
                     break;
                 case LIBSUBK_DEVSTATE_MUST_REMOVE:
-                    printf("%s\n", MSG_MUST_REMOVE);
+                    fprintf(stderr, MSG_MUST_REMOVE);
                     exit(0);
                     break;
                 default:
+                    fprintf(stderr, UNKOWN_ERROR);
+                    exit(0);
                     break;
                 }
             } else {
-                printf("%s%s\n", WARNING, MISSING_PARAMETER);
+                fprintf(stderr, MISSING_PARAMETER);
+                fprintf(stderr, TRY_HELP);
                 exit(0);
             }
         } else {
-            printf("%s%s\n", WARNING, MISSING_PARAMETER);
+            fprintf(stderr, MISSING_PARAMETER);
+            fprintf(stderr, TRY_HELP);
             exit(0);
         }
     }
@@ -249,22 +272,24 @@ int main(int argc, char *argv[]) {
             if (iflag) {
                 linuxcli_show_dev_info(usbk_dev);
             }
+            fprintf(stdout, COMMAND_DONE);
             exit(0);
-            printf("Done.\n");
             break;
         case LIBSUBK_DEVSTATE_DEACTIVATE:
-            printf("%s [%s] cihazı zaten deaktif.\n", usbk_dev, usbk_infos->dev_label);
+            fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
             exit(0);
             break;
         case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-            printf("%s\n", MSG_FABRIC_DEFAULT);
+            fprintf(stderr, MSG_FABRIC_DEFAULT);
             exit(0);
             break;
         case LIBSUBK_DEVSTATE_MUST_REMOVE:
-            printf("%s\n", MSG_MUST_REMOVE);
+            fprintf(stderr, MSG_MUST_REMOVE);
             exit(0);
             break;
         default:
+            fprintf(stderr, UNKOWN_ERROR);
+            exit(0);
             break;
         }
     }
@@ -276,7 +301,7 @@ int main(int argc, char *argv[]) {
         switch (usbk_infos->dev_state) {
         case LIBSUBK_DEVSTATE_ACTIVATE:
         case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-            printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk_dev, usbk_infos->dev_label);
+            fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
             exit(0);
             break;
         case LIBSUBK_DEVSTATE_DEACTIVATE:
@@ -289,10 +314,10 @@ int main(int argc, char *argv[]) {
                 if (iflag) {
                     linuxcli_show_dev_info(usbk_dev);
                 }
-                printf("Done.\n");
+                fprintf(stderr, COMMAND_DONE);
                 exit(0);
             } else {
-                printf("%s%s\n", WARNING, MISSING_PARAMETER);
+                fprintf(stderr, MISSING_PARAMETER);
                 exit(0);
             }
             break;
@@ -307,14 +332,16 @@ int main(int argc, char *argv[]) {
             if (iflag) {
                 linuxcli_show_dev_info(usbk_dev);
             }
-            printf("Done.\n");
+            fprintf(stdout, COMMAND_DONE);
             exit(0);
             break;
         case LIBSUBK_DEVSTATE_MUST_REMOVE:
-            printf("%s\n", MSG_MUST_REMOVE);
+            fprintf(stderr, MSG_MUST_REMOVE);
             exit(0);
             break;
         default:
+            fprintf(stderr, UNKOWN_ERROR);
+            exit(0);
             break;
         }
     }
@@ -327,7 +354,7 @@ int main(int argc, char *argv[]) {
             switch (usbk_infos->dev_state) {
             case LIBSUBK_DEVSTATE_ACTIVATE:
             case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-                printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk_dev, usbk_infos->dev_label);
+                fprintf (stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
                 exit(0);
                 break;
             case LIBSUBK_DEVSTATE_DEACTIVATE:
@@ -339,22 +366,24 @@ int main(int argc, char *argv[]) {
                 if (iflag) {
                     linuxcli_show_dev_info(usbk_dev);
                 }
-                printf("Done.\n");
+                fprintf(stdout, COMMAND_DONE);
                 exit(0);
                 break;
             case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-                printf("%s\n", MSG_FABRIC_DEFAULT);
+                fprintf(stderr, MSG_FABRIC_DEFAULT);
                 exit(0);
                 break;
             case LIBSUBK_DEVSTATE_MUST_REMOVE:
-                printf("%s\n", MSG_MUST_REMOVE);
+                fprintf( stderr, MSG_MUST_REMOVE);
                 exit(0);
                 break;
             default:
+                fprintf(stderr, UNKOWN_ERROR);
+                exit(0);
                 break;
             }
         } else {
-            printf("%s%s\n", WARNING, MISSING_PARAMETER);
+            fprintf(stderr, MISSING_PARAMETER);
             exit(0);
         }
     }
@@ -368,7 +397,7 @@ int main(int argc, char *argv[]) {
                 switch (usbk_infos->dev_state) {
                 case LIBSUBK_DEVSTATE_ACTIVATE:
                 case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-                    printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk_dev, usbk_infos->dev_label);
+                    fprintf (stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
                     exit(0);
                     break;
                 case LIBSUBK_DEVSTATE_DEACTIVATE:
@@ -380,27 +409,28 @@ int main(int argc, char *argv[]) {
                     if (iflag) {
                         linuxcli_show_dev_info(usbk_dev);
                     }
-                    printf("Done.\n");
+                    fprintf(stdout, COMMAND_DONE);
                     exit(0);
                     break;
                 case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-                    printf("%s\n", MSG_FABRIC_DEFAULT);
+                    fprintf(stderr, MSG_FABRIC_DEFAULT);
                     exit(0);
                     break;
                 case LIBSUBK_DEVSTATE_MUST_REMOVE:
-                    printf("%s\n", MSG_MUST_REMOVE);
+                    fprintf(stderr, MSG_MUST_REMOVE);
                     exit(0);
                     break;
                 default:
-                    printf("default error\n");
+                    fprintf(stderr, UNKOWN_ERROR);
+                    exit(0);
                     break;
                 }
             } else {
-                printf("%s%s\n", WARNING, MISSING_PARAMETER);
+                fprintf(stderr, MISSING_PARAMETER);
                 exit(0);
             }
         } else {
-            printf("%s%s\n", WARNING, MISSING_PARAMETER);
+            fprintf(stderr, MISSING_PARAMETER);
             exit(0);
         }
     }
@@ -416,7 +446,7 @@ int main(int argc, char *argv[]) {
                     switch (usbk_infos->dev_state) {
                     case LIBSUBK_DEVSTATE_ACTIVATE:
                     case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-                        printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk_dev, usbk_infos->dev_label);
+                        fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
                         exit(0);
                         break;
                     case LIBSUBK_DEVSTATE_DEACTIVATE:
@@ -432,7 +462,7 @@ int main(int argc, char *argv[]) {
                         } else if (!strcmp(opt_key_size_str, "256")) {
                             opt_key_size_byte = 32;
                         } else {
-                            printf("key uzunluğu yanlis");
+                            fprintf (stderr, KEY_LEN_INCORRECT);
                             exit(0);
                         }
 
@@ -440,17 +470,18 @@ int main(int argc, char *argv[]) {
                             if (opt_key_format == 'd') {
                                 if (check_key_decimal((string) opt_string_key, opt_aes_key, opt_key_size_byte)
                                         == -1) {
-                                    printf("Hata: key decimal format yanlis.\n");
+
+                                    fprintf(stderr, KEY_DECIMAL_FORMAT_INCORRECT);
                                     exit(0);
                                 }
                             } else if (opt_key_format == 't') {
                                 if (check_key_text((string) opt_string_key, opt_aes_key, opt_key_size_byte)
                                         == -1) {
-                                    printf("Hata: key text format yanlis.\n");
+                                    fprintf(stderr, KEY_TEXT_FORMAT_INCORRECT);
                                     exit(0);
                                 }
                             } else {
-                                cout << "Beklenmeyen hata!" << endl;
+                                fprintf(stderr, UNKOWN_ERROR);
                             }
 
                         }
@@ -464,7 +495,7 @@ int main(int argc, char *argv[]) {
                                 memcpy (set_key, dummy_set_key, opt_key_size_byte);
                                 break;
                             case LIBUSBK_RTN_SHORT_GENERATEDKEY:
-                                printf("key is short. So, remain part is filled with '0'.\n");
+                                fprintf(stderr, RANDOMKEY_SHORT);
                                 memcpy (set_key, dummy_set_key, opt_key_size_byte);
                                 break;
                             default:
@@ -484,67 +515,48 @@ int main(int argc, char *argv[]) {
 
                         if (Xflag) {
                             int i;
-                            printf("Set Edilen Key : ");
+                            fprintf (stdout, SET_RANDOM_KEY);
                             for (i=0; i<opt_key_size_byte; i++)
                             {
-                                printf("%d",set_key[i]);
+                                fprintf (stdout, "%d",set_key[i]);
 
-                                if (i != (opt_key_size_byte-1)) printf(".");
+                                if (i != (opt_key_size_byte-1)) fprintf (stdout, ".");
                             }
-                            printf ("\n");
+                            fprintf (stdout, "\n");
                         }
 
                         if (iflag) {
                             linuxcli_show_dev_info(usbk_dev);
                         }
-                        printf("Done.\n");
+                        fprintf (stdout, COMMAND_DONE);
                         exit(0);
                         break;
                     case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-                        printf("%s\n", MSG_FABRIC_DEFAULT);
+                        fprintf(stderr, MSG_FABRIC_DEFAULT);
                         exit(0);
                         break;
                     case LIBSUBK_DEVSTATE_MUST_REMOVE:
-                        printf("%s\n", MSG_MUST_REMOVE);
+                        fprintf(stderr, MSG_MUST_REMOVE);
                         exit(0);
                         break;
                     default:
+                        fprintf(stderr, UNKOWN_ERROR);
+                        exit(0);
                         break;
                     }
                 } else {
-                    printf("%s%s\n", WARNING, MISSING_PARAMETER);
+                    fprintf(stderr, MISSING_PARAMETER);
                     exit(0);
                 }
             } else {
-                printf("%s%s\n", WARNING, MISSING_PARAMETER);
+                fprintf(stderr, MISSING_PARAMETER);
                 exit(0);
             }
         } else {
-            printf("%s%s\n", WARNING, MISSING_PARAMETER);
+            fprintf(stderr, MISSING_PARAMETER);
             exit(0);
         }
     }
-
-    /*
-     switch(usbk_infos->dev_state){
-     case LIBSUBK_DEVSTATE_ACTIVATE:
-     case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-     break;
-     case LIBSUBK_DEVSTATE_DEACTIVATE:
-     break;
-     case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-     printf("%s\n", MSG_FABRIC_DEFAULT);
-     exit(0);
-     break;
-     case LIBSUBK_DEVSTATE_MUST_REMOVE:
-     printf("%s\n", MSG_MUST_REMOVE);
-     exit(0);
-     break;
-     default:
-     break;
-     }
-
-     */
 
     /////////////////////////////////////////////
     // ENABLE AUTO ACTIVATE
@@ -555,7 +567,7 @@ int main(int argc, char *argv[]) {
                 switch (usbk_infos->dev_state) {
                 case LIBSUBK_DEVSTATE_ACTIVATE:
                 case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-                    printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk_dev, usbk_infos->dev_label);
+                    fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
                     exit(0);
                     break;
                 case LIBSUBK_DEVSTATE_DEACTIVATE:
@@ -567,26 +579,28 @@ int main(int argc, char *argv[]) {
                     if (iflag) {
                         linuxcli_show_dev_info(usbk_dev);
                     }
-                    printf("Done.\n");
+                    fprintf(stdout, COMMAND_DONE);
                     exit(0);
                     break;
                 case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-                    printf("%s\n", MSG_FABRIC_DEFAULT);
+                    fprintf(stderr, MSG_FABRIC_DEFAULT);
                     exit(0);
                     break;
                 case LIBSUBK_DEVSTATE_MUST_REMOVE:
-                    printf("%s\n", MSG_MUST_REMOVE);
+                    fprintf(stderr, MSG_MUST_REMOVE);
                     exit(0);
                     break;
                 default:
+                    fprintf(stderr, UNKOWN_ERROR);
+                    exit(0);
                     break;
                 }
             } else {
-                printf("%s%s\n", WARNING, MISSING_PARAMETER);
+                fprintf(stderr, MISSING_PARAMETER);
                 exit(0);
             }
         } else {
-            printf("%s%s\n", WARNING, MISSING_PARAMETER);
+            fprintf(stderr, MISSING_PARAMETER);
             exit(0);
         }
     }
@@ -599,7 +613,7 @@ int main(int argc, char *argv[]) {
             switch (usbk_infos->dev_state) {
             case LIBSUBK_DEVSTATE_ACTIVATE:
             case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-                printf("%s [%s] cihazı aktif iken bu işlem yapılamaz.\n", usbk_dev, usbk_infos->dev_label);
+                fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
                 exit(0);
                 break;
             case LIBSUBK_DEVSTATE_DEACTIVATE:
@@ -611,29 +625,29 @@ int main(int argc, char *argv[]) {
                 if (iflag) {
                     linuxcli_show_dev_info(usbk_dev);
                 }
-                printf("Done.\n");
+                fprintf (stdout, COMMAND_DONE);
                 exit(0);
                 break;
             case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-                printf("%s\n", MSG_FABRIC_DEFAULT);
+                fprintf(stderr, MSG_FABRIC_DEFAULT);
                 exit(0);
                 break;
             case LIBSUBK_DEVSTATE_MUST_REMOVE:
-                printf("%s\n", MSG_MUST_REMOVE);
+                fprintf(stderr, MSG_MUST_REMOVE);
                 exit(0);
                 break;
             default:
                 break;
             }
         } else {
-            printf("%s%s\n", WARNING, MISSING_PARAMETER);
+            fprintf(stderr, MISSING_PARAMETER);
             exit(0);
         }
     }
 
     if (iflag) {
         linuxcli_show_dev_info(usbk_dev);
-        printf("Done.\n");
+        fprintf(stdout, COMMAND_DONE);
     }
 
     LibUSBK__GetDeviceInfo_Release(usbk_infos);
@@ -745,7 +759,7 @@ static int _parse_options(int *argc, char** argv[]) {
                 } else if (!strcmp(optarg, "t")) {
                     opt_key_format = 't';
                 } else {
-                    printf("%s%s\n", WARNING, MISSING_PARAMETER);
+                    fprintf(stderr, MISSING_PARAMETER);
                     exit(1);
                 }
                 break;
@@ -774,18 +788,8 @@ static int _parse_options(int *argc, char** argv[]) {
          and ‘--brief’ as they are encountered,
          we report the final status resulting from them. */
         if (verbose_flag)
-            puts("verbose flag is set");
+            fprintf(stdout, "verbose flag is set");
 
-        /* Print any remaining command line arguments (not options). */
-        /*
-         if (optind < argc)
-         {
-         printf ("non-option ARGV-elements: ");
-         while (optind < argc)
-         printf ("%s ", argv[optind++]);
-         putchar ('\n');
-         }
-         */
     }
 
     return 1;
@@ -827,7 +831,7 @@ void linuxcli_show_dev_info(const char* dev) {
     if (LibUSBK__GetDeviceInfo(dev, &usbk_infos)<0)
     {
         LibUSBK__GetDeviceInfo_Release(usbk_infos);
-        fprintf(stderr,"device yok");
+        fprintf(stderr,NO_DEVICE);
         return;
     }
 
@@ -910,24 +914,26 @@ void linuxcli_show_dev_info(const char* dev) {
 int StatusChecker(const char *usbk_dev, int status) {
     switch ((LIBUSBK_OPRSTATUS) status) {
     case LIBUSBK_RTN_OPRS_INVALID_PASS:
-        printf("Hata: Parola yanlis. RetryNum:%d\n", linuxcli_GetRetryNumber(usbk_dev));
+        fprintf(stderr, "Password is incorrect. Retry Number: %d", linuxcli_GetRetryNumber(usbk_dev));
         return false;
         break;
     case LIBUSBK_RTN_OPRS_FABRIC_RESET:
-        printf("\n*********************************************\n");
-        printf(" Uyari: USBK cihazinizdaki bilgiler silindi. \n");
-        printf(" Lutfen cihazinizi tekrar konfigure ediniz.  \n");
-        printf("*********************************************\n\n");
+        printf("\n");
+        printf("***********************************************\n");
+        printf(" All keys and your password is erased.         \n");
+        printf(" Please, re-configure your device.             \n");
+        printf("***********************************************\n");
+        printf("\n");
         return true;
         break;
     case LIBUSBK_RTN_OPRS_USBK_UNPLUGING:
-        printf("%s\n", MSG_MUST_REMOVE);
+        fprintf(stderr, MSG_MUST_REMOVE);
         return false;
         break;
     case LIBUSBK_RTN_OPRS_PASS:
     default:
         if (status < 0 ){
-            printf("Hata: Islem basarisiz. MSG_CODE:0x%02X RetryNum:%d\n", status, linuxcli_GetRetryNumber(usbk_dev));
+            fprintf(stderr, UNKOWN_ERROR "MSG_CODE:0x%02X and RetryNum:%d\n", status, linuxcli_GetRetryNumber(usbk_dev));
         }
         return status;
         break;
@@ -938,10 +944,15 @@ int StatusChecker(const char *usbk_dev, int status) {
 int linuxcli_GetRetryNumber(const char *usbk_dev)
 {
     USBK_INFO *usbk_infos;
-    if (LibUSBK__GetDeviceInfo(usbk_dev, &usbk_infos)<0) fprintf(stderr,"device yok");
-    int retry_number = usbk_infos->retry_num;
-    LibUSBK__GetDeviceInfo_Release(usbk_infos);
-    return retry_number;
+    if (LibUSBK__GetDeviceInfo(usbk_dev, &usbk_infos)<0) {
+        fprintf(stderr,"device yok");
+        return -1;
+    }
+    else{
+        int retry_number = usbk_infos->retry_num;
+        LibUSBK__GetDeviceInfo_Release(usbk_infos);
+        return retry_number;
+    }
 }
 
 
@@ -1024,6 +1035,7 @@ int check_key_text(string str, unsigned char *key, int key_size_byte) {
 
 static void print_help(int exval) {
     print_version();
+/*
     printf("Usage: usbk [OPTION...]\n\n");
 
     printf("Examples:\n");
@@ -1061,12 +1073,54 @@ static void print_help(int exval) {
     printf("--key-size=256\n");
     printf("--key-format=d\n");
     printf("--key-no=1\n\n");
-
+*/
+    printf(""
+            "Usage: usbk [OPTION...]\n"
+            "\n"
+            "Examples:\n"
+            "  usbk -s                       # Show device list\n"
+            "  usbk sdc -a -k 1 -p foo       # activate device with key 1\n"
+            "  usbk sdc -d                   # deactivate device\n"
+            "\n"
+            " Main operation mode:\n"
+            "\n"
+            "  -u, --dev                     device\n"
+            "  -a, --activate                activate device\n"
+            "  -d, --deactivate              deactivate device\n"
+            "  -c, --newpasswd=NEWPASS       change the password to NEWPASS\n"
+            "  -n, --label=LABEL             change the label to LABEL\n"
+            "  -m, --keyname=KEYNAME         change then key nameto NAME\n"
+            "  -x, --change-key=NEWKEY       change the key to NEWKEY\n"
+            "  -X, --change-key-with-random  change the key to random key\n"
+            "  -t, --enable-auto             enable auto activate\n"
+            "  -T, --disable-auto            disable auto activate\n"
+            "  -l, --gen-key                 generate and set random key\n"
+            "  -s, --show-devices            show device list\n"
+            "\n"
+            " Setting options:\n"
+            "\n"
+            "  -k, --key-no=KEYNO            use KEYNO as key number\n"
+            "  -p, --passwd=PASSWD           checks password with PASSWD\n"
+            "  -F, --key-size=KEY_SIZE       KEYSIZE is 128, 192 or 256\n"
+            "  -f, --key-format=FORMAT       FORMAT=t for text or FORMAT=d for\n"
+            "                                decimal input. default is decimal\n"
+            "\n"
+            " Other options:\n"
+            "\n"
+            "  -i, --show-info               show device info\n"
+            "  -v, --ver                     print program version\n"
+            "  -?, --help                    give this help list\n"
+            "\n"
+            "defaults for options:\n"
+            "--key-size=256\n"
+            "--key-format=d\n"
+            "--key-no=1\n"
+            "\n");
     exit(exval);
 }
 
 static void print_version(void) {
-    printf("%s version %s\n", PACKAGE, VERSION);
+    fprintf(stdout, "%s version %s\n", PACKAGE, VERSION);
 }
 
 
