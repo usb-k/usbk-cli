@@ -6,17 +6,13 @@
 # GNU General Public License
 #
 
+# Project name
 PROJECT (usbk)
 
-
-message(STATUS "## ${PROJECT_NAME} <<<< ")
-
-
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6.0)
+# CMAKE Settings
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 SET(CMAKE_COLOR_MAKEFILE ON)
-SET(CMAKE_VERBOSE_MAKEFILE ON)
+SET(CMAKE_VERBOSE_MAKEFILE OFF)
 
-add_subdirectory( LibUSBK )
-add_subdirectory( USBK_CLI )
-
-message(STATUS "## >>>> ${PROJECT_NAME}")
+ADD_SUBDIRECTORY( libusbk )
+ADD_SUBDIRECTORY( usbk_cli )
