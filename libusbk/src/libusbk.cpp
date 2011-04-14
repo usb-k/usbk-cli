@@ -105,7 +105,7 @@ int LibUSBK__list_devices(USBK_List** usbk_list){
 
     // Create the udev object
     udev = udev_new();
-    if (udev != NULL) {
+    if (udev == NULL) {
         rtn = LIBUSBK_RTN_UDEV_NOT_CREATE;
         goto _return;
     }
