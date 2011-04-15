@@ -128,7 +128,6 @@ USBK_List* LibUSBK__list_devices(void){
                                 udev_enumerate_unref(enumerate);
                                 udev_unref(udev);
 
-                                fprintf(stderr, msgLIBUSBK_SCSI_COMMAND_ERROR);
                                 return NULL;
                             }
 
