@@ -32,21 +32,11 @@
 
 //PRIVATE DEFINES
 //-ERROR MESSAGES
-#define msgLIBUSBK_UDEV_NOT_MALLOC              "libusbk: memory'de yer yok!\n"
-#define msgLIBUSBK_UDEV_NOT_CREATE              "libusbk: Can't create udev\n"
-#define msgLIBUSBK_UDEV_NOT_NODE                "libusbk: device node not found\n"
-#define msgLIBUSBK_UDEV_WRONG_FILE_TYPE         "libusbk: device node has wrong file type\n"
-#define msgLIBUSBK_UDEV_USBKLIST_NOT_CREATE     "libusbk: USBK List is not malloced\n."
-#define msgLIBUSBK_SCSI_COMMAND_ERROR           "libusbk: Scsi Command Sent Error\n"
-#define msgLIBUSBK_GET_BACKDISK_ERROR           "libusbk: BackDisk Get Error"
-
-
 typedef struct __LIBUSBK_RETURN_VALUE
 {
     LIBUSBK_OPRSTATUS   return_value;
     const char          *return_string;
 }LIBUSBK_RETURN_VALUE;
-
 
 LIBUSBK_RETURN_VALUE return_values[] =
 {
@@ -63,7 +53,7 @@ LIBUSBK_RETURN_VALUE return_values[] =
     { LIBUSBK_RTN_UDEV_USBKLIST_NOT_CREATE    ,"USBK List is not malloced\n."},
     { LIBUSBK_RTN_SCSI_COMMAND_ERROR          ,"Scsi Command Sent Error\n"},
     { LIBUSBK_RTN_GET_BACKDISK_ERROR          ,"BackDisk Get Error\n"},
-    { LIBUSBK_RTN_NOT_MALLOC                  ,"memory'de yer yok!\n"},
+    { LIBUSBK_RTN_NOT_MALLOC                  ,"invalid space of memory\n"},
     { LIBUSBK_RTN_SHORT_GENERATEDKEY          ,NULL},
 
     { (LIBUSBK_OPRSTATUS)NULL                 ,NULL}
