@@ -32,6 +32,7 @@ using namespace std;
 
 //PRIVATE DEFINES
 //-MESSAGES OF LINUX CLI
+#define NO_DEVICE_FOUND                     "No Device Found\n"
 #define MSG_FABRIC_DEFAULT                  "Fabric default. Please first set your password.\n"
 #define MSG_MUST_REMOVE                     "Must remove. Please remove and re-plug the USBK.\n"
 #define NOT_CREATE_RANDOM_KEY               "Random Key is unable to created.\n"
@@ -798,12 +799,26 @@ static int _parse_options(int *argc, char** argv[]) {
 void linuxcli_show_devices(void) {
     int i;
     int counter = 0;
+    int rtn;
 
     USBK_List* p_usbklink = NULL;
-    if (LibUSBK__list_devices(&p_usbklink) < 0){
-        fprintf(stderr, NOT_MALLOC "veya device yok");
-        exit(1);
+
+    rtn = LibUSBK__list_devices(&p_usbklink);
+
+    if (rtn < 0)
+    {
+        if (rtn == LIBUSBK_RTN_NO_DEVICE_FOUND)
+        {
+            fprintf(stderr, NO_DEVICE_FOUND);
+            exit(1);
+        }
+        else
+        {
+            fprintf(stderr, NOT_MALLOC);
+            exit(1);
+        }
     }
+
 
     USBK_List *dummy_usbklink;
     for (dummy_usbklink = p_usbklink; dummy_usbklink != NULL; dummy_usbklink = dummy_usbklink->next) {
