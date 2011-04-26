@@ -45,7 +45,7 @@ ELSE(NOT UDEV)
             
     # Libraries are located in these directories
     LINK_DIRECTORIES (
-        "/usr/local/lib/"
+        "/usr/lib/"
     )
     
     # Create Library File
@@ -73,11 +73,11 @@ ELSE(NOT UDEV)
     
     # Install this library
     INSTALL(TARGETS ${PROJECT_NAME} 
-            LIBRARY DESTINATION lib
+            LIBRARY DESTINATION /usr/lib
             PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
             
     INSTALL(FILES src/libusbk.h 
-            DESTINATION include
+            DESTINATION /usr/include
             PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
     
     # Settings for debian package
