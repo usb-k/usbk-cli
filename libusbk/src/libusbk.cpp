@@ -493,7 +493,7 @@ static int libusbk_get_device_info(const char *usbk_dev, USBK_INFO* usbk_infos) 
 
     udev = udev_new();
     udev = udev_new();
-    if (udev != NULL) {
+    if (udev == NULL) {
         rtn = LIBUSBK_RTN_UDEV_NOT_CREATE;
         goto _return;
     }
@@ -569,7 +569,7 @@ static int libusbk_get_backdisk(USBK_INFO* usbk_infos) {
 
     // Create the udev object
     udev = udev_new();
-    if (!udev) {
+    if (udev == NULL) {
         rtn = LIBUSBK_RTN_UDEV_NOT_CREATE;
         goto _return;
     }
