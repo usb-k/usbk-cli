@@ -324,8 +324,7 @@ int main(int argc, char *argv[]) {
             break;
         case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
 
-            // FIXME null olmuyor boş bir ptr ver
-            status = LibUSBK__ChangePassword(usbk_infos->dev_path, NULL, opt_new_password);
+            status = LibUSBK__ChangePassword(usbk_infos->dev_path, opt_new_password, opt_new_password);
             if (StatusChecker(usbk_dev ,status) < 0){
                 exit(1);
             }
