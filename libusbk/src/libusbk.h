@@ -36,6 +36,7 @@ typedef enum __LIBUSBK_OPRSTATUS
     LIBUSBK_RTN_GET_BACKDISK_ERROR       = -7,
     LIBUSBK_RTN_NOT_MALLOC               = -8,
     LIBUSBK_RTN_NO_DEVICE_FOUND          = -9,
+    LIBUSBK_RTN_UNSUPPORTED_USBK         = -10,
 
     LIBUSBK_RTN_SHORT_GENERATEDKEY       = 10,
 }LIBUSBK_OPRSTATUS;
@@ -55,6 +56,8 @@ typedef struct __USBK_INFO {
     char                *dev_path;
     char                *backdisk_path;
     char                *backdisk;
+
+    bool                supported;
 
     char                *product;
     char                *model;

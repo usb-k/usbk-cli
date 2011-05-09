@@ -206,159 +206,143 @@ int main(int argc, char *argv[]) {
     }
 
     USBK_INFO *usbk_infos;
-    if (LibUSBK__GetDeviceInfo(usbk_dev, &usbk_infos)<0){
-        fprintf(stderr,NO_DEVICE);
-        exit(0);
+    int rtn = LibUSBK__GetDeviceInfo(usbk_dev, &usbk_infos);
+    if (rtn<0){
+
+        switch(rtn)
+        {
+        case LIBUSBK_RTN_UNSUPPORTED_USBK:
+            break;
+        default:
+            fprintf(stderr,NO_DEVICE);
+            exit(0);
+            break;
+        }
+
     }
 
-    /////////////////////////////////////////////
-    // ACTIVATE
-    /////////////////////////////////////////////
-    if (aflag) {
-        if (kflag) {
-            if (pflag) {
-                switch (usbk_infos->dev_state) {
-                case LIBSUBK_DEVSTATE_ACTIVATE:
-                case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-                    fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
-                    break;
-                case LIBSUBK_DEVSTATE_DEACTIVATE:
-                    status = LibUSBK__ActivateKey(usbk_infos->dev_path, opt_parola, (int)opt_key);
+    if (iflag) {
+        linuxcli_show_dev_info(usbk_dev);
+        fprintf(stdout, COMMAND_DONE);
+    }
 
-                    if (StatusChecker(usbk_dev ,status) < 0){
-                        exit(1);
+
+    if (usbk_infos->supported == true)
+    {
+        /////////////////////////////////////////////
+        // ACTIVATE
+        /////////////////////////////////////////////
+        if (aflag) {
+            if (kflag) {
+                if (pflag) {
+                    switch (usbk_infos->dev_state) {
+                    case LIBSUBK_DEVSTATE_ACTIVATE:
+                    case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
+                        fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
+                        break;
+                    case LIBSUBK_DEVSTATE_DEACTIVATE:
+                        status = LibUSBK__ActivateKey(usbk_infos->dev_path, opt_parola, (int)opt_key);
+
+                        if (StatusChecker(usbk_dev ,status) < 0){
+                            exit(1);
+                        }
+                        if (iflag) {
+                            linuxcli_show_dev_info(usbk_dev);
+                        }
+                        fprintf(stdout, COMMAND_DONE);
+                        exit(0);
+                        break;
+                    case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
+                        fprintf(stderr, MSG_FABRIC_DEFAULT);
+                        exit(0);
+                        break;
+                    case LIBSUBK_DEVSTATE_MUST_REMOVE:
+                        fprintf(stderr, MSG_MUST_REMOVE);
+                        exit(0);
+                        break;
+                    default:
+                        fprintf(stderr, UNKOWN_ERROR);
+                        exit(0);
+                        break;
                     }
-                    if (iflag) {
-                        linuxcli_show_dev_info(usbk_dev);
-                    }
-                    fprintf(stdout, COMMAND_DONE);
+                } else {
+                    fprintf(stderr, MISSING_PARAMETER);
+                    fprintf(stderr, TRY_HELP);
                     exit(0);
-                    break;
-                case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-                    fprintf(stderr, MSG_FABRIC_DEFAULT);
-                    exit(0);
-                    break;
-                case LIBSUBK_DEVSTATE_MUST_REMOVE:
-                    fprintf(stderr, MSG_MUST_REMOVE);
-                    exit(0);
-                    break;
-                default:
-                    fprintf(stderr, UNKOWN_ERROR);
-                    exit(0);
-                    break;
                 }
             } else {
                 fprintf(stderr, MISSING_PARAMETER);
                 fprintf(stderr, TRY_HELP);
                 exit(0);
             }
-        } else {
-            fprintf(stderr, MISSING_PARAMETER);
-            fprintf(stderr, TRY_HELP);
-            exit(0);
         }
-    }
 
-    /////////////////////////////////////////////
-    // DEACTIVATE
-    /////////////////////////////////////////////
-    if (dflag) {
-        switch (usbk_infos->dev_state) {
-        case LIBSUBK_DEVSTATE_ACTIVATE:
-        case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-            status = LibUSBK__DeActivateKey(usbk_infos->dev_path);
-            if (StatusChecker(usbk_dev ,status) < 0){
-                exit(1);
-            }
-            if (iflag) {
-                linuxcli_show_dev_info(usbk_dev);
-            }
-            fprintf(stdout, COMMAND_DONE);
-            exit(0);
-            break;
-        case LIBSUBK_DEVSTATE_DEACTIVATE:
-            fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
-            exit(0);
-            break;
-        case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-            fprintf(stderr, MSG_FABRIC_DEFAULT);
-            exit(0);
-            break;
-        case LIBSUBK_DEVSTATE_MUST_REMOVE:
-            fprintf(stderr, MSG_MUST_REMOVE);
-            exit(0);
-            break;
-        default:
-            fprintf(stderr, UNKOWN_ERROR);
-            exit(0);
-            break;
-        }
-    }
-
-    /////////////////////////////////////////////
-    // CHANGE PASSWORD
-    /////////////////////////////////////////////
-    if (cflag) {
-        switch (usbk_infos->dev_state) {
-        case LIBSUBK_DEVSTATE_ACTIVATE:
-        case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-            fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
-            exit(0);
-            break;
-        case LIBSUBK_DEVSTATE_DEACTIVATE:
-            if (pflag) {
-                status = LibUSBK__ChangePassword(usbk_infos->dev_path, opt_parola, opt_new_password);
-                if (StatusChecker(usbk_dev ,status) < 0){
-                    exit(1);
-                }
-
-                if (iflag) {
-                    linuxcli_show_dev_info(usbk_dev);
-                }
-                fprintf(stderr, COMMAND_DONE);
-                exit(0);
-            } else {
-                fprintf(stderr, MISSING_PARAMETER);
-                exit(0);
-            }
-            break;
-        case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-
-            status = LibUSBK__ChangePassword(usbk_infos->dev_path, opt_new_password, opt_new_password);
-            if (StatusChecker(usbk_dev ,status) < 0){
-                exit(1);
-            }
-
-            if (iflag) {
-                linuxcli_show_dev_info(usbk_dev);
-            }
-            fprintf(stdout, COMMAND_DONE);
-            exit(0);
-            break;
-        case LIBSUBK_DEVSTATE_MUST_REMOVE:
-            fprintf(stderr, MSG_MUST_REMOVE);
-            exit(0);
-            break;
-        default:
-            fprintf(stderr, UNKOWN_ERROR);
-            exit(0);
-            break;
-        }
-    }
-
-    /////////////////////////////////////////////
-    // SET DEVICE NAME
-    /////////////////////////////////////////////
-    if (nflag) {
-        if (pflag) {
+        /////////////////////////////////////////////
+        // DEACTIVATE
+        /////////////////////////////////////////////
+        if (dflag) {
             switch (usbk_infos->dev_state) {
             case LIBSUBK_DEVSTATE_ACTIVATE:
             case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-                fprintf (stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
+                status = LibUSBK__DeActivateKey(usbk_infos->dev_path);
+                if (StatusChecker(usbk_dev ,status) < 0){
+                    exit(1);
+                }
+                if (iflag) {
+                    linuxcli_show_dev_info(usbk_dev);
+                }
+                fprintf(stdout, COMMAND_DONE);
                 exit(0);
                 break;
             case LIBSUBK_DEVSTATE_DEACTIVATE:
-                status = LibUSBK__SetDeviceName(usbk_infos->dev_path, opt_parola, opt_dev_label);
+                fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
+                exit(0);
+                break;
+            case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
+                fprintf(stderr, MSG_FABRIC_DEFAULT);
+                exit(0);
+                break;
+            case LIBSUBK_DEVSTATE_MUST_REMOVE:
+                fprintf(stderr, MSG_MUST_REMOVE);
+                exit(0);
+                break;
+            default:
+                fprintf(stderr, UNKOWN_ERROR);
+                exit(0);
+                break;
+            }
+        }
+
+        /////////////////////////////////////////////
+        // CHANGE PASSWORD
+        /////////////////////////////////////////////
+        if (cflag) {
+            switch (usbk_infos->dev_state) {
+            case LIBSUBK_DEVSTATE_ACTIVATE:
+            case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
+                fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
+                exit(0);
+                break;
+            case LIBSUBK_DEVSTATE_DEACTIVATE:
+                if (pflag) {
+                    status = LibUSBK__ChangePassword(usbk_infos->dev_path, opt_parola, opt_new_password);
+                    if (StatusChecker(usbk_dev ,status) < 0){
+                        exit(1);
+                    }
+
+                    if (iflag) {
+                        linuxcli_show_dev_info(usbk_dev);
+                    }
+                    fprintf(stderr, COMMAND_DONE);
+                    exit(0);
+                } else {
+                    fprintf(stderr, MISSING_PARAMETER);
+                    exit(0);
+                }
+                break;
+            case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
+
+                status = LibUSBK__ChangePassword(usbk_infos->dev_path, opt_new_password, opt_new_password);
                 if (StatusChecker(usbk_dev ,status) < 0){
                     exit(1);
                 }
@@ -369,12 +353,8 @@ int main(int argc, char *argv[]) {
                 fprintf(stdout, COMMAND_DONE);
                 exit(0);
                 break;
-            case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-                fprintf(stderr, MSG_FABRIC_DEFAULT);
-                exit(0);
-                break;
             case LIBSUBK_DEVSTATE_MUST_REMOVE:
-                fprintf( stderr, MSG_MUST_REMOVE);
+                fprintf(stderr, MSG_MUST_REMOVE);
                 exit(0);
                 break;
             default:
@@ -382,17 +362,12 @@ int main(int argc, char *argv[]) {
                 exit(0);
                 break;
             }
-        } else {
-            fprintf(stderr, MISSING_PARAMETER);
-            exit(0);
         }
-    }
 
-    /////////////////////////////////////////////
-    // SET KEY NAME ONLY
-    /////////////////////////////////////////////
-    if (mflag && !xflag && !Xflag) {
-        if (kflag) {
+        /////////////////////////////////////////////
+        // SET DEVICE NAME
+        /////////////////////////////////////////////
+        if (nflag) {
             if (pflag) {
                 switch (usbk_infos->dev_state) {
                 case LIBSUBK_DEVSTATE_ACTIVATE:
@@ -401,7 +376,7 @@ int main(int argc, char *argv[]) {
                     exit(0);
                     break;
                 case LIBSUBK_DEVSTATE_DEACTIVATE:
-                    status = LibUSBK__SetKey (usbk_infos->dev_path, opt_parola, opt_key, true, opt_aes_name, NULL, NULL);
+                    status = LibUSBK__SetDeviceName(usbk_infos->dev_path, opt_parola, opt_dev_label);
                     if (StatusChecker(usbk_dev ,status) < 0){
                         exit(1);
                     }
@@ -417,7 +392,7 @@ int main(int argc, char *argv[]) {
                     exit(0);
                     break;
                 case LIBSUBK_DEVSTATE_MUST_REMOVE:
-                    fprintf(stderr, MSG_MUST_REMOVE);
+                    fprintf( stderr, MSG_MUST_REMOVE);
                     exit(0);
                     break;
                 default:
@@ -429,106 +404,30 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, MISSING_PARAMETER);
                 exit(0);
             }
-        } else {
-            fprintf(stderr, MISSING_PARAMETER);
-            exit(0);
         }
-    }
 
-    /////////////////////////////////////////////
-    // SET KEY
-    /////////////////////////////////////////////
-    if (xflag | Xflag) {
-        if (pflag) {
+        /////////////////////////////////////////////
+        // SET KEY NAME ONLY
+        /////////////////////////////////////////////
+        if (mflag && !xflag && !Xflag) {
             if (kflag) {
-                if (Fflag)
-                {
+                if (pflag) {
                     switch (usbk_infos->dev_state) {
                     case LIBSUBK_DEVSTATE_ACTIVATE:
                     case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-                        fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
+                        fprintf (stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
                         exit(0);
                         break;
                     case LIBSUBK_DEVSTATE_DEACTIVATE:
-
-                        if (!mflag) {
-                            opt_aes_name = usbk_infos->key_names[opt_key];
-                        }
-
-                        if (!strcmp(opt_key_size_str, "128")) {
-                            opt_key_size_byte = 16;
-                        } else if (!strcmp(opt_key_size_str, "192")) {
-                            opt_key_size_byte = 24;
-                        } else if (!strcmp(opt_key_size_str, "256")) {
-                            opt_key_size_byte = 32;
-                        } else {
-                            fprintf (stderr, KEY_LEN_INCORRECT);
-                            exit(0);
-                        }
-
-                        if (xflag) {
-                            if (opt_key_format == 'd') {
-                                if (check_key_decimal((string) opt_string_key, opt_aes_key, opt_key_size_byte)
-                                        == -1) {
-
-                                    fprintf(stderr, KEY_DECIMAL_FORMAT_INCORRECT);
-                                    exit(0);
-                                }
-                            } else if (opt_key_format == 't') {
-                                if (check_key_text((string) opt_string_key, opt_aes_key, opt_key_size_byte)
-                                        == -1) {
-                                    fprintf(stderr, KEY_TEXT_FORMAT_INCORRECT);
-                                    exit(0);
-                                }
-                            } else {
-                                fprintf(stderr, UNKOWN_ERROR);
-                            }
-
-                        }
-                        else if (Xflag) {
-                            unsigned char *dummy_set_key;
-                            status = LibUSBK__GetRandomKey (usbk_infos->dev_path, &dummy_set_key, opt_key_size_byte);
-
-                            switch (StatusChecker(usbk_dev ,status))
-                            {
-                            case LIBUSBK_RTN_OPRS_PASS:
-                                memcpy (set_key, dummy_set_key, opt_key_size_byte);
-                                break;
-                            case LIBUSBK_RTN_SHORT_GENERATEDKEY:
-                                fprintf(stderr, RANDOMKEY_SHORT);
-                                memcpy (set_key, dummy_set_key, opt_key_size_byte);
-                                break;
-                            default:
-                                fprintf (stderr, NOT_CREATE_RANDOM_KEY);
-                                LibUSBK__GetRandomKey_Release(&dummy_set_key);
-                                exit(1);
-                                break;
-                            }
-
-                            LibUSBK__GetRandomKey_Release(&dummy_set_key);
-                        }
-
-                        status = LibUSBK__SetKey (usbk_infos->dev_path, opt_parola, opt_key, false, opt_aes_name, opt_key_size_str, opt_aes_key);
-                        if (StatusChecker(usbk_dev ,status) < 0 ){
+                        status = LibUSBK__SetKey (usbk_infos->dev_path, opt_parola, opt_key, true, opt_aes_name, NULL, NULL);
+                        if (StatusChecker(usbk_dev ,status) < 0){
                             exit(1);
-                        }
-
-                        if (Xflag) {
-                            int i;
-                            fprintf (stdout, SET_RANDOM_KEY);
-                            for (i=0; i<opt_key_size_byte; i++)
-                            {
-                                fprintf (stdout, "%d",set_key[i]);
-
-                                if (i != (opt_key_size_byte-1)) fprintf (stdout, ".");
-                            }
-                            fprintf (stdout, "\n");
                         }
 
                         if (iflag) {
                             linuxcli_show_dev_info(usbk_dev);
                         }
-                        fprintf (stdout, COMMAND_DONE);
+                        fprintf(stdout, COMMAND_DONE);
                         exit(0);
                         break;
                     case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
@@ -552,18 +451,183 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, MISSING_PARAMETER);
                 exit(0);
             }
-        } else {
-            fprintf(stderr, MISSING_PARAMETER);
-            exit(0);
         }
-    }
 
-    /////////////////////////////////////////////
-    // ENABLE AUTO ACTIVATE
-    /////////////////////////////////////////////
-    if (tflag) {
-        if (pflag) {
-            if (kflag) {
+        /////////////////////////////////////////////
+        // SET KEY
+        /////////////////////////////////////////////
+        if (xflag | Xflag) {
+            if (pflag) {
+                if (kflag) {
+                    if (Fflag)
+                    {
+                        switch (usbk_infos->dev_state) {
+                        case LIBSUBK_DEVSTATE_ACTIVATE:
+                        case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
+                            fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
+                            exit(0);
+                            break;
+                        case LIBSUBK_DEVSTATE_DEACTIVATE:
+
+                            if (!mflag) {
+                                opt_aes_name = usbk_infos->key_names[opt_key];
+                            }
+
+                            if (!strcmp(opt_key_size_str, "128")) {
+                                opt_key_size_byte = 16;
+                            } else if (!strcmp(opt_key_size_str, "192")) {
+                                opt_key_size_byte = 24;
+                            } else if (!strcmp(opt_key_size_str, "256")) {
+                                opt_key_size_byte = 32;
+                            } else {
+                                fprintf (stderr, KEY_LEN_INCORRECT);
+                                exit(0);
+                            }
+
+                            if (xflag) {
+                                if (opt_key_format == 'd') {
+                                    if (check_key_decimal((string) opt_string_key, opt_aes_key, opt_key_size_byte)
+                                            == -1) {
+
+                                        fprintf(stderr, KEY_DECIMAL_FORMAT_INCORRECT);
+                                        exit(0);
+                                    }
+                                } else if (opt_key_format == 't') {
+                                    if (check_key_text((string) opt_string_key, opt_aes_key, opt_key_size_byte)
+                                            == -1) {
+                                        fprintf(stderr, KEY_TEXT_FORMAT_INCORRECT);
+                                        exit(0);
+                                    }
+                                } else {
+                                    fprintf(stderr, UNKOWN_ERROR);
+                                }
+
+                            }
+                            else if (Xflag) {
+                                unsigned char *dummy_set_key;
+                                status = LibUSBK__GetRandomKey (usbk_infos->dev_path, &dummy_set_key, opt_key_size_byte);
+
+                                switch (StatusChecker(usbk_dev ,status))
+                                {
+                                case LIBUSBK_RTN_OPRS_PASS:
+                                    memcpy (set_key, dummy_set_key, opt_key_size_byte);
+                                    break;
+                                case LIBUSBK_RTN_SHORT_GENERATEDKEY:
+                                    fprintf(stderr, RANDOMKEY_SHORT);
+                                    memcpy (set_key, dummy_set_key, opt_key_size_byte);
+                                    break;
+                                default:
+                                    fprintf (stderr, NOT_CREATE_RANDOM_KEY);
+                                    LibUSBK__GetRandomKey_Release(&dummy_set_key);
+                                    exit(1);
+                                    break;
+                                }
+
+                                LibUSBK__GetRandomKey_Release(&dummy_set_key);
+                            }
+
+                            status = LibUSBK__SetKey (usbk_infos->dev_path, opt_parola, opt_key, false, opt_aes_name, opt_key_size_str, opt_aes_key);
+                            if (StatusChecker(usbk_dev ,status) < 0 ){
+                                exit(1);
+                            }
+
+                            if (Xflag) {
+                                int i;
+                                fprintf (stdout, SET_RANDOM_KEY);
+                                for (i=0; i<opt_key_size_byte; i++)
+                                {
+                                    fprintf (stdout, "%d",set_key[i]);
+
+                                    if (i != (opt_key_size_byte-1)) fprintf (stdout, ".");
+                                }
+                                fprintf (stdout, "\n");
+                            }
+
+                            if (iflag) {
+                                linuxcli_show_dev_info(usbk_dev);
+                            }
+                            fprintf (stdout, COMMAND_DONE);
+                            exit(0);
+                            break;
+                        case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
+                            fprintf(stderr, MSG_FABRIC_DEFAULT);
+                            exit(0);
+                            break;
+                        case LIBSUBK_DEVSTATE_MUST_REMOVE:
+                            fprintf(stderr, MSG_MUST_REMOVE);
+                            exit(0);
+                            break;
+                        default:
+                            fprintf(stderr, UNKOWN_ERROR);
+                            exit(0);
+                            break;
+                        }
+                    } else {
+                        fprintf(stderr, MISSING_PARAMETER);
+                        exit(0);
+                    }
+                } else {
+                    fprintf(stderr, MISSING_PARAMETER);
+                    exit(0);
+                }
+            } else {
+                fprintf(stderr, MISSING_PARAMETER);
+                exit(0);
+            }
+        }
+
+        /////////////////////////////////////////////
+        // ENABLE AUTO ACTIVATE
+        /////////////////////////////////////////////
+        if (tflag) {
+            if (pflag) {
+                if (kflag) {
+                    switch (usbk_infos->dev_state) {
+                    case LIBSUBK_DEVSTATE_ACTIVATE:
+                    case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
+                        fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
+                        exit(0);
+                        break;
+                    case LIBSUBK_DEVSTATE_DEACTIVATE:
+                        status = LibUSBK__SetAutoAct(usbk_infos->dev_path, opt_parola, true, opt_key);
+                        if (StatusChecker(usbk_dev ,status) < 0){
+                            exit(1);
+                        }
+
+                        if (iflag) {
+                            linuxcli_show_dev_info(usbk_dev);
+                        }
+                        fprintf(stdout, COMMAND_DONE);
+                        exit(0);
+                        break;
+                    case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
+                        fprintf(stderr, MSG_FABRIC_DEFAULT);
+                        exit(0);
+                        break;
+                    case LIBSUBK_DEVSTATE_MUST_REMOVE:
+                        fprintf(stderr, MSG_MUST_REMOVE);
+                        exit(0);
+                        break;
+                    default:
+                        fprintf(stderr, UNKOWN_ERROR);
+                        exit(0);
+                        break;
+                    }
+                } else {
+                    fprintf(stderr, MISSING_PARAMETER);
+                    exit(0);
+                }
+            } else {
+                fprintf(stderr, MISSING_PARAMETER);
+                exit(0);
+            }
+        }
+
+        /////////////////////////////////////////////
+        // DISABLE AUTO ACTIVATE
+        /////////////////////////////////////////////
+        if (Tflag) {
+            if (pflag) {
                 switch (usbk_infos->dev_state) {
                 case LIBSUBK_DEVSTATE_ACTIVATE:
                 case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
@@ -571,7 +635,7 @@ int main(int argc, char *argv[]) {
                     exit(0);
                     break;
                 case LIBSUBK_DEVSTATE_DEACTIVATE:
-                    status = LibUSBK__SetAutoAct(usbk_infos->dev_path, opt_parola, true, opt_key);
+                    status = LibUSBK__SetAutoAct(usbk_infos->dev_path, opt_parola, false, 0);
                     if (StatusChecker(usbk_dev ,status) < 0){
                         exit(1);
                     }
@@ -579,7 +643,7 @@ int main(int argc, char *argv[]) {
                     if (iflag) {
                         linuxcli_show_dev_info(usbk_dev);
                     }
-                    fprintf(stdout, COMMAND_DONE);
+                    fprintf (stdout, COMMAND_DONE);
                     exit(0);
                     break;
                 case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
@@ -591,64 +655,15 @@ int main(int argc, char *argv[]) {
                     exit(0);
                     break;
                 default:
-                    fprintf(stderr, UNKOWN_ERROR);
-                    exit(0);
                     break;
                 }
             } else {
                 fprintf(stderr, MISSING_PARAMETER);
                 exit(0);
             }
-        } else {
-            fprintf(stderr, MISSING_PARAMETER);
-            exit(0);
         }
     }
 
-    /////////////////////////////////////////////
-    // DISABLE AUTO ACTIVATE
-    /////////////////////////////////////////////
-    if (Tflag) {
-        if (pflag) {
-            switch (usbk_infos->dev_state) {
-            case LIBSUBK_DEVSTATE_ACTIVATE:
-            case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-                fprintf(stderr, COMMAND_ERROR_AS_ACTIVATE, usbk_dev, usbk_infos->dev_label);
-                exit(0);
-                break;
-            case LIBSUBK_DEVSTATE_DEACTIVATE:
-                status = LibUSBK__SetAutoAct(usbk_infos->dev_path, opt_parola, false, 0);
-                if (StatusChecker(usbk_dev ,status) < 0){
-                    exit(1);
-                }
-
-                if (iflag) {
-                    linuxcli_show_dev_info(usbk_dev);
-                }
-                fprintf (stdout, COMMAND_DONE);
-                exit(0);
-                break;
-            case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-                fprintf(stderr, MSG_FABRIC_DEFAULT);
-                exit(0);
-                break;
-            case LIBSUBK_DEVSTATE_MUST_REMOVE:
-                fprintf(stderr, MSG_MUST_REMOVE);
-                exit(0);
-                break;
-            default:
-                break;
-            }
-        } else {
-            fprintf(stderr, MISSING_PARAMETER);
-            exit(0);
-        }
-    }
-
-    if (iflag) {
-        linuxcli_show_dev_info(usbk_dev);
-        fprintf(stdout, COMMAND_DONE);
-    }
 
     LibUSBK__GetDeviceInfo_Release(usbk_infos);
     free (opt_parola);
@@ -821,14 +836,29 @@ void linuxcli_show_devices(void) {
 
     USBK_List *dummy_usbklink;
     for (dummy_usbklink = p_usbklink; dummy_usbklink != NULL; dummy_usbklink = dummy_usbklink->next) {
-        printf("  %s\n",                            dummy_usbklink->usbk_info.dev_label);
-        printf("    Device   : %s\n",               dummy_usbklink->dev);
-        printf("    BackDisk : %s\n",               dummy_usbklink->usbk_info.backdisk);
-        printf("    Product  : %s\n",               dummy_usbklink->usbk_info.product);
-        printf("    Model    : %s\n",               dummy_usbklink->usbk_info.model);
-        printf("    Serial   : %s\n",               dummy_usbklink->usbk_info.serial);
-        printf("    Firmware : %s\n",               dummy_usbklink->usbk_info.firmware_ver);
-        printf("\n");
+
+        if (dummy_usbklink->usbk_info.supported == true)
+        {
+            printf("  %s\n",                            dummy_usbklink->usbk_info.dev_label);
+            printf("    Device   : %s\n",               dummy_usbklink->dev);
+            printf("    BackDisk : %s\n",               dummy_usbklink->usbk_info.backdisk);
+            printf("    Product  : %s\n",               dummy_usbklink->usbk_info.product);
+            printf("    Model    : %s\n",               dummy_usbklink->usbk_info.model);
+            printf("    Serial   : %s\n",               dummy_usbklink->usbk_info.serial);
+            printf("    Firmware : %s\n",               dummy_usbklink->usbk_info.firmware_ver);
+            printf("\n");
+        }
+        else
+        {
+            printf("  %s(UNSUPPORTED DEVICE)\n",        dummy_usbklink->usbk_info.dev_label);
+            printf("    Device   : %s\n",               dummy_usbklink->dev);
+            printf("    Product  : %s\n",               dummy_usbklink->usbk_info.product);
+            printf("    Model    : %s\n",               dummy_usbklink->usbk_info.model);
+            printf("    Serial   : %s\n",               dummy_usbklink->usbk_info.serial);
+            printf("    Firmware : %s\n",               dummy_usbklink->usbk_info.firmware_ver);
+            printf("\n");
+        }
+
         counter++;
     }
 
@@ -849,76 +879,94 @@ void linuxcli_show_dev_info(const char* dev) {
         return;
     }
 
-    //UI_DEVINFO_T dev_info;
-    int i;
-    char status[64];
-    char backdisk[8];
-    char autoactive[64];
-    char model[32];
 
-    sprintf(backdisk, "-");
+    if (usbk_infos->supported == true)
+    {
+        //UI_DEVINFO_T dev_info;
+        int i;
+        char status[64];
+        char backdisk[8];
+        char autoactive[64];
+        char model[32];
 
-    switch (usbk_infos->dev_state) {
-    case LIBSUBK_DEVSTATE_ACTIVATE:
-        sprintf(status, "active [%d]", usbk_infos->current_key);
-        sprintf(backdisk, "none");
-        break;
-    case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
-        sprintf(status, "active [%d]", usbk_infos->current_key);
-        sprintf(backdisk, "exist");
-        break;
-    case LIBSUBK_DEVSTATE_DEACTIVATE:
-        sprintf(status, "deactive");
-        break;
-    case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-        sprintf(status, "%s", MSG_FABRIC_DEFAULT);
-        break;
-    case LIBSUBK_DEVSTATE_MUST_REMOVE:
-        sprintf(status, "%s", MSG_MUST_REMOVE);
-        break;
-    default:
-        sprintf(status, "%d:unknown", usbk_infos->dev_state);
-        break;
+        sprintf(backdisk, "-");
+
+        switch (usbk_infos->dev_state) {
+        case LIBSUBK_DEVSTATE_ACTIVATE:
+            sprintf(status, "active [%d]", usbk_infos->current_key);
+            sprintf(backdisk, "none");
+            break;
+        case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
+            sprintf(status, "active [%d]", usbk_infos->current_key);
+            sprintf(backdisk, "exist");
+            break;
+        case LIBSUBK_DEVSTATE_DEACTIVATE:
+            sprintf(status, "deactive");
+            break;
+        case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
+            sprintf(status, "%s", MSG_FABRIC_DEFAULT);
+            break;
+        case LIBSUBK_DEVSTATE_MUST_REMOVE:
+            sprintf(status, "%s", MSG_MUST_REMOVE);
+            break;
+        default:
+            sprintf(status, "%d:unknown", usbk_infos->dev_state);
+            break;
+        }
+
+        if (usbk_infos->autoact_keyno == 0) {
+            sprintf(autoactive, "disable");
+        } else {
+            sprintf(autoactive, "enable with key #%d", usbk_infos->autoact_keyno);
+        }
+
+        printf("\n  usbk information\n");
+        printf("    logic name              %s\n", dev);
+        printf("    back disk name          %s\n", usbk_infos->backdisk);
+        printf("    product                 %s\n", usbk_infos->product);
+        printf("    model                   %s\n", usbk_infos->model);
+        printf("    serial number           %s\n", usbk_infos->serial);
+        printf("    firmware verison        %s\n", usbk_infos->firmware_ver);
+        printf("    label                   %s\n", usbk_infos->dev_label);
+        printf("    status                  %s\n", status);
+        printf("    retry number            %d\n", usbk_infos->retry_num);
+        printf("    back disk               %s\n", backdisk);
+        printf("    auto activation         %s\n", autoactive);
+        printf("    max. key capacity       %d\n", usbk_infos->multikey_cap);
+        for (i = 0; i < usbk_infos->multikey_cap; i++) {
+            printf("      key %d name            %s\n", i, usbk_infos->key_names[i]);
+        }
+
+        /*
+
+         //      123456789012 1234567890123456 1234 12345678901 123456 12345678 1234567890 12345 12345678 123456789 123456789012
+         printf("device       Model            Rev  Name        Serial Firmware Status     Retry BackDisk Auto Act. KeyNames    \n");
+         //                                                 deactive                  disable
+         //                                                 active [1                 key 1
+         printf(
+         "%-12.12s %-16.16s %-4.4s %-11.11s %-6.6s %-8.8s %-10.10s %-5d %-8.8s %-9.9s [1] %-12s\n",
+         abcde->dev, abcde->model, abcde->rev, abcde->info.devlabel.s,
+         abcde->info.serial.u8, abcde->info.firmware_ver.s, status,
+         abcde->info.retry_num, backdisk, autoactive, abcde->info.keyname[0].s);
+         for (i = 1; i < abcde->info.multikeycap; i++)
+         printf("%99.s[%d] %-12s\n", " ", i + 1, abcde->info.keyname[i].s);
+
+         */
+    }
+    else
+    {
+        printf("\n  usbk information\n");
+        printf("    logic name              %s\n", dev);
+        printf("    product                 %s\n", usbk_infos->product);
+        printf("    model                   %s\n", usbk_infos->model);
+        printf("    serial number           %s\n", usbk_infos->serial);
+        printf("    firmware verison        %s\n", usbk_infos->firmware_ver);
+        printf("    label                   %s\n", usbk_infos->dev_label);
+        printf("    UNSUPPORTED DEVICE!\n");
     }
 
-    if (usbk_infos->autoact_keyno == 0) {
-        sprintf(autoactive, "disable");
-    } else {
-        sprintf(autoactive, "enable with key #%d", usbk_infos->autoact_keyno);
-    }
 
-    printf("\n  usbk information\n");
-    printf("    logic name              %s\n", dev);
-    printf("    back disk name          %s\n", usbk_infos->backdisk);
-    printf("    product                 %s\n", usbk_infos->product);
-    printf("    model                   %s\n", usbk_infos->model);
-    printf("    serial number           %s\n", usbk_infos->serial);
-    printf("    firmware verison        %s\n", usbk_infos->firmware_ver);
-    printf("    label                   %s\n", usbk_infos->dev_label);
-    printf("    status                  %s\n", status);
-    printf("    retry number            %d\n", usbk_infos->retry_num);
-    printf("    back disk               %s\n", backdisk);
-    printf("    auto activation         %s\n", autoactive);
-    printf("    max. key capacity       %d\n", usbk_infos->multikey_cap);
-    for (i = 0; i < usbk_infos->multikey_cap; i++) {
-        printf("      key %d name            %s\n", i, usbk_infos->key_names[i]);
-    }
 
-    /*
-
-     //      123456789012 1234567890123456 1234 12345678901 123456 12345678 1234567890 12345 12345678 123456789 123456789012
-     printf("device       Model            Rev  Name        Serial Firmware Status     Retry BackDisk Auto Act. KeyNames    \n");
-     //                                                 deactive                  disable
-     //                                                 active [1                 key 1
-     printf(
-     "%-12.12s %-16.16s %-4.4s %-11.11s %-6.6s %-8.8s %-10.10s %-5d %-8.8s %-9.9s [1] %-12s\n",
-     abcde->dev, abcde->model, abcde->rev, abcde->info.devlabel.s,
-     abcde->info.serial.u8, abcde->info.firmware_ver.s, status,
-     abcde->info.retry_num, backdisk, autoactive, abcde->info.keyname[0].s);
-     for (i = 1; i < abcde->info.multikeycap; i++)
-     printf("%99.s[%d] %-12s\n", " ", i + 1, abcde->info.keyname[i].s);
-
-     */
 
 
     LibUSBK__GetDeviceInfo_Release(usbk_infos);

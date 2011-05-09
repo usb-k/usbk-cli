@@ -55,8 +55,49 @@ LIBUSBK_RETURN_VALUE return_values[] =
     { LIBUSBK_RTN_GET_BACKDISK_ERROR          ,"BackDisk Get Error\n"},
     { LIBUSBK_RTN_NOT_MALLOC                  ,"invalid space of memory\n"},
     { LIBUSBK_RTN_SHORT_GENERATEDKEY          ,NULL},
+    { LIBUSBK_RTN_UNSUPPORTED_USBK            , "LIBUSBK_RTN_UNSUPPORTED_USBK"},
 
     { (LIBUSBK_OPRSTATUS)NULL                 ,NULL}
+};
+
+typedef struct __LIBUSBK_SUPPORTED_MODELS
+{
+    const char*         model;
+    bool                support;
+}LIBUSBK_SUPPORTED_MODELS;
+
+typedef struct __LIBUSBK_SUPPORTED_VERSIONS
+{
+    int                             major_version;
+    int                             minor_version;
+    LIBUSBK_SUPPORTED_MODELS*       models;
+}LIBUSBK_SUPPORTED_VERSIONS;
+
+typedef struct __LIBUSBK_SUPPORTED_PRODUCTS
+{
+    const char*                         product;
+    LIBUSBK_SUPPORTED_VERSIONS*         versions;
+}LIBUSBK_SUPPORTED_PRODUCTS;
+
+
+
+LIBUSBK_SUPPORTED_MODELS models_1_1[] =
+{
+     {"A101", true},
+     {"A103", true},
+     {NULL, false},
+};
+
+LIBUSBK_SUPPORTED_VERSIONS versions_1[] =
+{
+     {2, 5, models_1_1},
+     {0, 0, NULL}
+};
+
+LIBUSBK_SUPPORTED_PRODUCTS products[] =
+{
+     {"USBK CryptoBridge 2.0", versions_1},
+     {NULL, NULL}
 };
 
 
@@ -71,6 +112,7 @@ LIBUSBK_RETURN_VALUE return_values[] =
 static int libusbk_get_device_info(const char *usbk_dev, USBK_INFO* usbk_infos);
 static int libusbk_get_backdisk(USBK_INFO* usbk_infos);
 static LIBSUBK_DEVSTATE libusbk_getdevstate(e_UIP_DEVSTATE devstate_from_usbk);
+static int CheckSupported(USBK_INFO* usbk_info);
 static void debug_return_string (const LIBUSBK_RETURN_VALUE *return_values, LIBUSBK_OPRSTATUS return_status);
 
 //ALL FUNCTIONS
@@ -155,36 +197,45 @@ int LibUSBK__list_devices(USBK_List** usbk_list){
                                 goto _return;
                             }
 
-                            current_usbklink->usbk_info.multikey_cap = devinfo.multikeycap;
-                            current_usbklink->usbk_info.current_key = devinfo.current_keyno;
-                            current_usbklink->usbk_info.autoact_keyno = devinfo.autoactivate_keyno;
-                            current_usbklink->usbk_info.retry_num = devinfo.retry_num;
-                            current_usbklink->usbk_info.dev_state = libusbk_getdevstate(devinfo.devstate.me);
-
+                            current_usbklink->usbk_info.dev_label = strdup(devinfo.devlabel.s);
                             current_usbklink->usbk_info.product = strdup(devinfo.product.s);
                             current_usbklink->usbk_info.model = strdup(devinfo.model.s);
                             current_usbklink->usbk_info.firmware_ver = strdup(devinfo.firmware_ver.s);
-                            current_usbklink->usbk_info.dev_label = strdup(devinfo.devlabel.s);
 
                             current_usbklink->usbk_info.serial = (char*)calloc((sizeof(devinfo.serial.u8) * 2)+2, sizeof(char));
                             for (i = 0; i < sizeof(devinfo.serial.u8); i++)
                                 sprintf((current_usbklink->usbk_info.serial+i*2), "%2.2X", devinfo.serial.u8[i]);
 
-                            current_usbklink->usbk_info.key_names = (char**) calloc(current_usbklink->usbk_info.multikey_cap, sizeof(char*));
-                            for (i = 0; i < current_usbklink->usbk_info.multikey_cap; i++)
-                                current_usbklink->usbk_info.key_names[i] = strdup(devinfo.keyname[i].s);
-
-                            // get BackDisk information from UDEV
-                            rtn = libusbk_get_backdisk(&current_usbklink->usbk_info);
-
-                            if (rtn < 0)
+                            if (CheckSupported(&(current_usbklink->usbk_info)) == false)
                             {
-                                LibUSBK__list_devices_release(&current_usbklink);
-                                udev_device_unref(dev);
-                                udev_enumerate_unref(enumerate);
-                                udev_unref(udev);
-                                rtn = LIBUSBK_RTN_GET_BACKDISK_ERROR;
-                                goto _return;
+                                current_usbklink->usbk_info.supported = false;
+                            }
+                            else
+                            {
+                                current_usbklink->usbk_info.supported = true;
+
+                                current_usbklink->usbk_info.multikey_cap = devinfo.multikeycap;
+                                current_usbklink->usbk_info.current_key = devinfo.current_keyno;
+                                current_usbklink->usbk_info.autoact_keyno = devinfo.autoactivate_keyno;
+                                current_usbklink->usbk_info.retry_num = devinfo.retry_num;
+                                current_usbklink->usbk_info.dev_state = libusbk_getdevstate(devinfo.devstate.me);
+
+                                current_usbklink->usbk_info.key_names = (char**) calloc(current_usbklink->usbk_info.multikey_cap, sizeof(char*));
+                                for (i = 0; i < current_usbklink->usbk_info.multikey_cap; i++)
+                                    current_usbklink->usbk_info.key_names[i] = strdup(devinfo.keyname[i].s);
+
+                                // get BackDisk information from UDEV
+                                rtn = libusbk_get_backdisk(&current_usbklink->usbk_info);
+
+                                if (rtn < 0)
+                                {
+                                    LibUSBK__list_devices_release(&current_usbklink);
+                                    udev_device_unref(dev);
+                                    udev_enumerate_unref(enumerate);
+                                    udev_unref(udev);
+                                    rtn = LIBUSBK_RTN_GET_BACKDISK_ERROR;
+                                    goto _return;
+                                }
                             }
 
                             *usbk_list = current_usbklink;
@@ -253,28 +304,39 @@ int LibUSBK__GetDeviceInfo(const char *usbk_dev, USBK_INFO** usbk_infos)
         goto _return;
     }
 
-    // USBK_INFO creating
-    (*usbk_infos)->multikey_cap = real_usbk_info.multikeycap;
-    (*usbk_infos)->current_key = real_usbk_info.current_keyno;
-    (*usbk_infos)->autoact_keyno = real_usbk_info.autoactivate_keyno;
-    (*usbk_infos)->retry_num = real_usbk_info.retry_num;
-    (*usbk_infos)->dev_state = libusbk_getdevstate(real_usbk_info.devstate.me);
     (*usbk_infos)->product = strdup(real_usbk_info.product.s);
     (*usbk_infos)->model = strdup(real_usbk_info.model.s);
     (*usbk_infos)->firmware_ver = strdup(real_usbk_info.firmware_ver.s);
-    (*usbk_infos)->dev_label = strdup(real_usbk_info.devlabel.s);
 
-    (*usbk_infos)->serial = (char*)calloc((sizeof(real_usbk_info.serial) * 2)+2, sizeof(char));
-    for (i = 0; i < 15; i++){
-        sprintf(((*usbk_infos)->serial+i*2), "%2.2X", real_usbk_info.serial.u8[i]);
+    if (CheckSupported(*usbk_infos) == false)
+    {
+        (*usbk_infos)->supported = false;
+        rtn = LIBUSBK_RTN_UNSUPPORTED_USBK;
+    }
+    else
+    {
+        (*usbk_infos)->supported = true;
+        // USBK_INFO creating
+        (*usbk_infos)->multikey_cap = real_usbk_info.multikeycap;
+        (*usbk_infos)->current_key = real_usbk_info.current_keyno;
+        (*usbk_infos)->autoact_keyno = real_usbk_info.autoactivate_keyno;
+        (*usbk_infos)->retry_num = real_usbk_info.retry_num;
+        (*usbk_infos)->dev_state = libusbk_getdevstate(real_usbk_info.devstate.me);
+        (*usbk_infos)->dev_label = strdup(real_usbk_info.devlabel.s);
+
+        (*usbk_infos)->serial = (char*)calloc((sizeof(real_usbk_info.serial) * 2)+2, sizeof(char));
+        for (i = 0; i < 15; i++){
+            sprintf(((*usbk_infos)->serial+i*2), "%2.2X", real_usbk_info.serial.u8[i]);
+        }
+
+        (*usbk_infos)->key_names = (char**) calloc((*usbk_infos)->multikey_cap, sizeof(char*));
+        for (i = 0; i < (*usbk_infos)->multikey_cap; i++){
+            (*usbk_infos)->key_names[i] = strdup(real_usbk_info.keyname[i].s);
+        }
+
+        rtn = LIBUSBK_RTN_OPRS_PASS;
     }
 
-    (*usbk_infos)->key_names = (char**) calloc((*usbk_infos)->multikey_cap, sizeof(char*));
-    for (i = 0; i < (*usbk_infos)->multikey_cap; i++){
-        (*usbk_infos)->key_names[i] = strdup(real_usbk_info.keyname[i].s);
-    }
-
-    rtn = LIBUSBK_RTN_OPRS_PASS;
 
 _return:
     debug_return_string(return_values, (LIBUSBK_OPRSTATUS)rtn);
@@ -617,8 +679,42 @@ static LIBSUBK_DEVSTATE libusbk_getdevstate(e_UIP_DEVSTATE devstate_from_usbk)
     return (LIBSUBK_DEVSTATE)devstate_from_usbk;
 }
 
+static int CheckSupported(USBK_INFO* usbk_info)
+{
+    int major_version, minor_version, revision;
 
+    major_version = atoi(strtok(usbk_info->firmware_ver, "."));
+    minor_version = atoi(strtok(NULL, "."));
+    revision = atoi(strtok( NULL,".\n " ));
 
+    LIBUSBK_SUPPORTED_PRODUCTS * d_products = products;
+
+    for (; d_products->product; d_products++)
+    {
+        if (strcmp(usbk_info->product, d_products->product) == 0)
+        {
+            LIBUSBK_SUPPORTED_VERSIONS* d_version = d_products->versions;
+            for (; d_version->models; d_version++)
+            {
+                if (major_version == d_version->major_version)
+                {
+                    if (minor_version == d_version->minor_version)
+                    {
+                        LIBUSBK_SUPPORTED_MODELS* d_model = d_products->versions->models;
+                        for (; d_model->model; d_model++)
+                        {
+                            if (strcmp(usbk_info->model, d_model->model) == 0)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
 
 // DEBUG TOOLS
 static void debug_return_string (const LIBUSBK_RETURN_VALUE *return_values, LIBUSBK_OPRSTATUS return_status)
@@ -634,3 +730,5 @@ static void debug_return_string (const LIBUSBK_RETURN_VALUE *return_values, LIBU
         }
     }
 }
+
+
