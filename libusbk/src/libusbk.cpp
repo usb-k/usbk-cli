@@ -103,7 +103,8 @@ LIBUSBK_SUPPORTED_PRODUCTS products[] =
 
 //-DEFINES FOR FINDING USBK AND BACKDISK
 #define USBK_USB_IDVENDOR          "2384"
-#define USBK_USB_IDPRODUCT         "a103"
+#define USBK_USB_IDPRODUCT_A103    "a103"
+#define USBK_USB_IDPRODUCT_A101    "a101"
 #define USBK_SCSI_VENDOR           "USBK"
 #define USBK_SCSI_BACKDISK_VENDOR  "BackDisk"
 
@@ -155,7 +156,8 @@ int LibUSBK__list_devices(USBK_List** usbk_list){
         dev_usb = udev_device_get_parent_with_subsystem_devtype( dev, "usb", "usb_device");
         if (dev_usb != NULL) {
               if(strncmp(USBK_USB_IDVENDOR, udev_device_get_sysattr_value(dev_usb,"idVendor"), strlen(USBK_USB_IDVENDOR)) == 0 ){
-                if(strncmp(USBK_USB_IDPRODUCT, udev_device_get_sysattr_value(dev_usb,"idProduct"), strlen(USBK_USB_IDPRODUCT)) == 0){
+                if((strncmp(USBK_USB_IDPRODUCT_A101, udev_device_get_sysattr_value(dev_usb,"idProduct"), strlen(USBK_USB_IDPRODUCT_A101)) == 0) ||
+                    (strncmp(USBK_USB_IDPRODUCT_A103, udev_device_get_sysattr_value(dev_usb,"idProduct"), strlen(USBK_USB_IDPRODUCT_A103)) == 0)){
                     // get scsi device
                     dev_scsi = udev_device_get_parent_with_subsystem_devtype(dev, "scsi", "scsi_device");
                     if (dev_scsi != NULL) {
@@ -590,7 +592,8 @@ static int libusbk_get_device_info(const char *usbk_dev, USBK_INFO* usbk_infos) 
 
     if (dev_usb != NULL) {
         if (strncmp(USBK_USB_IDVENDOR, udev_device_get_sysattr_value(dev_usb, "idVendor"), strlen(USBK_USB_IDVENDOR)) == 0) {
-            if (strncmp(USBK_USB_IDPRODUCT, udev_device_get_sysattr_value(dev_usb, "idProduct"), strlen(USBK_USB_IDPRODUCT)) == 0) {
+            if ((strncmp(USBK_USB_IDPRODUCT_A101, udev_device_get_sysattr_value(dev_usb, "idProduct"), strlen(USBK_USB_IDPRODUCT_A101)) == 0) ||
+                (strncmp(USBK_USB_IDPRODUCT_A103, udev_device_get_sysattr_value(dev_usb, "idProduct"), strlen(USBK_USB_IDPRODUCT_A103)) == 0)) {
                 dev_scsi = udev_device_get_parent_with_subsystem_devtype(dev, "scsi", "scsi_device");
                 if (dev_scsi != NULL) {
                     if (strncmp(USBK_SCSI_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_VENDOR)) == 0) {
@@ -650,7 +653,8 @@ static int libusbk_get_backdisk(USBK_INFO* usbk_infos) {
         dev_usb = udev_device_get_parent_with_subsystem_devtype( dev, "usb", "usb_device");
         if (dev_usb != NULL) {
             if(strncmp(USBK_USB_IDVENDOR, udev_device_get_sysattr_value(dev_usb,"idVendor"), strlen(USBK_USB_IDVENDOR)) == 0 ){
-                if(strncmp(USBK_USB_IDPRODUCT, udev_device_get_sysattr_value(dev_usb,"idProduct"), strlen(USBK_USB_IDPRODUCT)) == 0){
+                if((strncmp(USBK_USB_IDPRODUCT_A101, udev_device_get_sysattr_value(dev_usb,"idProduct"), strlen(USBK_USB_IDPRODUCT_A101)) == 0) ||
+                    (strncmp(USBK_USB_IDPRODUCT_A103, udev_device_get_sysattr_value(dev_usb,"idProduct"), strlen(USBK_USB_IDPRODUCT_A103)) == 0)){
                     if(strcmp(usbk_infos->usb_serial, udev_device_get_sysattr_value(dev_usb, "serial")) == 0 ){
                         dev_scsi = udev_device_get_parent_with_subsystem_devtype(dev, "scsi", "scsi_device");
                         if (dev_scsi != NULL) {
@@ -730,5 +734,3 @@ static void debug_return_string (const LIBUSBK_RETURN_VALUE *return_values, LIBU
         }
     }
 }
-
-
