@@ -80,24 +80,27 @@ SET_TARGET_PROPERTIES(${PROJECT_NAME}
 # Install project
 INSTALL(TARGETS ${PROJECT_NAME} 
         RUNTIME 
-        DESTINATION /usr/bin
-        PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+        DESTINATION bin
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-# Settings for Debian Package
-SET(CPACK_GENERATOR "DEB")
-SET(CPACK_DEBIAN_PACKAGE_NAME ${PROJECT_NAME})
-SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Tamara Elektronik")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "USBK CryptoBridge CLI")
-SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION " USBK CryptoBridge CLI\n USBK CryptoBridge encrypts data independent by the operation systems and all filesystems.\n USBK works in SCSI level and encrypts/decrypts data on the fly. USBK has two model as A101\n and A103. A103 model uses 3 keys and A101 model uses 1 key. A password for this operation.\n Whenever user inserts USB-K into USB Hub of the PC, USB-K must be initialized (there is an\n exceptional situation!).")
-SET(CPACK_PACKAGE_VERSION "${${PROJECT_NAME}_VERSION}")
-SET(CPACK_DEBIAN_PACKAGE_VERSION "${${PROJECT_NAME}_VERSION}")
-SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
-# SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libusbk (>= 1.2.1)")
-SET(CPACK_DEBIAN_PACKAGE_SECTION "devel")
-SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-SET(CPACK_DEBIAN_PACKAGE_RECOMMENDS "recommends")	
-SET(CPACK_DEBIAN_PACKAGE_SUGGESTS "suggests")
-INCLUDE(CPack)
+
+IF (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
+    # Settings for Debian Package
+    SET(CPACK_GENERATOR "DEB")
+    SET(CPACK_DEBIAN_PACKAGE_NAME ${PROJECT_NAME})
+    SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Tamara Elektronik")
+    SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "USBK CryptoBridge CLI")
+    SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION " USBK CryptoBridge CLI\n USBK CryptoBridge encrypts data independent by the operation systems and all filesystems.\n USBK works in SCSI level and encrypts/decrypts data on the fly. USBK has two model as A101\n and A103. A103 model uses 3 keys and A101 model uses 1 key. A password for this operation.\n Whenever user inserts USB-K into USB Hub of the PC, USB-K must be initialized (there is an\n exceptional situation!).")
+    SET(CPACK_PACKAGE_VERSION "${${PROJECT_NAME}_VERSION}")
+    SET(CPACK_DEBIAN_PACKAGE_VERSION "${${PROJECT_NAME}_VERSION}")
+    SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
+    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "usbk (>= 0.0)")
+    SET(CPACK_DEBIAN_PACKAGE_SECTION "devel")
+    SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+    SET(CPACK_DEBIAN_PACKAGE_RECOMMENDS "recommends")	
+    SET(CPACK_DEBIAN_PACKAGE_SUGGESTS "suggests")
+    INCLUDE(CPack)
+ENDIF (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
 
 # Display finishing
 message(STATUS "## >>>> ${PROJECT_NAME}")

@@ -73,28 +73,32 @@ ELSE(NOT UDEV)
     
     # Install this library
     INSTALL(TARGETS ${PROJECT_NAME} 
-            LIBRARY DESTINATION /usr/lib
-            PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+            LIBRARY DESTINATION lib
+            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
             
     INSTALL(FILES src/libusbk.h 
-            DESTINATION /usr/include
-            PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+            DESTINATION include
+            PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
     
-    # Settings for debian package
-    SET(CPACK_GENERATOR "DEB")
-    SET(CPACK_DEBIAN_PACKAGE_NAME ${PROJECT_NAME})
-    SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Tamara Elektronik <tamara@tamara.com.tr>")
-    SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "USBK CryptoBridge Library")
-    SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION " USBK CryptoBridge Library\n USBK CryptoBridge encrypts data independent by the operation systems and all filesystems.\n USBK works in SCSI level and encrypts/decrypts data on the fly. USBK has two model as A101\n and A103. A103 model uses 3 keys and A101 model uses 1 key. A password for this operation.\n Whenever user inserts USB-K into USB Hub of the PC, USB-K must be initialized (there is an\n exceptional situation!).")
-    SET(CPACK_PACKAGE_VERSION "${${PROJECT_NAME}_VERSION}")
-    SET(CPACK_DEBIAN_PACKAGE_VERSION "${${PROJECT_NAME}_VERSION}")
-    #SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "udev (>= 151-12.3)")
-    SET(CPACK_DEBIAN_PACKAGE_SECTION "devel")
-    SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-    SET(CPACK_DEBIAN_PACKAGE_RECOMMENDS "recommends")	
-    SET(CPACK_DEBIAN_PACKAGE_SUGGESTS "suggests")
-    INCLUDE(CPack)
+    IF (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
+    
+        # Settings for debian package
+        SET(CPACK_GENERATOR "DEB")
+        SET(CPACK_DEBIAN_PACKAGE_NAME ${PROJECT_NAME})
+        SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Tamara Elektronik <tamara@tamara.com.tr>")
+        SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "USBK CryptoBridge Library")
+        SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION " USBK CryptoBridge Library\n USBK CryptoBridge encrypts data independent by the operation systems and all filesystems.\n USBK works in SCSI level and encrypts/decrypts data on the fly. USBK has two model as A101\n and A103. A103 model uses 3 keys and A101 model uses 1 key. A password for this operation.\n Whenever user inserts USB-K into USB Hub of the PC, USB-K must be initialized (there is an\n exceptional situation!).")
+        SET(CPACK_PACKAGE_VERSION "${${PROJECT_NAME}_VERSION}")
+        SET(CPACK_DEBIAN_PACKAGE_VERSION "${${PROJECT_NAME}_VERSION}")
+        #SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
+        SET(CPACK_DEBIAN_PACKAGE_DEPENDS "udev (>= 151-12.3)")
+        SET(CPACK_DEBIAN_PACKAGE_SECTION "devel")
+        SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+        SET(CPACK_DEBIAN_PACKAGE_RECOMMENDS "recommends")	
+        SET(CPACK_DEBIAN_PACKAGE_SUGGESTS "suggests")
+        INCLUDE(CPack)
+    
+    ENDIF (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
     
 ENDIF(NOT UDEV)
 
