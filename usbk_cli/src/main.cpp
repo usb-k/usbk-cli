@@ -33,7 +33,7 @@ using namespace std;
 //PRIVATE DEFINES
 //-MESSAGES OF LINUX CLI
 #define NO_DEVICE_FOUND                     "No Device Found\n"
-#define MSG_FABRIC_DEFAULT                  "Fabric default. Please first set your password.\n"
+#define MSG_FABRIC_DEFAULT                  "Fabric default. Please first set your password."
 #define MSG_MUST_REMOVE                     "Must remove. Please remove and re-plug the USBK.\n"
 #define NOT_CREATE_RANDOM_KEY               "Random Key is unable to created.\n"
 #define NOT_MALLOC                          "invalid space of memory\n"
