@@ -54,6 +54,15 @@ using namespace std;
 #define RANDOMKEY_SHORT                     "Random key is short. So, remain part is filled with '0'.\n"
 #define SET_RANDOM_KEY                      "Set Random Key: "
 
+#define MSG_INVALID_KEYNO                   "Key Number is invalid.\n"
+#define MSG_INVALID_KEYSIZE                 "Key Size is not correct.\n"
+#define MSG_INVALID_DEVICELABEL             "Device Label is not correct.\n"
+#define MSG_INVALID_PASS                    "Password is not correct.\n"
+#define MSG_INVALID_NEWPASS                 "New Password is not correct.\n"
+
+
+
+#define STATUS_FABRIC_DEFAULT                  "Fabric Default. (Please first set your password.)"
 
 //PRIVATE FUNCTIONS
 static int _parse_options(int *argc, char** argv[]);
@@ -904,7 +913,7 @@ void linuxcli_show_dev_info(const char* dev) {
             sprintf(status, "deactive");
             break;
         case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
-            sprintf(status, "%s", MSG_FABRIC_DEFAULT);
+            sprintf(status, "%s", STATUS_FABRIC_DEFAULT);
             break;
         case LIBSUBK_DEVSTATE_MUST_REMOVE:
             sprintf(status, "%s", MSG_MUST_REMOVE);
@@ -975,7 +984,10 @@ void linuxcli_show_dev_info(const char* dev) {
 
 int StatusChecker(const char *usbk_dev, int status) {
     switch ((LIBUSBK_OPRSTATUS) status) {
-    case LIBUSBK_RTN_OPRS_INVALID_PASS:
+    case LIBUSBK_RTN_OPRS_PASS:
+        return true;
+        break;
+    case LIBUSBK_RTN_OPRS_FAILED_PASS:
         fprintf(stderr, "Password is incorrect. Retry Number: %d", linuxcli_GetRetryNumber(usbk_dev));
         return false;
         break;
@@ -992,11 +1004,32 @@ int StatusChecker(const char *usbk_dev, int status) {
         fprintf(stderr, MSG_MUST_REMOVE);
         return false;
         break;
-    case LIBUSBK_RTN_OPRS_PASS:
+    case LIBUSBK_RTN_OPRS_INVALID_KEYNO:
+        fprintf(stderr, MSG_INVALID_KEYNO);
+        return false;
+        break;
+    case LIBUSBK_RTN_OPRS_INVALID_KEYSIZE:
+        fprintf(stderr, MSG_INVALID_KEYSIZE);
+        return false;
+        break;
+    case LIBUSBK_RTN_OPRS_INVALID_DEVICELABEL:
+        fprintf(stderr, MSG_INVALID_DEVICELABEL);
+        return false;
+        break;
+    case LIBUSBK_RTN_OPRS_INVALID_PASS:
+        fprintf(stderr, MSG_INVALID_PASS);
+        return false;
+        break;
+    case LIBUSBK_RTN_OPRS_INVALID_NEWPASS:
+        fprintf(stderr, MSG_INVALID_NEWPASS);
+        return false;
+        break;
+    case LIBUSBK_RTN_OPRS_GEN_FAIL:
+        fprintf(stderr, "general error\n");
+        return false;
+        break;
     default:
-        if (status < 0 ){
-            fprintf(stderr, UNKOWN_ERROR "MSG_CODE:0x%02X and RetryNum:%d\n", status, linuxcli_GetRetryNumber(usbk_dev));
-        }
+        fprintf(stderr, UNKOWN_ERROR "MSG_CODE:0x%02X and RetryNum:%d\n", status, linuxcli_GetRetryNumber(usbk_dev));
         return status;
         break;
     }

@@ -42,9 +42,15 @@ LIBUSBK_RETURN_VALUE return_values[] =
 {
     { LIBUSBK_RTN_OPRS_PASS                   ,NULL},
     { LIBUSBK_RTN_OPRS_GEN_FAIL               ,NULL},
-    { LIBUSBK_RTN_OPRS_INVALID_PASS           ,NULL},
+    { LIBUSBK_RTN_OPRS_FAILED_PASS            ,NULL},
     { LIBUSBK_RTN_OPRS_FABRIC_RESET           ,NULL},
     { LIBUSBK_RTN_OPRS_USBK_UNPLUGING         ,NULL},
+
+    { LIBUSBK_RTN_OPRS_INVALID_KEYNO          ,NULL},
+    { LIBUSBK_RTN_OPRS_INVALID_KEYSIZE        ,NULL},
+    { LIBUSBK_RTN_OPRS_INVALID_DEVICELABEL    ,NULL},
+    { LIBUSBK_RTN_OPRS_INVALID_PASS           ,NULL},
+    { LIBUSBK_RTN_OPRS_INVALID_NEWPASS        ,NULL},
 
     { LIBUSBK_RTN_GENERAL_ERROR               ,NULL},
     { LIBUSBK_RTN_UDEV_NOT_CREATE             ,"Can't create udev\n"},

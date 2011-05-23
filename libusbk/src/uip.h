@@ -7,7 +7,7 @@
  * - Compiler:              GNU GCC for AVR32, GNU GCC for Linux CLI, Visual Studio 2010 for Windows GUI
  * - Supported firmware:    USBK 2v5
  * - Supported software:    USBK Management Software GUI for Windows 2v3 and USBK Management Software CLI for Linux 1v2
- * - AppNote:               USBK_UI_Protocol_2v5r0
+ * - AppNote:               USBK_UI_Protocol_2v5r6
  *
  * \author                  Timucin Anuslu, Murat Kılıvan
  *                          Tamara Elektronik : http://www.tamara.com.tr \n
@@ -87,7 +87,7 @@ typedef U8 t_UIP_BACKDSTAT;
 typedef struct ATTR_PACKED_BEGIN __UIP_PRODUCT ATTR_PACKED_END
 {
 #define UIP_PRODUCT_SIZE          31
-    char s[UIP_PRODUCT_SIZE+1];
+        char s[UIP_PRODUCT_SIZE+1];
 }t_UIP_PRODUCT;
 
 typedef struct ATTR_PACKED_BEGIN __UIP_MODEL ATTR_PACKED_END
@@ -128,8 +128,6 @@ typedef U8 t_UIP_NBRETRY;
 typedef union ATTR_PACKED_BEGIN __UIP_KEY ATTR_PACKED_END
 {
 #define KEY_LEN     32
-      U32 u32[KEY_LEN/4];
-      U16 u16[KEY_LEN/2];
       U8  u8 [KEY_LEN];
 }t_UIP_KEY;
 
@@ -153,11 +151,17 @@ typedef U8 t_UIP_OPTION;
 
 typedef enum ATTR_ENUM_PACKED_BEGIN __E_UIP_OPRSTATUS ATTR_ENUM_PACKED_END // must be 1 byte
 {
-    OPRS_PASS           = 1,
-    OPRS_GEN_FAIL       = 2,
-    OPRS_INVALID_PASS   = 3,
-    OPRS_FABRIC_RESET   = 4,
-    OPRS_USBK_UNPLUGING = 5
+    OPRS_PASS                   = 1,
+    OPRS_GEN_FAIL               = 2,
+    OPRS_FAILED_PASS            = 3,
+    OPRS_FABRIC_RESET           = 4,
+    OPRS_USBK_UNPLUGING         = 5,
+    OPRS_INVALID_KEYNO          = 6,
+    OPRS_INVALID_KEYSIZE        = 7,
+    OPRS_INVALID_DEVICELABEL    = 8,
+    OPRS_INVALID_PASS           = 9,
+    OPRS_INVALID_NEWPASS        = 10,
+
 }e_UIP_OPRSTATUS;
 
 
@@ -170,11 +174,14 @@ typedef union ATTR_PACKED_BEGIN __UIP_OPRSTATUS ATTR_PACKED_END
 
 typedef enum ATTR_ENUM_PACKED_BEGIN __E_UIP_OPRSTATUS_MSG ATTR_ENUM_PACKED_END // must be 1 byte (int)
 {
-    OPMSG_DISABLE           = 1,
-    OPMSG_INVALID_KEYNO     = 2,
-    OPMSG_ACTIVE            = 3,
-    OPMSG_DEACTIVE          = 4,
-
+    OPMSG_DISABLE               = 1,
+    //OPMSG_INVALID_KEYNO       = 2,    //move to opr status
+    OPMSG_ACTIVE                = 3,
+    OPMSG_DEACTIVE              = 4,
+    //OPMSG_INVALID_KEYSIZE     = 5,    //move to opr status
+    //OPMSG_INVALID_DEVICELABEL = 6,    //move to opr status
+    //OPMSG_INVALID_PASS        = 7,    //move to opr status
+    //OPMSG_INVALID_NEWPASS     = 8,    //move to opr status
 }e_UIP_OPRSTATUS_MSG;
 
 typedef union ATTR_PACKED_BEGIN __UIP_OPRSTATUS_MSG ATTR_PACKED_END
@@ -204,9 +211,10 @@ typedef union ATTR_PACKED_BEGIN _UIP_KEYOPTION ATTR_PACKED_END
 
 typedef enum ATTR_ENUM_PACKED_BEGIN __E_UIP_KEYSIZE ATTR_ENUM_PACKED_END //must be 1 byte
 {
-    KEYSIZE_128 = 1,
-    KEYSIZE_192 = 2,
-    KEYSIZE_256 = 3,
+    KEYSIZE_NONE = 0,
+    KEYSIZE_128  = 1,
+    KEYSIZE_192  = 2,
+    KEYSIZE_256  = 3,
 }e_UIP_KEYSIZE;
 
 
