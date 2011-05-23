@@ -686,8 +686,11 @@ static LIBSUBK_DEVSTATE libusbk_getdevstate(e_UIP_DEVSTATE devstate_from_usbk)
 static int CheckSupported(USBK_INFO* usbk_info)
 {
     int major_version, minor_version, revision;
+    int rtn;
 
-    major_version = atoi(strtok(usbk_info->firmware_ver, "."));
+    char* firmware_ver = strdup(usbk_info->firmware_ver);
+
+    major_version = atoi(strtok(firmware_ver, "."));
     minor_version = atoi(strtok(NULL, "."));
     revision = atoi(strtok( NULL,".\n " ));
 
@@ -709,7 +712,8 @@ static int CheckSupported(USBK_INFO* usbk_info)
                         {
                             if (strcmp(usbk_info->model, d_model->model) == 0)
                             {
-                                return true;
+                                rtn = true;
+                                goto _return;
                             }
                         }
                     }
@@ -717,7 +721,10 @@ static int CheckSupported(USBK_INFO* usbk_info)
             }
         }
     }
-    return false;
+    rtn = false;
+_return:
+    free(firmware_ver);
+    return rtn;
 }
 
 // DEBUG TOOLS
