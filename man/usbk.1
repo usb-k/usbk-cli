@@ -1,0 +1,123 @@
+.\"Created with GNOME Manpages Editor Wizard
+.\"http://sourceforge.net/projects/gmanedit2
+.TH usbk 1 "May 26, 2011" "" "usbk"
+
+.SH NAME
+usbk \- linux cli program of usbk
+
+.SH SYNOPSIS
+.B usbk
+.RI [ options ]
+.br
+
+.SH DESCRIPTION
+This manual page explains the
+.B usbk
+which is command line interface (CLI) program . This program allows user to manage 
+.B usbk(s)
+plugged to the host system. 
+.PP
+The
+\fBusbk\fP 
+is a device which protects user's critical data on USB Flash Disk and USB External Hard Drive by AES (Advanced Encryption Standard). 
+
+.SH OPTIONS
+.B
+
+.TP 
+\fB-s\fR, \fB--show-devices\fR
+shows device list of USBKs plugged to host system.
+
+.TP 
+\fB-u\fR \fIDEVICENAME \fR, \fB--dev\fR=\fIDEVICENAME \fR
+declares a USBK to manage. DEVICENAME can be learnt by -s option.
+
+.TP 
+\fB-i\fR, \fB--show-info\fR
+shows more detail information of a specific USBK which is declarated with -u option.
+
+.TP 
+\fB-c\fR \fINEWPASSWORD \fR, \fB--newpasswd\fR=\fINEWPASSWORD \fR
+sets new password for USBK as NEWPASSWORD. This option can be used with setting first password or change password. For change password, this option must used with -p option.
+
+.TP 
+\fB-p\fR \fIPASSWORD \fR, \fB--passwd\fR=\fIPASSWORD \fR
+sets user's password to manage a specific USBK as PASSWORD. This option is used for authantication with other options.
+
+.TP 
+\fB-a\fR, \fB--activate\fR
+activates USBK with specific encryption key. This option must be used with -p and -k options.
+
+.TP 
+\fB-d\fR, \fB--deactivate\fR
+deactivates USBK.
+
+.TP 
+\fB-n\fR \fIDEVICELABEL \fR, \fB--label\fR=\fIDEVICELABEL \fR
+sets new device label for USBK as DEVICELABEL. The device label of USBK is used to separate this USBK from others. This option must used with -p option.
+
+.TP 
+\fB-k\fR \fIKEYNO \fR, \fB--key-no\fR=\fIKEYNO \fR
+selects a specific key which has KEYNO key number to manage USBK with this key. This option may be used for activation (-a), autoactivation or changing encyption key. If the option is not used, its default value is 1.
+
+.TP 
+\fB-x\fR \fINEWKEY \fR, \fB--change-key\fR=\fINEWKEY \fR
+sets new key for selected key number of USBK as NEWKEY. This option must used with -p option. If the -k option i not used, the -x option is applied for first encryption key. 
+Moreover, the name of selected key is not changed without -m option.
+
+.TP 
+\fB-F\fR \fIKEYSIZE \fR, \fB--key-size\fR=\fIKEYSIZE \fR
+declares key size for changing key. KEYSIZE parameter is either 128 or 256. The default value of this option is 256. 
+
+.TP 
+\fB-f\fR \fIKEYFORMAT \fR, \fB--key-format\fR=\fIKEYFORMAT \fR
+declares key format for changing key. KEYFORMAT parameter is either d for decimal form or t for text form. The default value of this option is decimal. 
+
+.TP 
+\fB-m\fR \fIKEYNAME \fR, \fB--keyname\fR=\fIKEYNAME \fR
+changes the keyname of selected key to KEYNAME. This option must be used with -x option.
+
+.TP 
+\fB-X\fR, \fB--change-key-with-random\fR
+sets new key for selected key number of USBK as random-generated key. 
+
+.TP 
+\fB-t\fR, \fB--enable-auto\fR
+enables autoactivation feature fo USBK with a selected key.
+
+.TP 
+\fB-T\fR, \fB--disable-auto\fR
+disables autoactivation feature fo USBK.
+
+.TP 
+\fB-v\fR, \fB--ver\fR
+shows the version of USBK linux CLI program.
+
+.TP 
+\fB-h\fR, \fB--help\fR
+shows the help page of USBK linux CLI program.
+
+.SH EXAMPLE
+
+.SH ERRORS
+
+.SH VERSIONS
+
+.SH "CONFORMING TO"
+
+.SH NOTES
+
+.SH BUGS
+Reporting the bugs of USBK Linux CLI program to <timucin at tamara dot com dot tr>
+
+
+.SH AUTHOR
+Mehmet Emre Atasever, Murat Kılıvan, Timuçin Anuşlu
+
+.SH COPYRIGHT
+Copyright © 2011 Free Software Foundation, Inc.  License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+
+.SH "SEE ALSO"
+
+

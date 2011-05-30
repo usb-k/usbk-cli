@@ -1,0 +1,114 @@
+usbk(1)                                                                                               usbk                                                                                              usbk(1)
+
+
+
+NAME
+       usbk - linux cli program of usbk
+
+
+SYNOPSIS
+       usbk [options]
+
+
+DESCRIPTION
+       This manual page explains the usbk which is command line interface (CLI) program . This program allows user to manage usbk(s) plugged to the host system.
+
+       The usbk is a device which protects user's critical data on USB Flash Disk and USB External Hard Drive by AES (Advanced Encryption Standard).
+
+
+OPTIONS
+       -s, --show-devices
+              shows device list of USBKs plugged to host system.
+
+
+       -u DEVICENAME , --dev=DEVICENAME
+              declares a USBK to manage. DEVICENAME can be learnt by -s option.
+
+
+       -i, --show-info
+              shows more detail information of a specific USBK which is declarated with -u option.
+
+
+       -c NEWPASSWORD , --newpasswd=NEWPASSWORD
+              sets new password for USBK as NEWPASSWORD. This option can be used with setting first password or change password. For change password, this option must used with -p option.
+
+
+       -p PASSWORD , --passwd=PASSWORD
+              sets user's password to manage a specific USBK as PASSWORD. This option is used for authantication with other options.
+
+
+       -a, --activate
+              activates USBK with specific encryption key. This option must be used with -p and -k options.
+
+
+       -d, --deactivate
+              deactivates USBK.
+
+
+       -n DEVICELABEL , --label=DEVICELABEL
+              sets new device label for USBK as DEVICELABEL. The device label of USBK is used to separate this USBK from others. This option must used with -p option.
+
+
+       -k KEYNO , --key-no=KEYNO
+              selects a specific key which has KEYNO key number to manage USBK with this key. This option may be used for activation (-a), autoactivation or changing encyption key. If the option is not used,
+              its default value is 1.
+
+
+       -x NEWKEY , --change-key=NEWKEY
+              sets new key for selected key number of USBK as NEWKEY. This option must used with -p option. If the -k option i not used, the -x option is applied for first encryption key.  Moreover, the name
+              of selected key is not changed without -m option.
+
+
+       -F KEYSIZE , --key-size=KEYSIZE
+              declares key size for changing key. KEYSIZE parameter is either 128 or 256. The default value of this option is 256.
+
+
+       -f KEYFORMAT , --key-format=KEYFORMAT
+              declares key format for changing key. KEYFORMAT parameter is either d for decimal form or t for text form. The default value of this option is decimal.
+
+
+       -m KEYNAME , --keyname=KEYNAME
+              changes the keyname of selected key to KEYNAME. This option must be used with -x option.
+
+
+       -X, --change-key-with-random
+              sets new key for selected key number of USBK as random-generated key.
+
+
+       -t, --enable-auto
+              enables autoactivation feature fo USBK with a selected key.
+
+
+       -T, --disable-auto
+              disables autoactivation feature fo USBK.
+
+
+       -v, --ver
+              shows the version of USBK linux CLI program.
+
+
+       -h, --help
+              shows the help page of USBK linux CLI program.
+
+
+EXAMPLE
+ERRORS
+VERSIONS
+CONFORMING TO
+NOTES
+BUGS
+       Reporting the bugs of USBK Linux CLI program to <timucin at tamara dot com dot tr>
+
+
+
+AUTHOR
+       Mehmet Emre Atasever, Murat Kılıvan, Timuçin Anuşlu
+
+
+COPYRIGHT
+       Copyright  ©  2011  Free  Software  Foundation, Inc.  License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.  This is free software: you are free to change and redistribute it.
+       There is NO WARRANTY, to the extent permitted by law.
+
+
+SEE ALSO
+                                                                                                  May 26, 2011                                                                                          usbk(1)
