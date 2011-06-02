@@ -103,6 +103,7 @@ LIBUSBK_SUPPORTED_VERSIONS versions_1[] =
 LIBUSBK_SUPPORTED_PRODUCTS products[] =
 {
      {"USBK CryptoBridge 2.0", versions_1},
+     {"USBK CryptoBridge", versions_1},
      {NULL, NULL}
 };
 
