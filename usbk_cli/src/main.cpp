@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <string.h>
-#include <usb.h>
 #include <sys/ioctl.h>
 #include "libusbk.h"
 
