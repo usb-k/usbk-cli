@@ -148,67 +148,71 @@ shows the version of USBK linux CLI program.
 .IP "To list USBKs plugged to host system:"
 #usbk -s
 .BR
-.IP 	
-To get more detail information about USBK:
-	#usbk -u DEVICENAME -i
-
-To set password for USBK in Fabric Default:
-	#usbk -u DEVICENAME -c PASSWORD
+.IP "To get more detail information about USBK:"
+#usbk -u DEVICENAME -i
+.BR
+.IP "To set password for USBK in Fabric Default:"
+#usbk -u DEVICENAME -c PASSWORD
+.BR
+.IP "To set encrption key and key name:"
+#usbk -u DEVICENAME -p PASSWORD -k KEYNO -m KEYNAME -f KEYFORMAT -F KEYSIZE -x NEWKEY
+.BR
+.IP "To random-generate and set encryption key:"
+#usbk -u DEVICENAME -p PASSWOD -k KEYNO -m KEYNAME -F KEYSIZE -X
+.BR
+.IP "To activate USBK with a encryption key:"
+#usbk -u DEVICENAME -p PASSWOD -a -k KEYNO
+.BR
+.IP "To deactivate USBK:"
+#usbk -u DEVICENAME -d
+.BR
+.IP "To change password:"
+#usbk -u DEVICENAME -p PASSWORD -c NEWPASSWORD
+.BR
+.IP "To enable Auto-Activation:"
+#usbk -u DEVICENAME -p PASSWOD -k KEYNO -t
+.BR
+.IP "To disable Auto-Activation:"
+#usbk -u DEVICENAME -p PASSWOD -T
+.BR
+.IP "To change device label:"
+#usbk -u DEVICENAME -p PASSWOD -n DEVICELABEL
+.BR
+.IP "To change key name:"
+#usbk -u DEVICENAME -p PASSWORD -k KEYNO -m KEYNAME
+.BR
+.IP "To learn version of USBK Linux CLI program:"
+$usbk -v
+.BR
+.IP "To get help about the parameters of USBK CLI software:"
+#usbk -h
 	
-To set encrption key and key name:
-	#usbk -u DEVICENAME -p PASSWORD -k KEYNO -m KEYNAME -f KEYFORMAT -F KEYSIZE -x NEWKEY
-	
-To random-generate and set encryption key:
-	#usbk -u DEVICENAME -p PASSWOD -k KEYNO -m KEYNAME -F KEYSIZE -X
-	
-To activate USBK with a encryption key:
-	#usbk -u DEVICENAME -p PASSWOD -a -k KEYNO
-	
-To deactivate USBK:
-	#usbk -u DEVICENAME -d
-	 
-To change password:
-	#usbk -u DEVICENAME -p PASSWORD -c NEWPASSWORD
-
-To enable Auto-Activation:
-	#usbk -u DEVICENAME -p PASSWOD -k KEYNO -t
-	
-To disable Auto-Activation:
-	#usbk -u DEVICENAME -p PASSWOD -T
-	
-To change device label
-	#usbk -u DEVICENAME -p PASSWOD -n DEVICELABEL
-	
-To change key name:
-	#usbk -u DEVICENAME -p PASSWORD -k KEYNO -m KEYNAME
-
-To learn version of USBK Linux CLI program:
-	$usbk -v
-
-To get help about the parameters of USBK CLI software:
-	#usbk -h
-	
-
-
-.SH ERRORS
-
 .SH VERSIONS
-
-.SH "CONFORMING TO"
+USBK Linux CLI (usbk) 1.2.x: supports 2.5.x version of USBK.
 
 .SH NOTES
+Using User Guide for more detail information about usbk and usage of usbk. This document can be downloaded from USBK's website. 
+<http://www.usbk-k.com> 
 
-.SH BUGS
-Reporting the bugs of USBK Linux CLI program to <timucin at tamara dot com dot tr>
 
+.SH "REPORTING BUGS"
+Report the bugs of USBK Linux CLI program to <timucin at usb-k dot com>
+.br
+USBK home page: <http://www.usb-k.com>
 
 .SH AUTHOR
-Mehmet Emre Atasever, Murat Kılıvan, Timuçin Anuşlu
+.IP "Written by" 
+Mehmet Emre Atasever
+.br
+Murat Kılıvan
+.br
+Timuçin Anuşlu
 
 .SH COPYRIGHT
-Copyright © 2011 Free Software Foundation, Inc.  License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-This is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+Copyright (C) 2011 by USB-K Team. This program is free software: you can redistribute it and/or modify it under the terms of the 
+GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any 
+later version.
+.P
+See http://www.gnu.org/licenses/ for more information
 
 .SH "SEE ALSO"
-
-

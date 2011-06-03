@@ -170,7 +170,7 @@ NOTES
 
 REPORTING BUGS
        Report the bugs of USBK Linux CLI program to <timucin at usb-k dot com>
-       USBK home page: <http://www.gnu.org/software/coreutils/>
+       USBK home page: <http://www.usb-k.com>
 
 
 AUTHOR
