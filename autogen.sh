@@ -32,3 +32,4 @@ autoconf || exit 1
 echo "Running automake..."
 automake || exit 1
 
+
