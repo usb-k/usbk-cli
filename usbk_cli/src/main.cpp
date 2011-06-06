@@ -942,7 +942,7 @@ void linuxcli_show_dev_info(const char* dev) {
         printf("    auto activation         %s\n", autoactive);
         printf("    max. key capacity       %d\n", usbk_infos->multikey_cap);
         for (i = 0; i < usbk_infos->multikey_cap; i++) {
-            printf("      key %d name            %s\n", i, usbk_infos->key_names[i]);
+            printf("      key %d name            %s\n", i+1, usbk_infos->key_names[i]);
         }
 
         /*
