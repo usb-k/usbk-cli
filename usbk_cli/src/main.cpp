@@ -738,19 +738,19 @@ static int _parse_options(int *argc, char** argv[]) {
 
             case 'm':
                 mflag = 1;
-                main_operation++;
+                if (!Xflag && !xflag) main_operation++;
                 opt_aes_name = strdup(optarg);
                 break;
 
             case 'x':
                 xflag = 1;
-                main_operation++;
+                if (!mflag) main_operation++;
                 sprintf(opt_string_key, "%s", optarg);
                 break;
 
             case 'X':
                 Xflag = 1;
-                main_operation++;
+                if (!mflag) main_operation++;
                 break;
 
             case 't':
