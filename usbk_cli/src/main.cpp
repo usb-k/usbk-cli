@@ -478,7 +478,14 @@ int main(int argc, char *argv[]) {
                         case LIBSUBK_DEVSTATE_DEACTIVATE:
 
                             if (!mflag) {
-                                opt_aes_name = usbk_infos->key_names[opt_key];
+                                if ((opt_key > 0) &&  (usbk_infos->multikey_cap >= opt_key))
+                                {
+                                    opt_aes_name = usbk_infos->key_names[opt_key-1];
+                                }
+                                else
+                                {
+                                    opt_aes_name = strdup("");
+                                }
                             }
 
                             if (!strcmp(opt_key_size_str, "128")) {
