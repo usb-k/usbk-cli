@@ -53,13 +53,13 @@ LIBUSBK_RETURN_VALUE return_values[] =
     { LIBUSBK_RTN_OPRS_INVALID_NEWPASS        ,NULL},
 
     { LIBUSBK_RTN_GENERAL_ERROR               ,NULL},
-    { LIBUSBK_RTN_UDEV_NOT_CREATE             ,"Can't create udev\n"},
-    { LIBUSBK_RTN_UDEV_NOT_NODE               ,"device node not found\n"},
-    { LIBUSBK_RTN_UDEV_WRONG_FILE_TYPE        ,"device node has wrong file type\n"},
-    { LIBUSBK_RTN_UDEV_USBKLIST_NOT_CREATE    ,"USBK List is not malloced\n."},
-    { LIBUSBK_RTN_SCSI_COMMAND_ERROR          ,"Scsi Command Sent Error\n"},
-    { LIBUSBK_RTN_GET_BACKDISK_ERROR          ,"BackDisk Get Error\n"},
-    { LIBUSBK_RTN_NOT_MALLOC                  ,"invalid space of memory\n"},
+    { LIBUSBK_RTN_UDEV_NOT_CREATE             ,"Can't create udev"},
+    { LIBUSBK_RTN_UDEV_NOT_NODE               ,"device node not found"},
+    { LIBUSBK_RTN_UDEV_WRONG_FILE_TYPE        ,"device node has wrong file type"},
+    { LIBUSBK_RTN_UDEV_USBKLIST_NOT_CREATE    ,"USBK List is not malloced"},
+    { LIBUSBK_RTN_SCSI_COMMAND_ERROR          ,"Scsi Command Sent Error"},
+    { LIBUSBK_RTN_GET_BACKDISK_ERROR          ,"BackDisk Get Error"},
+    { LIBUSBK_RTN_NOT_MALLOC                  ,"invalid space of memory"},
     { LIBUSBK_RTN_SHORT_GENERATEDKEY          ,NULL},
     { LIBUSBK_RTN_UNSUPPORTED_USBK            , "LIBUSBK_RTN_UNSUPPORTED_USBK"},
 
@@ -103,6 +103,7 @@ LIBUSBK_SUPPORTED_VERSIONS versions_1[] =
 LIBUSBK_SUPPORTED_PRODUCTS products[] =
 {
      {"USBK CryptoBridge 2.0", versions_1},
+     {"USBK CryptoBridge", versions_1},
      {NULL, NULL}
 };
 
@@ -741,7 +742,7 @@ static void debug_return_string (const LIBUSBK_RETURN_VALUE *return_values, LIBU
         if (return_values->return_value == return_status){
             if (return_values->return_string != NULL)
             {
-                fprintf(stderr, "libusbk--> %s", return_values->return_string);
+                fprintf(stderr, "libusbk--> %s\n", return_values->return_string);
             }
             break;
         }

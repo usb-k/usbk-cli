@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <string.h>
-#include <usb.h>
 #include <sys/ioctl.h>
 #include "libusbk.h"
 
@@ -59,10 +58,11 @@ using namespace std;
 #define MSG_INVALID_DEVICELABEL             "Device Label is not correct.\n"
 #define MSG_INVALID_PASS                    "Password is not correct.\n"
 #define MSG_INVALID_NEWPASS                 "New Password is not correct.\n"
+#define MSG_ERROR                           "Error\n"
 
 
 
-#define STATUS_FABRIC_DEFAULT                  "Fabric Default. (Please first set your password.)"
+#define STATUS_FABRIC_DEFAULT               "Fabric Default. (Please first set your password.)"
 
 //PRIVATE FUNCTIONS
 static int _parse_options(int *argc, char** argv[]);
@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
                     case LIBSUBK_DEVSTATE_DEACTIVATE:
                         status = LibUSBK__ActivateKey(usbk_infos->dev_path, opt_parola, (int)opt_key);
 
-                        if (StatusChecker(usbk_dev ,status) < 0){
+                        if (StatusChecker(usbk_dev ,status) == false){
                             exit(1);
                         }
                         if (iflag) {
@@ -294,7 +294,7 @@ int main(int argc, char *argv[]) {
             case LIBSUBK_DEVSTATE_ACTIVATE:
             case LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK:
                 status = LibUSBK__DeActivateKey(usbk_infos->dev_path);
-                if (StatusChecker(usbk_dev ,status) < 0){
+                if (StatusChecker(usbk_dev ,status) == false){
                     exit(1);
                 }
                 if (iflag) {
@@ -335,7 +335,7 @@ int main(int argc, char *argv[]) {
             case LIBSUBK_DEVSTATE_DEACTIVATE:
                 if (pflag) {
                     status = LibUSBK__ChangePassword(usbk_infos->dev_path, opt_parola, opt_new_password);
-                    if (StatusChecker(usbk_dev ,status) < 0){
+                    if (StatusChecker(usbk_dev ,status) == false){
                         exit(1);
                     }
 
@@ -352,7 +352,7 @@ int main(int argc, char *argv[]) {
             case LIBSUBK_DEVSTATE_FABRIC_DEFAULT:
 
                 status = LibUSBK__ChangePassword(usbk_infos->dev_path, opt_new_password, opt_new_password);
-                if (StatusChecker(usbk_dev ,status) < 0){
+                if (StatusChecker(usbk_dev ,status) == false){
                     exit(1);
                 }
 
@@ -386,7 +386,7 @@ int main(int argc, char *argv[]) {
                     break;
                 case LIBSUBK_DEVSTATE_DEACTIVATE:
                     status = LibUSBK__SetDeviceName(usbk_infos->dev_path, opt_parola, opt_dev_label);
-                    if (StatusChecker(usbk_dev ,status) < 0){
+                    if (StatusChecker(usbk_dev ,status) == false){
                         exit(1);
                     }
 
@@ -429,7 +429,7 @@ int main(int argc, char *argv[]) {
                         break;
                     case LIBSUBK_DEVSTATE_DEACTIVATE:
                         status = LibUSBK__SetKey (usbk_infos->dev_path, opt_parola, opt_key, true, opt_aes_name, NULL, NULL);
-                        if (StatusChecker(usbk_dev ,status) < 0){
+                        if (StatusChecker(usbk_dev ,status) == false){
                             exit(1);
                         }
 
@@ -479,7 +479,14 @@ int main(int argc, char *argv[]) {
                         case LIBSUBK_DEVSTATE_DEACTIVATE:
 
                             if (!mflag) {
-                                opt_aes_name = usbk_infos->key_names[opt_key];
+                                if ((opt_key > 0) &&  (usbk_infos->multikey_cap >= opt_key))
+                                {
+                                    opt_aes_name = usbk_infos->key_names[opt_key-1];
+                                }
+                                else
+                                {
+                                    opt_aes_name = strdup("");
+                                }
                             }
 
                             if (!strcmp(opt_key_size_str, "128")) {
@@ -536,7 +543,7 @@ int main(int argc, char *argv[]) {
                             }
 
                             status = LibUSBK__SetKey (usbk_infos->dev_path, opt_parola, opt_key, false, opt_aes_name, opt_key_size_str, opt_aes_key);
-                            if (StatusChecker(usbk_dev ,status) < 0 ){
+                            if (StatusChecker(usbk_dev ,status) == false){
                                 exit(1);
                             }
 
@@ -599,7 +606,7 @@ int main(int argc, char *argv[]) {
                         break;
                     case LIBSUBK_DEVSTATE_DEACTIVATE:
                         status = LibUSBK__SetAutoAct(usbk_infos->dev_path, opt_parola, true, opt_key);
-                        if (StatusChecker(usbk_dev ,status) < 0){
+                        if (StatusChecker(usbk_dev ,status) == false){
                             exit(1);
                         }
 
@@ -645,7 +652,7 @@ int main(int argc, char *argv[]) {
                     break;
                 case LIBSUBK_DEVSTATE_DEACTIVATE:
                     status = LibUSBK__SetAutoAct(usbk_infos->dev_path, opt_parola, false, 0);
-                    if (StatusChecker(usbk_dev ,status) < 0){
+                    if (StatusChecker(usbk_dev ,status) == false){
                         exit(1);
                     }
 
@@ -731,19 +738,19 @@ static int _parse_options(int *argc, char** argv[]) {
 
             case 'm':
                 mflag = 1;
-                main_operation++;
+                if (!Xflag && !xflag) main_operation++;
                 opt_aes_name = strdup(optarg);
                 break;
 
             case 'x':
                 xflag = 1;
-                main_operation++;
+                if (!mflag) main_operation++;
                 sprintf(opt_string_key, "%s", optarg);
                 break;
 
             case 'X':
                 Xflag = 1;
-                main_operation++;
+                if (!mflag) main_operation++;
                 break;
 
             case 't':
@@ -943,7 +950,7 @@ void linuxcli_show_dev_info(const char* dev) {
         printf("    auto activation         %s\n", autoactive);
         printf("    max. key capacity       %d\n", usbk_infos->multikey_cap);
         for (i = 0; i < usbk_infos->multikey_cap; i++) {
-            printf("      key %d name            %s\n", i, usbk_infos->key_names[i]);
+            printf("      key %d name            %s\n", i+1, usbk_infos->key_names[i]);
         }
 
         /*
@@ -1025,7 +1032,7 @@ int StatusChecker(const char *usbk_dev, int status) {
         return false;
         break;
     case LIBUSBK_RTN_OPRS_GEN_FAIL:
-        fprintf(stderr, "general error\n");
+        fprintf(stderr, MSG_ERROR);
         return false;
         break;
     default:

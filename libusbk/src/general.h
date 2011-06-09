@@ -18,9 +18,13 @@
 #ifndef GENERAL_H_
 #define GENERAL_H_
 
-#define U8 unsigned char
-#define U16 unsigned int
-#define U32 unsigned long
+
+#include <inttypes.h>
+
+#define U8  int8_t
+#define U16 int16_t
+#define U32 int32_t
+
 #define NB_AESKEY         3
 
 #endif // GENERAL_H_
