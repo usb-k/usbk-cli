@@ -9,16 +9,12 @@
 # Project name
 PROJECT (usbk_cli C CXX)
 
-# Display Starting
-message(STATUS "## ${PROJECT_NAME} <<<< ")
-
 # CMAKE Settings
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 SET(CMAKE_COLOR_MAKEFILE ON)
 SET(CMAKE_VERBOSE_MAKEFILE OFF)
 
 # The USBK_CLI version number.
-
 IF (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
 SET(${PROJECT_NAME}_VERSION_MAJOR 1)
 SET(${PROJECT_NAME}_VERSION_MINOR 2)
@@ -40,41 +36,39 @@ AUX_SOURCE_DIRECTORY (${${PROJECT_NAME}_SOURCE_DIR}/src ${PROJECT_NAME}_SOURCES)
 
 # Header files are located in these directories
 SET (${PROJECT_NAME}_INCLUDE_DIRS
-    "/usr/local/include/"
-    "/usr/include"
-    "${${PROJECT_NAME}_SOURCE_DIR}/../libusbk/src"
+    ${${PROJECT_NAME}_SOURCE_DIR}/../libusbk/src
+    ${CMAKE_SYSTEM_INCLUDE_PATH}
 )
 INCLUDE_DIRECTORIES (${${PROJECT_NAME}_INCLUDE_DIRS})
 
 
 # Libraries are located in these directories
 SET (${PROJECT_NAME}_LIBRARY_DIRS
-    "/usr/local/lib/"
-    "/usr/lib/"
-    "/usr/X11R6/lib/"
-    "${CMAKE_CURRENT_BINARY_DIR}/../libusbk/"
+    ${CMAKE_CURRENT_BINARY_DIR}/../libusbk/
+    ${CMAKE_SYSTEM_LIBRARY_PATH}
 )
 LINK_DIRECTORIES ( ${${PROJECT_NAME}_LIBRARY_DIRS})
 
 # Depend Includes
 SET (${PROJECT_NAME}_INCLUDES
     libusbk.h
+    getopt.h
 )
 
-# Depend Libraries
-SET (${PROJECT_NAME}_LIBRARIES
+# Depend Internal Libraries
+SET (${PROJECT_NAME}_LIBRARIES_INTERNAL
     usbk
 )
 
-FOREACH (INCLUDE ${${PROJECT_NAME}_INCLUDES})
-    FIND_PATH(FOUND_INCLUDE ${INCLUDE} PATHS ${${PROJECT_NAME}_INCLUDE_DIRS})
-    IF(NOT FOUND_INCLUDE)
-        message(FATAL_ERROR "${INCLUDE} is not Found!")
-    ELSE(NOT FOUND_INCLUDE)    
-#        MESSAGE("Include: ${INCLUDE}")
-#        MESSAGE("Found Path: ${FOUND_INCLUDE}")
-    ENDIF(NOT FOUND_INCLUDE)
-ENDFOREACH(INCLUDE)
+# Depend External Libraries
+SET (${PROJECT_NAME}_LIBRARIES_EXTERNAL
+)
+
+# Depend All Libraries
+SET (${PROJECT_NAME}_LIBRARIES
+    ${${PROJECT_NAME}_LIBRARIES_INTERNAL}
+    ${${PROJECT_NAME}_LIBRARIES_EXTERNAL}
+)
 
 # Create project
 ADD_EXECUTABLE (${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
@@ -109,6 +103,3 @@ IF (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
     SET(CPACK_DEBIAN_PACKAGE_SUGGESTS "suggests")
     INCLUDE(CPack)
 ENDIF (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
-
-# Display finishing
-message(STATUS "## >>>> ${PROJECT_NAME}")

@@ -3,9 +3,6 @@
 # Project name
 PROJECT (usbk_man)
 
-# Display Starting
-message(STATUS "## ${PROJECT_NAME} <<<< ")
-
 # Search for gzip program
 INCLUDE (FindGZIP.cmake)    
 
@@ -32,12 +29,3 @@ ADD_CUSTOM_TARGET(man ALL
 INSTALL(FILES ${PROJECT_BINARY_DIR}/${usbk_man_gz_1}
         DESTINATION "share/man/man1"
         PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-        
-        
-        
-message(STATUS "source dir : ${PROJECT_SOURCE_DIR}/${man}")
-message(STATUS "binarydir : ${PROJECT_BINARY_DIR}/${usbk_man_gz_1}")        
-        
-# Display Finishing
-message(STATUS "## >>>> ${PROJECT_NAME}")
-        

@@ -17,52 +17,32 @@
 #ifndef LIBUSBK_H_
 #define LIBUSBK_H_
 
-//PUBLIC STRUCTURES
-//-LIBUSK OPERATION STATUS
-typedef enum __LIBUSBK_OPRSTATUS
+#include <inttypes.h>
+
+typedef enum __attribute__((__packed__)) __KEYSIZE
 {
-    LIBUSBK_RTN_OPRS_PASS                   = 1,
-    LIBUSBK_RTN_OPRS_GEN_FAIL               = 2,
-    LIBUSBK_RTN_OPRS_FAILED_PASS            = 3,
-    LIBUSBK_RTN_OPRS_FABRIC_RESET           = 4,
-    LIBUSBK_RTN_OPRS_USBK_UNPLUGING         = 5,
-    LIBUSBK_RTN_OPRS_INVALID_KEYNO          = 6,
-    LIBUSBK_RTN_OPRS_INVALID_KEYSIZE        = 7,
-    LIBUSBK_RTN_OPRS_INVALID_DEVICELABEL    = 8,
-    LIBUSBK_RTN_OPRS_INVALID_PASS           = 9,
-    LIBUSBK_RTN_OPRS_INVALID_NEWPASS        = 10,
-
-
-    LIBUSBK_RTN_SHORT_GENERATEDKEY          = 100,
-
-    LIBUSBK_RTN_GENERAL_ERROR            = -1,
-    LIBUSBK_RTN_UDEV_NOT_CREATE          = -2,
-    LIBUSBK_RTN_UDEV_NOT_NODE            = -3,
-    LIBUSBK_RTN_UDEV_WRONG_FILE_TYPE     = -4,
-    LIBUSBK_RTN_UDEV_USBKLIST_NOT_CREATE = -5,
-    LIBUSBK_RTN_SCSI_COMMAND_ERROR       = -6,
-    LIBUSBK_RTN_GET_BACKDISK_ERROR       = -7,
-    LIBUSBK_RTN_NOT_MALLOC               = -8,
-    LIBUSBK_RTN_NO_DEVICE_FOUND          = -9,
-    LIBUSBK_RTN_UNSUPPORTED_USBK         = -10,
-
-}LIBUSBK_OPRSTATUS;
+    KEYSIZE_NULL = 0,
+    KEYSIZE_128BIT = 1,
+    KEYSIZE_192BIT = 2,
+    KEYSIZE_256BIT = 3,
+}KEYSIZE;
 
 //-USBK DEVICE STATES
-typedef enum __LIBSUBK_DEVSTATE
+typedef enum __USBK_DS
 {
-    LIBSUBK_DEVSTATE_ACTIVATE                = 1,
-    LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK  = 2,
-    LIBSUBK_DEVSTATE_DEACTIVATE              = 3,
-    LIBSUBK_DEVSTATE_FABRIC_DEFAULT          = 4,
-    LIBSUBK_DEVSTATE_MUST_REMOVE             = 5,
-}LIBSUBK_DEVSTATE;
+    USBK_DS_ACTIVATE                = 1,
+    USBK_DS_ACTIVATE_WITH_BACKDISK  = 2,
+    USBK_DS_DEACTIVATE              = 3,
+    USBK_DS_FABRIC_DEFAULT          = 4,
+    USBK_DS_MUST_REMOVE             = 5,
+}USBK_DS;
 
 //-USBK DEVICE INFORMATION STRUCTURE
 typedef struct __USBK_INFO {
+    char                *dev;
     char                *dev_path;
-    char                *backdisk_path;
     char                *backdisk;
+    char                *backdisk_path;
 
     bool                supported;
 
@@ -73,37 +53,120 @@ typedef struct __USBK_INFO {
     char                *firmware_ver;
     int                 multikey_cap;
     char                *dev_label;
-    LIBSUBK_DEVSTATE    dev_state;
+    USBK_DS             dev_state;
     int                 current_key;
     int                 autoact_keyno;
     int                 retry_num;
     char                **key_names;
 } USBK_INFO;
 
-//-LINK LIST FOR USBK ON HOST SYSTEM
-typedef struct __USBK_List {
-    struct __USBK_List  *next;
-    char                *dev;
-    USBK_INFO           usbk_info;
-} USBK_List;
+typedef enum __USBK_LASTOPR
+{
+    USBK_LO_PASS = 0,
+    USBK_LO_GEN_FAIL = 1,
+    USBK_LO_FAILED_PASS =2,
+    USBK_LO_FABRIC_RESET = 3,
+    USBK_LO_USBK_UNPLUGING = 4,
+    USBK_LO_INVALID_KEYNO = 5,
+    USBK_LO_INVALID_KEYSIZE = 6,
+    USBK_LO_INVALID_DEVICELABEL = 7,
+    USBK_LO_INVALID_PASS = 8,
+    USBK_LO_INVALID_NEWPASS = 9,
 
-//PUBLIC FUNCTIONS
-//-LIST ALL USBK'S ON HOST SYSTEM
-int LibUSBK__list_devices(USBK_List** usbk_list);
-void LibUSBK__list_devices_release(USBK_List** p_usbklink);
+    USBK_LO_STATE_ERROR = 10,
+    USBK_LO_SCSI_ERROR = 11,
+    USBK_LO_UNSUPPORTED_USBK = 12,
+    USBK_LO_INVALID_KEY = 13,
 
-//-SET AND GET USBK'S INFORMATION
-int LibUSBK__GetDeviceInfo(const char *usbk_dev, USBK_INFO** usbk_infos);
-int LibUSBK__GetDeviceInfo_Release(USBK_INFO* usbk_infos);
-int LibUSBK__GetStatus (const char *usbk_path);
-int LibUSBK__ActivateKey (const char *usbk_path, const char *password, const int key_no);
-int LibUSBK__DeActivateKey (const char *usbk_path);
-int LibUSBK__ChangePassword (const char *usbk_path, const char *old_pass, const char *new_pass);
-int LibUSBK__SetDeviceName (const char *usbk_path, const char *pass, const char *device_label);
-int LibUSBK__SetKey (const char *usbk_path, const char *pass, int key_no, int name_only, const char* key_name, const char* key_size, const unsigned char* key);
-int LibUSBK__SetAutoAct (const char *usbk_path, const char *pass, int enable, int key_no);
-int LibUSBK__GetRandomKey (const char *usbk_path, unsigned char **random_key, int get_key_size_byte);
-int LibUSBK__GetRandomKey_Release(unsigned char **random_key);
+    USBK_LO_UDEV_ERROR = 14,
+    USBK_LO_MEM_ERROR = 15,
+}LIBUSBK_LASTOPR;
+
+class usbk
+{
+private:
+    // Variables
+    int debug_enable;
+    //Functions
+    int commandstatus();
+    int lastop();
+    int getdeviceinfo();
+    int getudevbackdisk();
+    int getudevinfo(const char *device);
+    int getstate();
+
+    int keysize_byte(KEYSIZE keysize);
+    int convertkey_decimal2hex(uint8_t *key_hex, const char* key_decimal, KEYSIZE keysize);
+    int convertkey_text2hex(uint8_t *key_hex, const char* key_text, KEYSIZE keysize);
+
+    int setkey_keyname(const char *pass, int key_no, const char* key_name, KEYSIZE key_size, const uint8_t* key);
+    int setautact(const char *pass, int key_no);
+
+public:
+    // Variable
+    USBK_INFO info;
+    int lastopr;
+
+    // Function
+    usbk(const char* dev);
+    ~usbk(){};
+
+    int activatekey(const char* pass, uint8_t key_no);
+    int deactivatekey();
+    int assignpassword(const char* new_pass);
+    int changepassword(const char* old_pass, const char* new_pass);
+    int setdevicelabel(const char* pass, const char* device_label);
+
+    int setkeyname(const char *pass, uint8_t key_no, const char* key_name);
+
+
+    int setkey_hex(const char *pass, uint8_t key_no, KEYSIZE key_size, const uint8_t* key);
+    int setkey_decimal(const char *pass, uint8_t key_no, KEYSIZE key_size, const char* key);
+    int setkey_text(const char *pass, uint8_t key_no, KEYSIZE key_size, const char* key);
+
+    int setkey_128bit_hex(const char *pass, uint8_t key_no, const uint8_t * key);
+    int setkey_192bit_hex(const char *pass, uint8_t key_no, const uint8_t * key);
+    int setkey_256bit_hex(const char *pass, uint8_t key_no, const uint8_t * key);
+
+    int setkey_128bit_decimal(const char *pass, uint8_t key_no, char* key);
+    int setkey_192bit_decimal(const char *pass, uint8_t key_no, char* key);
+    int setkey_256bit_decimal(const char *pass, uint8_t key_no, char* key);
+
+    int setkey_128bit_text(const char *pass, uint8_t key_no, const char* key);
+    int setkey_192bit_text(const char *pass, uint8_t key_no, const char* key);
+    int setkey_256bit_text(const char *pass, uint8_t key_no, const char* key);
+
+    int enableautact(const char *pass, uint8_t key_no);
+    int disableautact(const char *pass);
+
+    int getrandomkey(uint8_t *random_key, KEYSIZE keysize);
+
+    int refreshusbkinfo();
+};
+
+typedef struct __USBK_LIST
+{
+    usbk*               me;
+    struct __USBK_LIST* next;
+    struct __USBK_LIST* previous;
+}USBK_LIST;
+
+class usbklist
+{
+private:
+    //variables
+    int debug_enable;
+    int counter;
+    //functions
+public:
+    //variables
+    USBK_LIST* usbks;
+    int lastopr;
+    //functions
+    usbklist();
+    ~usbklist();
+    int refreshall();
+};
 
 #endif
 
