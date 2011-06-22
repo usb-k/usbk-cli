@@ -23,6 +23,7 @@ SET(${PROJECT_NAME}_VERSION_FULL "${${PROJECT_NAME}_VERSION}.${${PROJECT_NAME}_V
 
 ADD_SUBDIRECTORY( libusbk )
 ADD_SUBDIRECTORY( usbk_cli )
+ADD_SUBDIRECTORY( man )
 
 # uninstall target
 configure_file(
