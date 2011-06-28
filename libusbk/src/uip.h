@@ -42,7 +42,18 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+#if defined(__AVR32__)
 #include <inttypes.h>
+#elif  defined(__linux__)
+#include <inttypes.h>
+#elif defined(WIN32)
+#include <stdint.h>
+#else
+#error must define environment
+#endif
+
 
 #if defined(__AVR32__)
 #  define ATTR_PACKED_BEGIN __attribute__((__packed__))

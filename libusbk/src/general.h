@@ -18,8 +18,15 @@
 #ifndef GENERAL_H_
 #define GENERAL_H_
 
-
+#if defined(__AVR32__)
 #include <inttypes.h>
+#elif  defined(__linux__)
+#include <inttypes.h>
+#elif defined(WIN32)
+#include <stdint.h>
+#else
+#error must define environment
+#endif
 
 #define U8  int8_t
 #define U16 int16_t
