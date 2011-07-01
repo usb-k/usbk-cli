@@ -86,6 +86,7 @@ int uflag = 0;
 int aflag = 0;
 int dflag = 0;
 int cflag = 0;
+int Dflag = 0;
 int nflag = 0;
 int mflag = 0;
 int xflag = 0;
@@ -122,11 +123,10 @@ static struct option long_options[] =
         {
         /* These options set a flag. */
         { "dev", required_argument, 0, 'u' },
-        { "verbose", no_argument, &verbose_flag, 1 },
-        { "brief", no_argument, &verbose_flag, 0 },
           /* These options don't set a flag. We distinguish them by their indices. */
         { "activate", no_argument, 0, 'a' },
         { "deactivate", no_argument, 0, 'd' },
+        { "debug", no_argument, 0, 'D' },
         { "newpass", required_argument, 0, 'c' },
         { "label", required_argument, 0, 'n' },
         { "keyname", required_argument, 0, 'm' },
@@ -141,7 +141,7 @@ static struct option long_options[] =
         { "key-format", required_argument, 0, 'f' },
         { "key-size", required_argument, 0, 'F' },
         { "show-info", no_argument, 0, 'i' },
-        { "ver", no_argument, 0, 'v' },
+        { "version", no_argument, 0, 'v' },
         { "help", no_argument, 0, '?' },
         { NULL, 0, NULL, 0 }  // Last element must be NULL
 };
@@ -166,6 +166,10 @@ int main(int argc, char *argv[]) {
     if (!_parse_options(&argc, &argv)) {
         fprintf(stderr, ARG_PARSE_ERROR);
         exit(0);
+    }
+
+    if (Dflag) {
+        usbk_debug_enable();
     }
 
     if (question_flag) {
@@ -374,7 +378,7 @@ static int _parse_options(int *argc, char** argv[]) {
     }
     else
     {
-        while (( opt = getopt_long(*argc, *argv, "u:adc:n:m:x:XtTlsk:p:F:f:iv?", long_options, &option_index)) != -1) {
+        while (( opt = getopt_long(*argc, *argv, "u:adc:n:m:x:XtTlsk:p:F:f:ivD?", long_options, &option_index)) != -1) {
             switch (opt) {
             case 0:
                 /* If this option set a flag, do nothing else now. */
@@ -476,6 +480,10 @@ static int _parse_options(int *argc, char** argv[]) {
                 break;
             case 'i':
                 iflag = 1;
+                break;
+
+            case 'D':
+                Dflag = 1;
                 break;
 
             case 'v':
@@ -735,7 +743,8 @@ static void print_help(int exval) {
             " Other options:\n"
             "\n"
             "  -i, --show-info               show device info\n"
-            "  -v, --ver                     print program version\n"
+            "  -D, --debug                   print debug output"
+            "  -v, --version                 print program version\n"
             "  -?, --help                    give this help list\n"
             "\n"
             "defaults for options:\n"

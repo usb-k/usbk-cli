@@ -128,10 +128,10 @@ int usbk_get_retry_number(USBK* usbk);
 USBK_DS usbk_get_state(USBK* usbk);
 
 
-void usbk_debug_enable(USBK* usbk);
-void usbk_debug_disable(USBK* usbk);
-void usbk_debug(USBK* usbk, bool enable);
-bool usbk_debug_check(USBK* usbk);
+void usbk_debug_enable(void);
+void usbk_debug_disable(void);
+void usbk_debug(bool enable);
+bool usbk_debug_check(void);
 
 const char* usbk_libversion(void);
 
@@ -147,15 +147,12 @@ typedef struct __USBK_LIST
 typedef struct __USBKS
 {
     USBK_LIST* usbk;
-    int debug_enable;
     int counter;
     int lastopr;
 }USBKS;
 
 USBKS* usbk_list_new(void);
 int usbk_list_release(USBKS* usbks);
-void usbk_list_debug_enable(USBKS* usbks);
-void usbk_list_debug_disabe(USBKS* usbks);
 int usbk_list_refreshall(USBKS* usbks);
 #endif
 

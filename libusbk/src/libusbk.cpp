@@ -37,29 +37,19 @@
 using namespace std;
 
 #if  defined(__linux__)
-    #define DBG_INFO(x, ...) {if(usbk->debug_enable) {fprintf(stderr, "\033[0;32;40m%s(%d):%s:\033[0;37;40m" x "\033[0;37;40m\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
-    #define DBG_ERROR(x, ...) {if(usbk->debug_enable) {fprintf(stderr, "\033[1;3;31m%s(%d):%s:\033[0;37;40m" x "\033[0;37;40m\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
+    #define DBG_INFO(x, ...) {if(debug_enable) {fprintf(stderr, "\033[0;32;40m%s(%d):%s:\033[0;37;40m" x "\033[0;37;40m\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
+    #define DBG_ERROR(x, ...) {if(debug_enable) {fprintf(stderr, "\033[1;3;31m%s(%d):%s:\033[0;37;40m" x "\033[0;37;40m\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
     #define DBG_RETURN_STRING(x) {if (x!=0) DBG_ERROR("%s", USBK_RTN_ERRORS_STRING[x]);}
     #define DBG_LASTOPR_STRING(x) {if (x!=0) {DBG_ERROR("last opration status: %s", lastopr_string[x].rtrn_string);} \
                                    else {DBG_INFO("last opration status: %s", lastopr_string[x].rtrn_string);}}
 
-    #define DBG_INFO2(x, ...) {if(usbks->debug_enable) {fprintf(stderr, "\033[0;32;40m%s(%d):%s:\033[0;37;40m" x "\033[0;37;40m\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
-    #define DBG_ERROR2(x, ...) {if(usbks->debug_enable) {fprintf(stderr, "\033[1;3;31m%s(%d):%s:\033[0;37;40m" x "\033[0;37;40m\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
-    #define DBG_RETURN_STRING2(x) {if (x!=0) DBG_ERROR2("%s", USBK_RTN_ERRORS_STRING[x]);}
-    #define DBG_LASTOPR_STRING2(x) {if (x!=0) {DBG_ERROR2("last opration status: %s", lastopr_string[x].rtrn_string);} \
-                                   else {DBG_INFO2("last opration status: %s", lastopr_string[x].rtrn_string);}}
 #elif defined(WIN32)
-    #define DBG_INFO(x, ...) {if(usbk->debug_enable) {fprintf(stderr, "%s(%d):%s:" x "\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
-    #define DBG_ERROR(x, ...) {if(usbk->debug_enable) {fprintf(stderr, "%s(%d):%s:" x "\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
+    #define DBG_INFO(x, ...) {if(debug_enable) {fprintf(stderr, "%s(%d):%s:" x "\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
+    #define DBG_ERROR(x, ...) {if(debug_enable) {fprintf(stderr, "%s(%d):%s:" x "\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
     #define DBG_RETURN_STRING(x) {if (x!=0) DBG_ERROR("%s", USBK_RTN_ERRORS_STRING[x]);}
     #define DBG_LASTOPR_STRING(x) {if (x!=0) {DBG_ERROR("last opration status: %s", lastopr_string[x].rtrn_string);} \
                                    else {DBG_INFO("last opration status: %s", lastopr_string[x].rtrn_string);}}
 
-    #define DBG_INFO2(x, ...) {if(usbks->debug_enable) {fprintf(stderr, "\033[0;32;40m%s(%d):%s:\033[0;37;40m" x "\033[0;37;40m\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
-    #define DBG_ERROR2(x, ...) {if(usbks->debug_enable) {fprintf(stderr, "\033[1;3;31m%s(%d):%s:\033[0;37;40m" x "\033[0;37;40m\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
-    #define DBG_RETURN_STRING2(x) {if (x!=0) DBG_ERROR2("%s", USBK_RTN_ERRORS_STRING[x]);}
-    #define DBG_LASTOPR_STRING2(x) {if (x!=0) {DBG_ERROR2("last opration status: %s", lastopr_string[x].rtrn_string);} \
-                                   else {DBG_INFO2("last opration status: %s", lastopr_string[x].rtrn_string);}}
 #endif
 
 typedef struct __RTRN_STRING {
@@ -201,12 +191,11 @@ typedef struct __USBK_INFO {
 typedef struct __USBK
 {
     USBK_INFO info;
-    int debug_enable;
     int lastopr;
 }USBK;
 
 
-
+static bool debug_enable = false;
 
 
 static int getudevinfo(USBK* usbk, const char *device);
@@ -229,8 +218,6 @@ USBK* usbk_new(const char* dev) {
         DBG_LASTOPR_STRING(usbk->lastopr);
         return NULL;
     }
-
-    usbk->debug_enable = 1;
 
 #if  defined(__linux__)
     // get information about usbk by udev
@@ -830,18 +817,18 @@ USBK_DS usbk_get_state(USBK* usbk){
 }
 
 
-void usbk_debug_enable(USBK* usbk){
-    usbk->debug_enable = true;
+void usbk_debug_enable(void){
+    debug_enable = true;
 }
-void usbk_debug_disable(USBK* usbk){
-    usbk->debug_enable = false;
+void usbk_debug_disable(void){
+    debug_enable = false;
 }
-void usbk_debug(USBK* usbk, bool enable){
-    usbk->debug_enable = enable;
+void usbk_debug(bool enable){
+    debug_enable = enable;
 }
-bool usbk_debug_check(USBK* usbk)
+bool usbk_debug_check(void)
 {
-    return usbk->debug_enable;
+    return debug_enable;
 }
 
 const char* usbk_libversion(void){
@@ -1010,7 +997,6 @@ USBKS* usbk_list_new(void) {
 
     USBKS* usbks = (USBKS*)calloc(1, sizeof(USBKS));
 
-    usbks->debug_enable = 1;
     usbks->counter = 0;
 
     usbks->usbk = NULL;
@@ -1020,7 +1006,7 @@ USBKS* usbk_list_new(void) {
     udev = udev_new();
     if (udev == NULL) {
         usbks->lastopr = USBK_LO_UDEV_ERROR;
-        DBG_LASTOPR_STRING2(usbks->lastopr);
+        DBG_LASTOPR_STRING(usbks->lastopr);
         return NULL;
     }
 
@@ -1052,7 +1038,7 @@ USBKS* usbk_list_new(void) {
                              udev_unref(udev);
                              */
                             usbks->lastopr = USBK_LO_MEM_ERROR;
-                            DBG_LASTOPR_STRING2(usbks->lastopr);
+                            DBG_LASTOPR_STRING(usbks->lastopr);
                             return NULL;
                         }
 
@@ -1093,22 +1079,12 @@ int usbk_list_release(USBKS* usbks) {
     return 0;
 }
 
-void usbk_list_debug_enable(USBKS* usbks)
-{
-    usbks->debug_enable = 1;
-}
-
-void usbk_list_debug_disable(USBKS* usbks)
-{
-    usbks->debug_enable = 0;
-}
-
 int usbk_list_refreshall(USBKS* usbks) {
     for (USBK_LIST* list_entry = usbks->usbk; list_entry != NULL; list_entry = list_entry->next) {
         usbk_refreshusbkinfo(list_entry->me);
     }
     usbks->lastopr = USBK_LO_PASS;
-    DBG_LASTOPR_STRING2(usbks->lastopr);
+    DBG_LASTOPR_STRING(usbks->lastopr);
     return (-1) * usbks->lastopr;
 }
 
