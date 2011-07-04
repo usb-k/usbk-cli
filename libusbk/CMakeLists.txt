@@ -38,7 +38,7 @@ ADD_DEFINITIONS ( -DVERSION="${${PROJECT_NAME}_VERSION_FULL}" )
 
 IF(UNIX AND NOT APPLE)
     # Search for udev package
-    INCLUDE (FindUDEV.cmake)
+    INCLUDE (FindUDEV)
     IF(NOT UDEV)
         message(FATAL_ERROR "Unable to find 'udev' library!")
     ENDIF(NOT UDEV)

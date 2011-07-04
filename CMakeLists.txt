@@ -20,19 +20,15 @@ SET(${PROJECT_NAME}_VERSION_PATCH 7)
 SET(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}")
 SET(${PROJECT_NAME}_VERSION_FULL "${${PROJECT_NAME}_VERSION}.${${PROJECT_NAME}_VERSION_PATCH}")
 
+SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
+INCLUDE (Uninstaller)
+
 
 ADD_SUBDIRECTORY( libusbk )
 ADD_SUBDIRECTORY( usbk_cli )
 ADD_SUBDIRECTORY( man )
 
-# uninstall target
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY)
-
-add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+UNINSTALLLER_FEATURE()
 
 # Settings for standard package
 SET(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
