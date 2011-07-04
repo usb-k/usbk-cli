@@ -136,24 +136,24 @@ bool usbk_debug_check(void);
 const char* usbk_libversion(void);
 
 #if  defined(__linux__)
-typedef struct __USBK_LIST
-{
-    USBK*               me;
-    struct __USBK_LIST* next;
-    struct __USBK_LIST* previous;
-}USBK_LIST;
 
-
-typedef struct __USBKS
-{
-    USBK_LIST* usbk;
-    int counter;
-    int lastopr;
-}USBKS;
+typedef struct __USBKS USBKS;
 
 USBKS* usbk_list_new(void);
 int usbk_list_release(USBKS* usbks);
+USBK* usbk_list_get_entry(USBKS* usbks);
+USBK* usbk_list_get_next(USBK* usbk);
+USBK* usbk_list_get_previous(USBK* usbk);
+int usbk_list_get_counter(USBKS* usbks);
+int usbk_list_get_lastoprstatus(USBKS* usbks);
+
 int usbk_list_refreshall(USBKS* usbks);
+
+#define usbk_list_entry_foreach(list_entry, first_entry) \
+    for (list_entry = first_entry; \
+         list_entry != NULL; \
+         list_entry = usbk_list_get_next(list_entry))
+
 #endif
 
 #endif

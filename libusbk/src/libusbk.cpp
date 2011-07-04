@@ -142,6 +142,9 @@ typedef struct __USBK
     int       retry_num;
     char      **key_names;
 
+    struct __USBK *next;
+    struct __USBK *previous;
+
 }USBK;
 
 
@@ -921,6 +924,15 @@ static int getudevbackdisk(USBK* usbk) {
 #endif
 
 #if  defined(__linux__)
+
+typedef struct __USBKS
+{
+    USBK* usbk;
+    int counter;
+    int lastopr;
+}USBKS;
+
+
 USBKS* usbk_list_new(void) {
     int i;
     struct udev *udev;
@@ -936,7 +948,7 @@ USBKS* usbk_list_new(void) {
     usbks->counter = 0;
 
     usbks->usbk = NULL;
-    USBK_LIST *new_usbk = NULL;
+    USBK *new_usbk = NULL;
 
     // Create the udev object
     udev = udev_new();
@@ -964,8 +976,9 @@ USBKS* usbk_list_new(void) {
                 dev_scsi = udev_device_get_parent_with_subsystem_devtype(dev, "scsi", "scsi_device");
                 if (dev_scsi != NULL) {
                     if (strncmp(USBK_SCSI_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_VENDOR)) == 0) {
-                        new_usbk = (USBK_LIST*) calloc(1, sizeof(USBK_LIST));
-                        if (new_usbk == NULL) {
+                        new_usbk = usbk_new(udev_device_get_sysname(dev));
+                        if (new_usbk ==NULL)
+                        {
                             // todo: release all mem location
                             /*
                              LibUSBK__list_devices_release(usbk_list);
@@ -978,14 +991,10 @@ USBKS* usbk_list_new(void) {
                             return NULL;
                         }
 
-
-
-                        new_usbk->me = usbk_new(udev_device_get_sysname(dev));
-
-                        new_usbk->next = NULL;
-                        new_usbk->previous = usbks->usbk;
-                        if (new_usbk->next != NULL){
-                            new_usbk->previous->next = new_usbk;
+                        new_usbk->previous = NULL;
+                        new_usbk->next = usbks->usbk;
+                        if (new_usbk->previous != NULL){
+                            new_usbk->next->previous = new_usbk;
                         }
                         usbks->usbk = new_usbk;
                         usbks->counter++;
@@ -1000,14 +1009,13 @@ USBKS* usbk_list_new(void) {
     return usbks;
 }
 
+
 int usbk_list_release(USBKS* usbks) {
-    USBK_LIST *d_usbks;
+    USBK *d_usbks;
     while (usbks->usbk != NULL) {
-        d_usbks = usbks->usbk->previous;
-        usbk_release(usbks->usbk->me);
-        usbks->usbk->me = NULL;
-        usbks->usbk->previous = NULL;
-        free(usbks->usbk);
+        d_usbks = usbks->usbk->next;
+        usbk_release(usbks->usbk);
+        usbks->usbk->next = NULL;
         usbks->usbk = d_usbks;
         usbks->counter--;
     }
@@ -1015,13 +1023,36 @@ int usbk_list_release(USBKS* usbks) {
     return 0;
 }
 
-int usbk_list_refreshall(USBKS* usbks) {
-    for (USBK_LIST* list_entry = usbks->usbk; list_entry != NULL; list_entry = list_entry->next) {
-        usbk_refreshusbkinfo(list_entry->me);
+USBK* usbk_list_get_entry(USBKS* usbks){
+    return usbks->usbk;
+}
+
+USBK* usbk_list_get_next(USBK* usbk){
+    return usbk->next;
+}
+
+USBK* usbk_list_get_previous(USBK* usbk){
+    return usbk->previous;
+}
+
+int usbk_list_refreshall(USBKS* usbks){
+
+    USBK* list_entry;
+    usbk_list_entry_foreach(list_entry, usbks->usbk){
+        usbk_refreshusbkinfo(list_entry);
     }
+
     usbks->lastopr = USBK_LO_PASS;
     DBG_LASTOPR_STRING(usbks->lastopr);
     return (-1) * usbks->lastopr;
+}
+
+int usbk_list_get_counter(USBKS* usbks){
+    return usbks->counter;
+}
+
+int usbk_list_get_lastoprstatus(USBKS* usbks){
+    return usbks->lastopr;
 }
 
 #endif
