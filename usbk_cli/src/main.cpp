@@ -42,12 +42,12 @@ using namespace std;
 #define MSG_INVALID_DEVICELABEL         "Invalid Device Label\n"
 #define MSG_INVALID_NEWPASS             "Invalid New Password.\n"
 
-#define MSG_DSE_ACTIVATE                "USBK in active. This operation is not able to done in this state.\n"
-#define MSG_DSE_ACTIVATE_WITH_BACKDISK  "The backdisk is plugged to USBK.  This operation is not able to done in this state.\n"
-#define MSG_DSE_DEACTIVATE              "USBK in deactive. This operation is not able to done in this state.\n"
-#define MSG_DSE_FABRIC_DEFAULT          "USBK in fabric default. Please first set your password.\n"
-#define MSG_DSE_MUST_REMOVE             "USBK in must remove. This operation is not able to done in this state.\n"
-#define MSG_DSE_UNKNOWN                 "The state of USBK  is unknown. This operation is not able to done in this state.\n"
+#define MSG_DSE_ACTIVATE                "USBK in active. This operation is not able to done in this state."
+#define MSG_DSE_ACTIVATE_WITH_BACKDISK  "The backdisk is plugged to USBK.  This operation is not able to done in this state."
+#define MSG_DSE_DEACTIVATE              "USBK in deactive. This operation is not able to done in this state."
+#define MSG_DSE_FABRIC_DEFAULT          "USBK in fabric default. Please first set your password."
+#define MSG_DSE_MUST_REMOVE             "USBK in must remove. This operation is not able to done in this state."
+#define MSG_DSE_UNKNOWN                 "The state of USBK  is unknown. This operation is not able to done in this state."
 
 #define MSG_SCSI_ERROR                  "No Device Found (scsi error).\n"
 #define MSG_UNSUPPORTED_USBK            "Unsupported USBK.\n"
@@ -669,44 +669,44 @@ static void print_result(USBK* myusbk) {
 
         switch (usbk_get_state(myusbk)) {
         case USBK_DS_ACTIVATE:
-            fprintf(stderr, "USBK in active. This operation is not able to done in this state.\n");
+            fprintf(stderr, MSG_DSE_ACTIVATE);
             break;
         case USBK_DS_ACTIVATE_WITH_BACKDISK:
-            fprintf(stderr, "The backdisk is plugged to USBK.  This operation is not able to done in this state.\n");
+            fprintf(stderr, MSG_DSE_ACTIVATE_WITH_BACKDISK);
             break;
         case USBK_DS_DEACTIVATE:
-            fprintf(stderr, "USBK in deactive. This operation is not able to done in this state.\n");
+            fprintf(stderr, MSG_DSE_DEACTIVATE);
             break;
         case USBK_DS_FABRIC_DEFAULT:
-            fprintf(stderr, "USBK in fabric default. Please first set your password.\n");
+            fprintf(stderr, MSG_DSE_FABRIC_DEFAULT);
             break;
         case USBK_DS_MUST_REMOVE:
-            fprintf(stderr, "USBK in must remove. This operation is not able to done in this state.\n");
+            fprintf(stderr, MSG_DSE_MUST_REMOVE);
             break;
         default:
-            fprintf(stderr, "The state of USBK  is unknown. This operation is not able to done in this state.\n");
+            fprintf(stderr, MSG_DSE_UNKNOWN);
             break;
         }
 
         break;
     case USBK_LO_SCSI_ERROR:
-        fprintf(stderr, "No Device Found (scsi error).\n");
+        fprintf(stderr, MSG_SCSI_ERROR);
         break;
     case USBK_LO_UNSUPPORTED_USBK:
-        fprintf(stderr, "Unsupported USBK.\n");
+        fprintf(stderr, MSG_UNSUPPORTED_USBK);
         break;
     case USBK_LO_INVALID_KEY:
-        fprintf(stderr, "Invalid Key.\n");
+        fprintf(stderr, MSG_INVALID_KEY);
         break;
     case USBK_LO_UDEV_ERROR:
-        fprintf(stderr, "No Device Found (udev error).\n");
+        fprintf(stderr, MSG_UDEV_ERROR);
         break;
     case USBK_LO_MEM_ERROR:
-        fprintf(stderr, "No Device Found (mem error).\n");
+        fprintf(stderr, MSG_MEM_ERROR);
         break;
     case USBK_LO_INVALID_PASS:
     default:
-        fprintf(stderr, "Unkown Error.\n");
+        fprintf(stderr, MSG_MEM_ERROR);
         break;
     }
 }
@@ -747,7 +747,7 @@ static void print_help(int exval) {
             " Other options:\n"
             "\n"
             "  -i, --show-info               show device info\n"
-            "  -D, --debug                   print debug output"
+            "  -D, --debug                   print debug output\n"
             "  -v, --version                 print program version\n"
             "  -?, --help                    give this help list\n"
             "\n"
