@@ -5,10 +5,7 @@
 
 # Look for FUSE library
 FIND_LIBRARY(UDEV_LIB
-             NAMES udev
-             PATHS /lib
-                   /usr/lib
-                   /usr/local/lib)
+             NAMES udev)
 
 
 IF(NOT UDEV_LIB)
@@ -21,9 +18,7 @@ ENDIF(NOT UDEV_LIB)
 
 # Look for FUSE include files
 FIND_PATH(UDEV_INC
-          NAMES libudev.h
-          PATHS /usr/include
-                /usr/local/include)
+          NAMES libudev.h)
 
 IF (NOT UDEV_INC)
   MESSAGE(STATUS "Unable to find 'udev' include files")
