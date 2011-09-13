@@ -81,6 +81,7 @@ IF(UNIX AND NOT APPLE)
         
         # avoid conflicts between library and binary target names
         OUTPUT_NAME usbk 
+#        LINK_FLAGS -m64
     )
 
     # Install this library
@@ -111,9 +112,8 @@ IF(UNIX AND NOT APPLE)
         INCLUDE(CPack)
     
     ENDIF (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
-ENDIF(UNIX AND NOT APPLE)
-
-IF(WIN32)
+    
+ELSEIF(WIN32)
     
         # Header files are located in these directories
     SET (${PROJECT_NAME}_INCLUDE_DIRS
@@ -153,14 +153,8 @@ IF(WIN32)
 	
     INCLUDE(CPack)
 
-ENDIF(WIN32)
+ELSEIF(APPLE)
 
-IF(APPLE)
-ENDIF(APPLE)
-
-
-
-
-
-
-
+ELSE(UNIX AND NOT APPLE)
+    message(FATAL_ERROR "Undefined Operating System") 
+ENDIF(UNIX AND NOT APPLE)
