@@ -7,7 +7,7 @@
  * - Compiler:              GNU GCC for AVR32, GNU GCC for Linux CLI, Visual Studio 2010 for Windows GUI
  * - Supported firmware:    USBK 2v5
  * - Supported software:    USBK Management Software GUI for Windows 2v3 and USBK Management Software CLI for Linux 1v2
- * - AppNote:               USBK_UI_Protocol_2v5r6
+ * - AppNote:               USBK_UI_Protocol_2v5r7
  *
  * \author                  Timucin Anuslu, Murat Kılıvan
  *                          Tamara Elektronik : http://www.tamara.com.tr \n
@@ -43,6 +43,18 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
+#if defined(__AVR32__)
+#include <inttypes.h>
+#elif  defined(__linux__)
+#include <inttypes.h>
+#elif defined(WIN32)
+#include <stdint.h>
+#else
+#error must define environment
+#endif
+
+
 #if defined(__AVR32__)
 #  define ATTR_PACKED_BEGIN __attribute__((__packed__))
 #  define ATTR_ENUM_PACKED_BEGIN __attribute__((__packed__))
@@ -64,7 +76,7 @@
 
 #define PROTOCOL_HEADER "USBK"
 
-typedef U32 t_UIP_TAGNUMBER;
+typedef uint32_t t_UIP_TAGNUMBER;
 
 typedef struct ATTR_PACKED_BEGIN __UIP_FIRMVER ATTR_PACKED_END
 {
@@ -76,18 +88,18 @@ typedef union ATTR_PACKED_BEGIN __UIP_SERIAL ATTR_PACKED_END
 {
 #define UIP_SERIAL_TOTALSIZE        32
 #define UIP_SERIAL_SIZE             15
-    U8 u8[UIP_SERIAL_SIZE];
-    U8 all[UIP_SERIAL_TOTALSIZE];
+    uint8_t u8[UIP_SERIAL_SIZE];
+    uint8_t all[UIP_SERIAL_TOTALSIZE];
 }t_UIP_SERIAL;
 
-typedef U8 t_UIP_FABDEF;
-typedef U8 t_UIP_LOGSTAT;
-typedef U8 t_UIP_BACKDSTAT;
+typedef uint8_t t_UIP_FABDEF;
+typedef uint8_t t_UIP_LOGSTAT;
+typedef uint8_t t_UIP_BACKDSTAT;
 
 typedef struct ATTR_PACKED_BEGIN __UIP_PRODUCT ATTR_PACKED_END
 {
 #define UIP_PRODUCT_SIZE          31
-        char s[UIP_PRODUCT_SIZE+1];
+    char s[UIP_PRODUCT_SIZE+1];
 }t_UIP_PRODUCT;
 
 typedef struct ATTR_PACKED_BEGIN __UIP_MODEL ATTR_PACKED_END
@@ -101,8 +113,8 @@ typedef union ATTR_PACKED_BEGIN __UIP_DEVLABEL ATTR_PACKED_END
 {
 #define UIP_DEVLABEL_TOTALSIZE      65
 #define UIP_DEVLABEL_SIZE           11
-    char s[UIP_DEVLABEL_SIZE+1];
-    U8 all[UIP_DEVLABEL_TOTALSIZE];
+    char    s[UIP_DEVLABEL_SIZE+1];
+    uint8_t all[UIP_DEVLABEL_TOTALSIZE];
 }t_UIP_DEVLABEL;
 
 typedef enum ATTR_ENUM_PACKED_BEGIN __E_UIP_DEVSTATE ATTR_ENUM_PACKED_END // must be 1 byte
@@ -118,36 +130,36 @@ typedef union ATTR_PACKED_BEGIN __UIP_DEVSTATE ATTR_PACKED_END
 {
 #define UIP_DEVSTATE_TOTALSIZE  4
     e_UIP_DEVSTATE  me;
-    U8              all[UIP_DEVSTATE_TOTALSIZE];
+    uint8_t         all[UIP_DEVSTATE_TOTALSIZE];
 }t_UIP_DEVSTATE;
 
 
-typedef U8 t_UIP_KEYNB;
-typedef U8 t_UIP_NBRETRY;
+typedef uint8_t t_UIP_KEYNB;
+typedef uint8_t t_UIP_NBRETRY;
 
 typedef union ATTR_PACKED_BEGIN __UIP_KEY ATTR_PACKED_END
 {
 #define KEY_LEN     32
-      U8  u8 [KEY_LEN];
+      uint8_t  u8 [KEY_LEN];
 }t_UIP_KEY;
 
 typedef union ATTR_PACKED_BEGIN __UIP_KEYNAME ATTR_PACKED_END
 {
 #define UIP_KEYNAME_TOTALSIZE       65
 #define UIP_KEYNAME_SIZE            12
-    char s[UIP_KEYNAME_SIZE+1];
-    U8 all [UIP_KEYNAME_TOTALSIZE];
+    char        s[UIP_KEYNAME_SIZE+1];
+    uint8_t all [UIP_KEYNAME_TOTALSIZE];
 }t_UIP_KEYNAME;
 
 typedef union ATTR_PACKED_BEGIN __UIP_PAROLA ATTR_PACKED_END
 {
 #define UIP_PAROLA_TOTALSIZE        65
 #define UIP_PAROLA_SIZE             17
-      char  s[UIP_PAROLA_SIZE];
-      U8    all[UIP_PAROLA_TOTALSIZE];
+      char      s[UIP_PAROLA_SIZE];
+      uint8_t   all[UIP_PAROLA_TOTALSIZE];
 } t_UIP_PAROLA;
 
-typedef U8 t_UIP_OPTION;
+typedef uint8_t t_UIP_OPTION;
 
 typedef enum ATTR_ENUM_PACKED_BEGIN __E_UIP_OPRSTATUS ATTR_ENUM_PACKED_END // must be 1 byte
 {
@@ -169,7 +181,7 @@ typedef union ATTR_PACKED_BEGIN __UIP_OPRSTATUS ATTR_PACKED_END
 {
 #define UIP_OPRSTATUS_TOTALSIZE     4
     e_UIP_OPRSTATUS     me;
-    U8                  all[UIP_OPRSTATUS_TOTALSIZE];
+    uint8_t             all[UIP_OPRSTATUS_TOTALSIZE];
 }t_UIP_OPRSTATUS;
 
 typedef enum ATTR_ENUM_PACKED_BEGIN __E_UIP_OPRSTATUS_MSG ATTR_ENUM_PACKED_END // must be 1 byte (int)
@@ -188,7 +200,7 @@ typedef union ATTR_PACKED_BEGIN __UIP_OPRSTATUS_MSG ATTR_PACKED_END
 {
 #define UIP_OPRSTATUS_MSG_TOTALSIZE     4
     e_UIP_OPRSTATUS_MSG     me;
-    U8                      all[UIP_OPRSTATUS_MSG_TOTALSIZE];
+    uint8_t                 all[UIP_OPRSTATUS_MSG_TOTALSIZE];
 }t_UIP_OPRSTATUS_MSG;
 
 
@@ -205,8 +217,8 @@ typedef struct ATTR_PACKED_BEGIN __UIP_HEADER ATTR_PACKED_END
 typedef union ATTR_PACKED_BEGIN _UIP_KEYOPTION ATTR_PACKED_END
 {
 #define UIP_KEYOPTION_TOTALSIZE     4
-    U8 me;
-    U8 all[UIP_KEYOPTION_TOTALSIZE];
+    uint8_t me;
+    uint8_t all[UIP_KEYOPTION_TOTALSIZE];
 }t_UIP_KEYOPTION;
 
 typedef enum ATTR_ENUM_PACKED_BEGIN __E_UIP_KEYSIZE ATTR_ENUM_PACKED_END //must be 1 byte
@@ -221,8 +233,8 @@ typedef enum ATTR_ENUM_PACKED_BEGIN __E_UIP_KEYSIZE ATTR_ENUM_PACKED_END //must 
 typedef union ATTR_PACKED_BEGIN __UIP_KEYSIZE ATTR_PACKED_END
 {
 #define UIP_KEYSIZE_TOTALSIZE       4
-    e_UIP_KEYSIZE me;
-    U8 all[UIP_KEYSIZE_TOTALSIZE];
+    e_UIP_KEYSIZE   me;
+    uint8_t         all[UIP_KEYSIZE_TOTALSIZE];
 }t_UIP_KEYSIZE;
 
 

@@ -1,1 +1,0 @@
-SUBDIRS=libusbk usbk_cli

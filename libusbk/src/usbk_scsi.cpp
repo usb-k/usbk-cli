@@ -29,7 +29,7 @@
 
 //PRIVATE VARIABLES
 //-VENDOR SPECIFIC CMD COMMAND
-ST_CMD_T scsi_cmd[][10] = {
+const ST_CMD_T scsi_cmd[9] = {
   {0xFE, 0x00, GET_STATUS,      0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00},
   {0xFE, 0x00, GET_DEV_INFO,    0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00},
   {0xFE, 0x00, ACTIVATE_KEY,    0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00},
@@ -60,7 +60,7 @@ int send_scsi_command(const char *usbk_path, unsigned char *buff, int cmd_index,
         }
     }
 
-    packet.cmd = scsi_cmd[cmd_index - 1];
+    packet.cmd = (ST_CMD_T*)&scsi_cmd[cmd_index - 1];
     packet.cmdlen = cmdlen;
     packet.cmddir = (rw == WRITE_SCSI) ? OUTDIR : INDIR;
     packet.data = buffer;

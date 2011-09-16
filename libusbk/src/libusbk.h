@@ -17,93 +17,144 @@
 #ifndef LIBUSBK_H_
 #define LIBUSBK_H_
 
-//PUBLIC STRUCTURES
-//-LIBUSK OPERATION STATUS
-typedef enum __LIBUSBK_OPRSTATUS
+#if defined(__AVR32__)
+#include <inttypes.h>
+#elif  defined(__linux__)
+#include <inttypes.h>
+#elif defined(WIN32)
+#include <stdint.h>
+#else
+#error must define environment
+#endif
+
+
+#if  defined(__linux__)
+typedef enum __attribute__((__packed__)) __KEYSIZE
+#elif defined(WIN32)
+typedef enum __KEYSIZE// : char
+#else
+#error must define environment
+#endif
 {
-    LIBUSBK_RTN_OPRS_PASS                   = 1,
-    LIBUSBK_RTN_OPRS_GEN_FAIL               = 2,
-    LIBUSBK_RTN_OPRS_FAILED_PASS            = 3,
-    LIBUSBK_RTN_OPRS_FABRIC_RESET           = 4,
-    LIBUSBK_RTN_OPRS_USBK_UNPLUGING         = 5,
-    LIBUSBK_RTN_OPRS_INVALID_KEYNO          = 6,
-    LIBUSBK_RTN_OPRS_INVALID_KEYSIZE        = 7,
-    LIBUSBK_RTN_OPRS_INVALID_DEVICELABEL    = 8,
-    LIBUSBK_RTN_OPRS_INVALID_PASS           = 9,
-    LIBUSBK_RTN_OPRS_INVALID_NEWPASS        = 10,
-
-
-    LIBUSBK_RTN_SHORT_GENERATEDKEY          = 100,
-
-    LIBUSBK_RTN_GENERAL_ERROR            = -1,
-    LIBUSBK_RTN_UDEV_NOT_CREATE          = -2,
-    LIBUSBK_RTN_UDEV_NOT_NODE            = -3,
-    LIBUSBK_RTN_UDEV_WRONG_FILE_TYPE     = -4,
-    LIBUSBK_RTN_UDEV_USBKLIST_NOT_CREATE = -5,
-    LIBUSBK_RTN_SCSI_COMMAND_ERROR       = -6,
-    LIBUSBK_RTN_GET_BACKDISK_ERROR       = -7,
-    LIBUSBK_RTN_NOT_MALLOC               = -8,
-    LIBUSBK_RTN_NO_DEVICE_FOUND          = -9,
-    LIBUSBK_RTN_UNSUPPORTED_USBK         = -10,
-
-}LIBUSBK_OPRSTATUS;
+    KEYSIZE_NULL = 0,
+    KEYSIZE_128BIT = 1,
+    KEYSIZE_192BIT = 2,
+    KEYSIZE_256BIT = 3,
+}KEYSIZE;
 
 //-USBK DEVICE STATES
-typedef enum __LIBSUBK_DEVSTATE
+typedef enum __USBK_DS
 {
-    LIBSUBK_DEVSTATE_ACTIVATE                = 1,
-    LIBSUBK_DEVSTATE_ACTIVATE_WITH_BACKDISK  = 2,
-    LIBSUBK_DEVSTATE_DEACTIVATE              = 3,
-    LIBSUBK_DEVSTATE_FABRIC_DEFAULT          = 4,
-    LIBSUBK_DEVSTATE_MUST_REMOVE             = 5,
-}LIBSUBK_DEVSTATE;
+    USBK_DS_ACTIVATE                = 1,
+    USBK_DS_ACTIVATE_WITH_BACKDISK  = 2,
+    USBK_DS_DEACTIVATE              = 3,
+    USBK_DS_FABRIC_DEFAULT          = 4,
+    USBK_DS_MUST_REMOVE             = 5,
+}USBK_DS;
 
-//-USBK DEVICE INFORMATION STRUCTURE
-typedef struct __USBK_INFO {
-    char                *dev_path;
-    char                *backdisk_path;
-    char                *backdisk;
+typedef enum __USBK_LASTOPR
+{
+    USBK_LO_PASS = 0,
+    USBK_LO_GEN_FAIL = 1,
+    USBK_LO_FAILED_PASS =2,
+    USBK_LO_FABRIC_RESET = 3,
+    USBK_LO_USBK_UNPLUGING = 4,
+    USBK_LO_INVALID_KEYNO = 5,
+    USBK_LO_INVALID_KEYSIZE = 6,
+    USBK_LO_INVALID_DEVICELABEL = 7,
+    USBK_LO_INVALID_PASS = 8,
+    USBK_LO_INVALID_NEWPASS = 9,
 
-    bool                supported;
+    USBK_LO_STATE_ERROR = 10,
+    USBK_LO_SCSI_ERROR = 11,
+    USBK_LO_UNSUPPORTED_USBK = 12,
+    USBK_LO_INVALID_KEY = 13,
 
-    char                *product;
-    char                *model;
-    char                *serial;
-    char                *usb_serial;
-    char                *firmware_ver;
-    int                 multikey_cap;
-    char                *dev_label;
-    LIBSUBK_DEVSTATE    dev_state;
-    int                 current_key;
-    int                 autoact_keyno;
-    int                 retry_num;
-    char                **key_names;
-} USBK_INFO;
+    USBK_LO_UDEV_ERROR = 14,
+    USBK_LO_MEM_ERROR = 15,
+}LIBUSBK_LASTOPR;
 
-//-LINK LIST FOR USBK ON HOST SYSTEM
-typedef struct __USBK_List {
-    struct __USBK_List  *next;
-    char                *dev;
-    USBK_INFO           usbk_info;
-} USBK_List;
+typedef struct __USBK USBK;
 
-//PUBLIC FUNCTIONS
-//-LIST ALL USBK'S ON HOST SYSTEM
-int LibUSBK__list_devices(USBK_List** usbk_list);
-void LibUSBK__list_devices_release(USBK_List** p_usbklink);
+USBK* usbk_new(const char* dev);
+int usbk_release(USBK* usbk);
+int usbk_activatekey(USBK* usbk, const char* pass, uint8_t key_no);
+int usbk_deactivatekey(USBK* usbk);
+int usbk_changepassword(USBK* usbk, const char* old_pass, const char* new_pass);
+int usbk_setdevicelabel(USBK* usbk, const char* pass, const char* device_label);
+int usbk_setkeyname(USBK* usbk, const char* pass, uint8_t key_no, const char* key_name);
+int usbk_setkey_keyname(USBK* usbk, const char* pass, int key_no, const char* key_name, KEYSIZE key_size, const uint8_t* key);
+int usbk_setkey_hex(USBK* usbk, const char* pass, uint8_t key_no, KEYSIZE key_size, const uint8_t* key);
+int usbk_setkey_decimal(USBK* usbk, const char* pass, uint8_t key_no, KEYSIZE key_size, const char* key);
+int usbk_setkey_text(USBK* usbk, const char* pass, uint8_t key_no, KEYSIZE key_size, const char* key);
+int usbk_setautact(USBK* usbk, const char* pass, int key_no);
+int usbk_getrandomkey(USBK* usbk, uint8_t*random_key, KEYSIZE keysize);
+int usbk_refreshusbkinfo(USBK* usbk);
 
-//-SET AND GET USBK'S INFORMATION
-int LibUSBK__GetDeviceInfo(const char *usbk_dev, USBK_INFO** usbk_infos);
-int LibUSBK__GetDeviceInfo_Release(USBK_INFO* usbk_infos);
-int LibUSBK__GetStatus (const char *usbk_path);
-int LibUSBK__ActivateKey (const char *usbk_path, const char *password, const int key_no);
-int LibUSBK__DeActivateKey (const char *usbk_path);
-int LibUSBK__ChangePassword (const char *usbk_path, const char *old_pass, const char *new_pass);
-int LibUSBK__SetDeviceName (const char *usbk_path, const char *pass, const char *device_label);
-int LibUSBK__SetKey (const char *usbk_path, const char *pass, int key_no, int name_only, const char* key_name, const char* key_size, const unsigned char* key);
-int LibUSBK__SetAutoAct (const char *usbk_path, const char *pass, int enable, int key_no);
-int LibUSBK__GetRandomKey (const char *usbk_path, unsigned char **random_key, int get_key_size_byte);
-int LibUSBK__GetRandomKey_Release(unsigned char **random_key);
+int usbk_assignpassword(USBK* usbk, const char* new_pass)                                       {return usbk_changepassword(usbk, NULL, new_pass)                               ;}
+int usbk_setkeyname(USBK* usbk, const char* pass, uint8_t key_no, const char* key_name)         {return usbk_setkey_keyname(usbk, pass, key_no, key_name, KEYSIZE_NULL, NULL)   ;}
+int usbk_setkey_128bit_hex(USBK* usbk, const char* pass, uint8_t key_no, uint8_t* key)          {return usbk_setkey_hex(usbk, pass, key_no, KEYSIZE_128BIT, key)                ;}
+int usbk_setkey_192bit_hex(USBK* usbk, const char* pass, uint8_t key_no, uint8_t* key)          {return usbk_setkey_hex(usbk, pass, key_no, KEYSIZE_192BIT, key)                ;}
+int usbk_setkey_256bit_hex(USBK* usbk, const char* pass, uint8_t key_no, uint8_t* key)          {return usbk_setkey_hex(usbk, pass, key_no, KEYSIZE_256BIT, key)                ;}
+int usbk_setkey_128bit_decimal(USBK* usbk, const char* pass, uint8_t key_no, const char* key)   {return usbk_setkey_decimal(usbk, pass, key_no, KEYSIZE_128BIT, key)            ;}
+int usbk_setkey_192bit_decimal(USBK* usbk, const char* pass, uint8_t key_no, const char* key)   {return usbk_setkey_decimal(usbk, pass, key_no, KEYSIZE_192BIT, key)            ;}
+int usbk_setkey_256bit_decimal(USBK* usbk, const char* pass, uint8_t key_no, const char* key)   {return usbk_setkey_decimal(usbk, pass, key_no, KEYSIZE_256BIT, key)            ;}
+int usbk_setkey_128bit_text(USBK* usbk, const char* pass, uint8_t key_no, const char* key)      {return usbk_setkey_text(usbk, pass, key_no, KEYSIZE_128BIT, key)               ;}
+int usbk_setkey_192bit_text(USBK* usbk, const char* pass, uint8_t key_no, const char* key)      {return usbk_setkey_text(usbk, pass, key_no, KEYSIZE_192BIT, key)               ;}
+int usbk_setkey_256bit_text(USBK* usbk, const char* pass, uint8_t key_no, const char* key)      {return usbk_setkey_text(usbk, pass, key_no, KEYSIZE_256BIT, key)               ;}
+int usbk_enableautact(USBK* usbk, const char* pass, uint8_t key_no)                             {return usbk_setautact(usbk, pass, key_no)                                      ;}
+int usbk_disableautact(USBK* usbk, const char* pass)                                            {return usbk_setautact(usbk, pass, 0);                                          ;}
+
+
+const char* usbk_get_dev(USBK* usbk);
+const char* usbk_get_dev_path(USBK* usbk);
+const char* usbk_get_backdisk(USBK* usbk);
+const char* usbk_get_backdisk_path(USBK* usbk);
+const char* usbk_get_product(USBK* usbk);
+const char* usbk_get_model(USBK* usbk);
+const char* usbk_get_serial(USBK* usbk);
+const char* usbk_get_usb_serial(USBK* usbk);
+const char* usbk_get_firmware_ver(USBK* usbk);
+const char* usbk_get_dev_label(USBK* usbk);
+const char* usbk_get_keyname(USBK* usbk, int key_no);
+
+int usbk_get_lastopr_status(USBK* usbk);
+
+bool usbk_check_support(USBK* usbk);
+int usbk_get_multikeycap(USBK* usbk);
+int usbk_get_current_keyno(USBK* usbk);
+int usbk_get_autoactivation_keyno(USBK* usbk);
+int usbk_get_retry_number(USBK* usbk);
+USBK_DS usbk_get_state(USBK* usbk);
+
+
+void usbk_debug_enable(void);
+void usbk_debug_disable(void);
+void usbk_debug(bool enable);
+bool usbk_debug_check(void);
+
+const char* usbk_libversion(void);
+
+#if  defined(__linux__)
+
+typedef struct __USBKS USBKS;
+
+USBKS* usbk_list_new(void);
+int usbk_list_release(USBKS* usbks);
+USBK* usbk_list_get_entry(USBKS* usbks);
+USBK* usbk_list_get_next(USBK* usbk);
+USBK* usbk_list_get_previous(USBK* usbk);
+int usbk_list_get_counter(USBKS* usbks);
+int usbk_list_get_lastoprstatus(USBKS* usbks);
+
+int usbk_list_refreshall(USBKS* usbks);
+
+#define usbk_list_entry_foreach(list_entry, first_entry) \
+    for (list_entry = first_entry; \
+         list_entry != NULL; \
+         list_entry = usbk_list_get_next(list_entry))
+
+#endif
 
 #endif
 

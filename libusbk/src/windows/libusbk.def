@@ -1,0 +1,57 @@
+LIBRARY	libusbk
+
+EXPORTS
+
+	usbk_new
+	usbk_release
+	usbk_activatekey
+	usbk_deactivatekey
+	usbk_changepassword
+	usbk_setdevicelabel
+	usbk_setkeyname
+	usbk_setkey_keyname
+	usbk_setkey_hex
+	usbk_setkey_decimal
+	usbk_setkey_text
+	usbk_setautact
+	usbk_getrandomkey
+	usbk_refreshusbkinfo
+	usbk_assignpassword
+	usbk_libversion
+	usbk_setkeyname
+	usbk_setkey_128bit_hex
+	usbk_setkey_192bit_hex
+	usbk_setkey_256bit_hex
+	usbk_setkey_128bit_decimal
+	usbk_setkey_192bit_decimal
+	usbk_setkey_256bit_decimal
+	usbk_setkey_128bit_text
+	usbk_setkey_192bit_text
+	usbk_setkey_256bit_text
+	usbk_enableautact
+	usbk_disableautact
+	usbk_get_dev
+	usbk_get_dev_path
+	usbk_get_backdisk
+	usbk_get_backdisk_path
+	usbk_get_product
+	usbk_get_model
+	usbk_get_serial
+	usbk_get_usb_serial
+	usbk_get_firmware_ver
+	usbk_get_dev_label
+	usbk_get_serial
+	usbk_get_keyname
+	usbk_get_serial
+	usbk_get_lastopr_status
+	usbk_check_support
+	usbk_get_multikeycap
+	usbk_get_current_keyno
+	usbk_get_autoactivation_keyno
+	usbk_get_retry_number
+	usbk_get_state
+	usbk_debug_enable
+	usbk_debug_disable
+	usbk_debug
+	usbk_debug_check
+	

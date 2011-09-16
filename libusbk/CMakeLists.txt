@@ -6,15 +6,23 @@
 # GNU General Public License
 #
 
+IF(UNIX)
+    message(STATUS "Cmake for Unix")
+ENDIF(UNIX)
+
+IF(WIN32)
+    message(STATUS "Cmake for Windows")
+ENDIF(WIN32)
+
+IF(APPLE)
+    message(FATAL_ERROR "APPLE NOT SUPPORTED")
+ENDIF(APPLE)
 
 # Project name
-PROJECT (usbk_lib C CXX)
-
-# Display Starting
-message(STATUS "## ${PROJECT_NAME} <<<< ")
+PROJECT (usbk_lib)
 
 # CMAKE Settings
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(CMAKE_COLOR_MAKEFILE ON)
 SET(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -26,37 +34,41 @@ SET(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_
 SET(${PROJECT_NAME}_VERSION_FULL "${${PROJECT_NAME}_VERSION}.${${PROJECT_NAME}_VERSION_PATCH}")
 SET(${PROJECT_NAME}_SOVERSION "${${PROJECT_NAME}_VERSION}.${${PROJECT_NAME}_VERSION_PATCH}")
 
+ADD_DEFINITIONS ( -DVERSION="${${PROJECT_NAME}_VERSION_FULL}" )
 
-# Search for fuse package
-INCLUDE (FindUDEV.cmake)
-
-IF(NOT UDEV)
-    message(FATAL_ERROR "Unable to find 'udev' library!")
-ELSE(NOT UDEV)
-
-    # Source Files
-    AUX_SOURCE_DIRECTORY (src ${PROJECT_NAME}_SOURCES)
+IF(UNIX AND NOT APPLE)
+    # Search for udev package
+    INCLUDE (FindUDEV)
+    IF(NOT UDEV)
+        message(FATAL_ERROR "Unable to find 'udev' library!")
+    ENDIF(NOT UDEV)
     
-    # Include Headers are loacted in these directory 
-    INCLUDE_DIRECTORIES (
-        "/usr/local/include/"
-        "/usr/include"
+    
+    # Header files are located in these directories
+    SET (${PROJECT_NAME}_INCLUDE_DIRS
+        ${${PROJECT_NAME}_SOURCE_DIR}/src/
+        ${${PROJECT_NAME}_SOURCE_DIR}/src/linux/
+        ${CMAKE_SYSTEM_INCLUDE_PATH}
     )
-            
+    INCLUDE_DIRECTORIES (${${PROJECT_NAME}_INCLUDE_DIRS})
+    
+    
     # Libraries are located in these directories
-    LINK_DIRECTORIES (
-        "/usr/lib/"
+    SET (${PROJECT_NAME}_LIBRARIES_PATH
+        ${CMAKE_SYSTEM_LIBRARY_PATH}
     )
+    LINK_DIRECTORIES (${${PROJECT_NAME}_LIBRARIES_PATH})
+    
+    # Source Files
+    #AUX_SOURCE_DIRECTORY (src ${PROJECT_NAME}_SOURCES)
+    
+    FILE(GLOB SRC_FILES "src/*" "src/linux/*")
     
     # Create Library File
-    ADD_LIBRARY( ${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES})
+    ADD_LIBRARY( ${PROJECT_NAME} SHARED ${SRC_FILES})
     
     # These are the symbols for the linker
     TARGET_LINK_LIBRARIES(${PROJECT_NAME} udev)    
-    
-    
-    # create symbolic lib target for calling target lib_XXX
-    #ADD_CUSTOM_TARGET( lib DEPENDS ${PROJECT_NAME} )
     
     # change lib_target properties
     SET_TARGET_PROPERTIES( ${PROJECT_NAME} PROPERTIES
@@ -66,20 +78,21 @@ ELSE(NOT UDEV)
     
         # allow creating static and shared libs without conflicts
         CLEAN_DIRECT_OUTPUT 1
-    
+        
         # avoid conflicts between library and binary target names
         OUTPUT_NAME usbk 
+#        LINK_FLAGS -m64
     )
-    
+
     # Install this library
     INSTALL(TARGETS ${PROJECT_NAME} 
             LIBRARY DESTINATION lib
             PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
             
-    INSTALL(FILES src/libusbk.h 
+    INSTALL(FILES src/libusbk.h
             DESTINATION include
             PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-    
+
     IF (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
     
         # Settings for debian package
@@ -100,7 +113,48 @@ ELSE(NOT UDEV)
     
     ENDIF (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
     
-ENDIF(NOT UDEV)
+ELSEIF(WIN32)
+    
+        # Header files are located in these directories
+    SET (${PROJECT_NAME}_INCLUDE_DIRS
+        ${${PROJECT_NAME}_SOURCE_DIR}/src/
+        ${${PROJECT_NAME}_SOURCE_DIR}/src/windows/
+        ${CMAKE_SYSTEM_INCLUDE_PATH}
+    )
+    INCLUDE_DIRECTORIES (${${PROJECT_NAME}_INCLUDE_DIRS})
+    
+    # Libraries are located in these directories
+    SET (${PROJECT_NAME}_LIBRARIES_PATH
+        ${CMAKE_SYSTEM_LIBRARY_PATH}
+    )
+    LINK_DIRECTORIES (${${PROJECT_NAME}_LIBRARIES_PATH})
+    
+    FILE(GLOB SRC_FILES "src/*" "src/windows/*")
+    
+    ADD_LIBRARY( ${PROJECT_NAME} SHARED ${SRC_FILES})
+    
+    SET_TARGET_PROPERTIES( ${PROJECT_NAME} PROPERTIES
+        VERSION ${${PROJECT_NAME}_VERSION}
+        SOVERSION ${${PROJECT_NAME}_SOVERSION}
+    
+        # allow creating static and shared libs without conflicts
+        CLEAN_DIRECT_OUTPUT 1
+        
+        # avoid conflicts between library and binary target names
+        OUTPUT_NAME libusbk 
+    )
 
-# Display Finishing
-message(STATUS "## >>>> ${PROJECT_NAME}")
+	INSTALL(TARGETS			${PROJECT_NAME}
+		LIBRARY DESTINATION lib
+		ARCHIVE DESTINATION lib
+		RUNTIME DESTINATION bin
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+	)
+	
+    INCLUDE(CPack)
+
+ELSEIF(APPLE)
+
+ELSE(UNIX AND NOT APPLE)
+    message(FATAL_ERROR "Undefined Operating System") 
+ENDIF(UNIX AND NOT APPLE)
