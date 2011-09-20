@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "general.h"
 #include "uip.h"
 
 #include "libusbk.h"
@@ -120,7 +119,7 @@ LIBUSBK_SUPPORTED_PRODUCTS products[] = {
 
 typedef struct __USBK
 {
-    int       lastopr;
+    int32_t   lastopr;
 
     char      *dev;
     char      *dev_path;
@@ -134,7 +133,7 @@ typedef struct __USBK
     char      *serial;
     char      *usb_serial;
     char      *firmware_ver;
-    int       multikey_cap;
+    int32_t   multikey_cap;
     char      *dev_label;
     USBK_DS   dev_state;
     int       current_key;

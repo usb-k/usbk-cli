@@ -18,29 +18,30 @@
 #define LIBUSBK_H_
 
 #if defined(__AVR32__)
-#include <inttypes.h>
+#  include <inttypes.h>
 #elif  defined(__linux__)
-#include <inttypes.h>
+#  include <inttypes.h>
 #elif defined(WIN32)
-#include <stdint.h>
+#  include <stdint.h>
 #else
-#error must define environment
+#  error unsupported environment
 #endif
 
+#define NB_AESKEY         3
 
-#if  defined(__linux__)
-typedef enum __attribute__((__packed__)) __KEYSIZE
-#elif defined(WIN32)
-typedef enum __KEYSIZE// : char
+#if defined(__linux__)
+#  define USBK_ATTRIBUTE_PACKED __attribute__((__packed__))
 #else
-#error must define environment
+#  define USBK_ATTRIBUTE_PACKED
 #endif
+
+typedef enum USBK_ATTRIBUTE_PACKED __KEYSIZE
 {
     KEYSIZE_NULL = 0,
     KEYSIZE_128BIT = 1,
     KEYSIZE_192BIT = 2,
     KEYSIZE_256BIT = 3,
-}KEYSIZE;
+} KEYSIZE;
 
 //-USBK DEVICE STATES
 typedef enum __USBK_DS
@@ -50,33 +51,34 @@ typedef enum __USBK_DS
     USBK_DS_DEACTIVATE              = 3,
     USBK_DS_FABRIC_DEFAULT          = 4,
     USBK_DS_MUST_REMOVE             = 5,
-}USBK_DS;
+} USBK_DS;
 
 typedef enum __USBK_LASTOPR
 {
-    USBK_LO_PASS = 0,
-    USBK_LO_GEN_FAIL = 1,
-    USBK_LO_FAILED_PASS =2,
-    USBK_LO_FABRIC_RESET = 3,
-    USBK_LO_USBK_UNPLUGING = 4,
-    USBK_LO_INVALID_KEYNO = 5,
-    USBK_LO_INVALID_KEYSIZE = 6,
+    USBK_LO_PASS                = 0,
+    USBK_LO_GEN_FAIL            = 1,
+    USBK_LO_FAILED_PASS         = 2,
+    USBK_LO_FABRIC_RESET        = 3,
+    USBK_LO_USBK_UNPLUGING      = 4,
+    USBK_LO_INVALID_KEYNO       = 5,
+    USBK_LO_INVALID_KEYSIZE     = 6,
     USBK_LO_INVALID_DEVICELABEL = 7,
-    USBK_LO_INVALID_PASS = 8,
-    USBK_LO_INVALID_NEWPASS = 9,
+    USBK_LO_INVALID_PASS        = 8,
+    USBK_LO_INVALID_NEWPASS     = 9,
 
-    USBK_LO_STATE_ERROR = 10,
-    USBK_LO_SCSI_ERROR = 11,
-    USBK_LO_UNSUPPORTED_USBK = 12,
-    USBK_LO_INVALID_KEY = 13,
+    USBK_LO_STATE_ERROR         = 10,
+    USBK_LO_SCSI_ERROR          = 11,
+    USBK_LO_UNSUPPORTED_USBK    = 12,
+    USBK_LO_INVALID_KEY         = 13,
 
-    USBK_LO_UDEV_ERROR = 14,
-    USBK_LO_MEM_ERROR = 15,
-}LIBUSBK_LASTOPR;
+    USBK_LO_UDEV_ERROR          = 14,
+    USBK_LO_MEM_ERROR           = 15,
+} LIBUSBK_LASTOPR;
 
 typedef struct __USBK USBK;
 
 USBK* usbk_new(const char* dev);
+
 int usbk_release(USBK* usbk);
 int usbk_activatekey(USBK* usbk, const char* pass, uint8_t key_no);
 int usbk_deactivatekey(USBK* usbk);
@@ -135,7 +137,7 @@ bool usbk_debug_check(void);
 
 const char* usbk_libversion(void);
 
-#if  defined(__linux__)
+#if defined(__linux__)
 
 typedef struct __USBKS USBKS;
 
@@ -154,7 +156,7 @@ int usbk_list_refreshall(USBKS* usbks);
          list_entry != NULL; \
          list_entry = usbk_list_get_next(list_entry))
 
-#endif
+#endif /* defined(__linux__) */
 
-#endif
+#endif /* LIBUSBK_H_ */
 
