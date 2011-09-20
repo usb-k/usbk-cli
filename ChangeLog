@@ -1,9 +1,13 @@
+2011.09.21
+	* .gitignore cmake enhancement
+	* CMakeList.txt distclean
+
 2011.01.14
-    * Autotools build script enhancements added
-    * CMake build system added
-    * Coding style enhancements applied
-    * More comments added to the codes
-    * filenames turned into all lowercase
+	* Autotools build script enhancements added
+	* CMake build system added
+	* Coding style enhancements applied
+	* More comments added to the codes
+	* filenames turned into all lowercase
 
 2011.01.07 (Start point)
-    * Tamara Electronics decided to open USB-K source codes.
+	* Tamara Electronics decided to open USB-K source codes.
