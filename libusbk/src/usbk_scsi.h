@@ -46,9 +46,11 @@ extern "C" {
 
 //!\name -RETURN VALUES OF SCSI LAYER
 //! @{
-#define rtnUSBK_SCSI_PASS            0      //!< Pass
-#define rtnUSBK_SCSI_OPEN_FAIL      -1      //!< Device Open Error
-#define rtnUSBK_SCSI_TRANSFER_FAIL  -2      //!< Transfer Error
+enum usbk_scsi_ret {
+    USBK_SCSI_PASS          =  0,      //!< Pass
+    USBK_SCSI_OPEN_FAIL     = -1,      //!< Device Open Error
+    USBK_SCSI_TRANSFER_FAIL = -2,      //!< Transfer Error
+};
 //! @}
 
 

@@ -22,6 +22,7 @@
 #include <getopt.h>
 #include <sstream>
 #include <string.h>
+
 #include "libusbk.h"
 
 using namespace std;

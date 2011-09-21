@@ -35,7 +35,7 @@ int usbk_sg_open(const char* DevicePath)
     sg_fd  = open(DevicePath , O_RDWR);
 
     if (sg_fd < 0) {
-        fprintf(stderr, "Device not found!");
+        fprintf(stderr, "Error! Device not found!");
         return USBK_SG_ERR_NOT_DEVICE;
     }
 
