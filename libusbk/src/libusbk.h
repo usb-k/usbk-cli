@@ -17,6 +17,10 @@
 #ifndef LIBUSBK_H_
 #define LIBUSBK_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(__AVR32__)
 #  include <inttypes.h>
 #elif  defined(__linux__)
@@ -157,6 +161,10 @@ int usbk_list_refreshall(USBKS* usbks);
          list_entry = usbk_list_get_next(list_entry))
 
 #endif /* defined(__linux__) */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* LIBUSBK_H_ */
 

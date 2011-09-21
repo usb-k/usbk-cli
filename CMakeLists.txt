@@ -51,6 +51,7 @@ IF (UNIX)
          cmake.depends
          cmake.check_depends
          CMakeCache.txt
+         */CMakeCache.txt
          cmake.check_cache
          *.cmake
          Makefile

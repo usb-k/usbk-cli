@@ -17,6 +17,9 @@
 #ifndef USBK_SCSI_H_
 #define USBK_SCSI_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 //PUBLIC DEFINES
 //-DIRECTIONS
@@ -70,6 +73,10 @@
  *
  */
 int send_scsi_command(const char *usbk_path, unsigned char *buff, int cmd_index, int len, char rw);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

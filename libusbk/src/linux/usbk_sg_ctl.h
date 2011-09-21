@@ -17,14 +17,21 @@
 #ifndef USBK_SG_CTL_H_
 #define USBK_SG_CTL_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //PUBLIC DEFINES
 //*! \name -RETURN VALUES OF SCSI GENERIC LAYER
 //! @{
-#define rtnUSBK_SG_PASS                  0      //!< Pass
-#define rtnUSBK_SG_ERR_GENERAL          -1      //!< General Error
-#define rtnUSBK_SG_ERR_NOT_DEVICE       -2      //!< Device can not be found
-#define rtnUSBK_SG_ERR_IOCTL_SCSI       -3      //!< IOCTL Error
-#define rtnUSBK_SG_ERR_COMMAND_FAIL     -4      //!< SCSI Command Fail
+typedef enum __USBK_SG_RET
+{
+    USBK_SG_PASS             =  0, //!< Pass
+    USBK_SG_ERR_GENERAL      = -1, //!< General Error
+    USBK_SG_ERR_NOT_DEVICE   = -2, //!< Device can not be found
+    USBK_SG_ERR_IOCTL_SCSI   = -3, //!< IOCTL Error
+    USBK_SG_ERR_COMMAND_FAIL = -4, //!< SCSI Command Fail
+} USBK_SG_RET;
 //! @}
 
 //PUBLIC STRUCTURES
@@ -100,6 +107,10 @@ void usbk_sg_close(void);
  *
  */
 int usbk_sg_tansfer(ST_PACKET_T *scsi_packet);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // USBK_SG_CTL_H_
 
