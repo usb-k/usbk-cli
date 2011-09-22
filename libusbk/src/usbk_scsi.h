@@ -17,6 +17,9 @@
 #ifndef USBK_SCSI_H_
 #define USBK_SCSI_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 //PUBLIC DEFINES
 //-DIRECTIONS
@@ -43,9 +46,11 @@
 
 //!\name -RETURN VALUES OF SCSI LAYER
 //! @{
-#define rtnUSBK_SCSI_PASS            0      //!< Pass
-#define rtnUSBK_SCSI_OPEN_FAIL      -1      //!< Device Open Error
-#define rtnUSBK_SCSI_TRANSFER_FAIL  -2      //!< Transfer Error
+enum usbk_scsi_ret {
+    USBK_SCSI_PASS          =  0,      //!< Pass
+    USBK_SCSI_OPEN_FAIL     = -1,      //!< Device Open Error
+    USBK_SCSI_TRANSFER_FAIL = -2,      //!< Transfer Error
+};
 //! @}
 
 
@@ -70,6 +75,10 @@
  *
  */
 int send_scsi_command(const char *usbk_path, unsigned char *buff, int cmd_index, int len, char rw);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

@@ -1,9 +1,16 @@
+2011.09.21
+	* .gitignore cmake enhancement
+	* CMakeList.txt distclean
+	* remove general.h since its contents must be exist in libusbk.h
+	* some cosmetic changes in source codes
+	* add extern "C" to use libusbk in c++
+
 2011.01.14
-    * Autotools build script enhancements added
-    * CMake build system added
-    * Coding style enhancements applied
-    * More comments added to the codes
-    * filenames turned into all lowercase
+	* Autotools build script enhancements added
+	* CMake build system added
+	* Coding style enhancements applied
+	* More comments added to the codes
+	* filenames turned into all lowercase
 
 2011.01.07 (Start point)
-    * Tamara Electronics decided to open USB-K source codes.
+	* Tamara Electronics decided to open USB-K source codes.

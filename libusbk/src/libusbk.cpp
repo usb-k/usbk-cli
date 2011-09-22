@@ -20,15 +20,14 @@
 //PRIVATE HEADERS
 #include <sstream>
 
-#if  defined(__linux__)
-#include <libudev.h>
+#if defined(__linux__)
+#  include <libudev.h>
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "general.h"
 #include "uip.h"
 
 #include "libusbk.h"
@@ -42,14 +41,12 @@ using namespace std;
     #define DBG_RETURN_STRING(x) {if (x!=0) DBG_ERROR("%s", USBK_RTN_ERRORS_STRING[x]);}
     #define DBG_LASTOPR_STRING(x) {if (x!=0) {DBG_ERROR("last opration status: %s", lastopr_string[x].rtrn_string);} \
                                    else {DBG_INFO("last opration status: %s", lastopr_string[x].rtrn_string);}}
-
 #elif defined(WIN32)
     #define DBG_INFO(x, ...) {if(debug_enable) {fprintf(stderr, "%s(%d):%s:" x "\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
     #define DBG_ERROR(x, ...) {if(debug_enable) {fprintf(stderr, "%s(%d):%s:" x "\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
     #define DBG_RETURN_STRING(x) {if (x!=0) DBG_ERROR("%s", USBK_RTN_ERRORS_STRING[x]);}
     #define DBG_LASTOPR_STRING(x) {if (x!=0) {DBG_ERROR("last opration status: %s", lastopr_string[x].rtrn_string);} \
                                    else {DBG_INFO("last opration status: %s", lastopr_string[x].rtrn_string);}}
-
 #endif
 
 typedef struct __RTRN_STRING {
@@ -120,7 +117,7 @@ LIBUSBK_SUPPORTED_PRODUCTS products[] = {
 
 typedef struct __USBK
 {
-    int       lastopr;
+    int32_t   lastopr;
 
     char      *dev;
     char      *dev_path;
@@ -134,7 +131,7 @@ typedef struct __USBK
     char      *serial;
     char      *usb_serial;
     char      *firmware_ver;
-    int       multikey_cap;
+    int32_t   multikey_cap;
     char      *dev_label;
     USBK_DS   dev_state;
     int       current_key;

@@ -1,5 +1,5 @@
 /*
- * @file usbk_sg_ctl.cpp
+ * @file usbk_sg_ctl.c
  *
  * Copyright (C) 2010 USB-K Team
  *
@@ -25,12 +25,6 @@
 
 #include "usbk_sg_ctl.h"
 
-//PRIVATE DEFINES
-//-ERROR MESSAGES
-#define msgUSBK_SG_ERR_NOT_DEVICE          "Not device!\n"
-#define msgUSBK_SG_ERR_IOCTL_SCSI           "Error in IOCTL_SCSI\n"
-#define msgUSBK_SG_ERR_COMMAND_FAIL         "Command failed!\n"
-
 //PRIVATE VARIABLES;
 static int sg_fd;
 
@@ -38,16 +32,14 @@ static int sg_fd;
 
 int usbk_sg_open(const char* DevicePath)
 {
-    int rtn = rtnUSBK_SG_PASS;
-
     sg_fd  = open(DevicePath , O_RDWR);
 
     if (sg_fd < 0) {
-        fprintf(stderr, msgUSBK_SG_ERR_NOT_DEVICE);
-        rtn = rtnUSBK_SG_ERR_NOT_DEVICE;
+        fprintf(stderr, "Error! Device not found!");
+        return USBK_SG_ERR_NOT_DEVICE;
     }
 
-    return rtn;
+    return USBK_SG_PASS;
 }
 
 void usbk_sg_close(void)
@@ -60,7 +52,7 @@ int usbk_sg_tansfer(ST_PACKET_T *scsi_packet)
     sg_io_hdr_t  io_hdr;
     int i=0;
     int j=0;
-    unsigned char  sense_buffer[32];
+    unsigned char sense_buffer[32];
 
     memset(sense_buffer, 0, sizeof(sense_buffer));
     memset(&io_hdr, 0, sizeof(sg_io_hdr_t));
@@ -82,8 +74,8 @@ int usbk_sg_tansfer(ST_PACKET_T *scsi_packet)
     io_hdr.timeout = 1000;
 
     if (ioctl(sg_fd, SG_IO, &io_hdr) < 0) {
-        fprintf(stderr, msgUSBK_SG_ERR_IOCTL_SCSI);
-        return rtnUSBK_SG_ERR_IOCTL_SCSI;
+        fprintf(stderr, "IO Error: ioctl_scsi");
+        return USBK_SG_ERR_IOCTL_SCSI;
     } else if ((io_hdr.info & SG_INFO_OK_MASK) != SG_INFO_OK) {
 
         if (io_hdr.sb_len_wr > 0) {
@@ -111,14 +103,14 @@ int usbk_sg_tansfer(ST_PACKET_T *scsi_packet)
         }
 
         scsi_packet->datalen = 0;
-        fprintf(stderr, msgUSBK_SG_ERR_COMMAND_FAIL);
-        return rtnUSBK_SG_ERR_COMMAND_FAIL;
+        fprintf(stderr, "IO Error: Illegal command or operation cannot be executed!");
+        return USBK_SG_ERR_COMMAND_FAIL;
     }
 
     //printf("ByteReturn :: %x\n", io_hdr.dxfer_len);
     scsi_packet->datalen = io_hdr.dxfer_len;
 
-    return rtnUSBK_SG_PASS;
+    return USBK_SG_PASS;
 }
 /*
 // FOR DEBUB

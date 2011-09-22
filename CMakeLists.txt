@@ -46,6 +46,37 @@ SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
 SET(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README")
 SET(CPACK_RESOURCE_FILE_WELCOME "${CMAKE_CURRENT_SOURCE_DIR}/NEWS")
 
+IF (UNIX)
+    ADD_CUSTOM_TARGET (distclean @echo cleaning for source distribution)
+    SET( DISTCLEANED
+         CMakeFiles
+         cmake.depends
+         cmake.check_depends
+         CMakeCache.txt
+         */CMakeCache.txt
+         cmake.check_cache
+         *.cmake
+         Makefile
+         core core.*
+         gmon.out
+         *~
+         */Makefile
+         */CMakeFiles
+         */cmake_install.cmake
+         libusbk/*.so*
+         usbk_cli/usbk
+         man/*.gz
+    )
+
+    ADD_CUSTOM_COMMAND(
+         DEPENDS clean
+         COMMENT "distribution clean"
+         COMMAND rm
+         ARGS    -Rf CMakeTmp ${DISTCLEANED}
+         TARGET  distclean
+    )
+ENDIF(UNIX)
+
 # Settings for debian package
 #SET(CPACK_GENERATOR "DEB")
 SET(CPACK_DEBIAN_PACKAGE_NAME ${PROJECT_NAME})

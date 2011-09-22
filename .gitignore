@@ -1,14 +1,26 @@
+# Eclipse project files
 .project
 .cproject
 .settings
-Makefile.in
-aclocal.m4
-autom4te.cache/
-build/
-config.guess
-config.sub
-configure
-depcomp
-install-sh
-missing
-src/Makefile.in
+
+# CMake generated files and directories
+build
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+install_manifest.txt
+cmake_uninstall.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+
+# compiled files
+*.o
+*.so*
+usbk_cli/usbk
+
+# vim swap files
+*.swp
+
+# compressed files (e.g. man)
+*.gz
