@@ -29,6 +29,7 @@ ADD_SUBDIRECTORY( man )
 
 UNINSTALLLER_FEATURE()
 
+
 # Settings for standard package
 SET(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
 SET(CPACK_PACKAGE_VENDOR  "Tamara Elektronik <tamara@tamara.com.tr>")
@@ -87,4 +88,15 @@ SET(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 SET(CPACK_DEBIAN_PACKAGE_RECOMMENDS "recommends")	
 SET(CPACK_DEBIAN_PACKAGE_SUGGESTS "suggests")
+
+SET(CPACK_SOURCE_GENERATOR "TGZ")
+SET(CPACK_SOURCE_IGNORE_FILES 
+        ${CMAKE_CURRENT_SOURCE_DIR}/.git         #Git
+        ${CMAKE_CURRENT_SOURCE_DIR}/.settings    #Eclipse
+        ${CMAKE_CURRENT_SOURCE_DIR}/.cproject    #Eclipse
+        ${CMAKE_CURRENT_SOURCE_DIR}/.project     #Eclipse
+        ${CMAKE_CURRENT_BINARY_DIR}              #Build    #TODO: If CMAKE_CURRENT_BINARY_DIR == CMAKE_CURRENT_BINARY_DIR, source zip file is empty.
+)
+add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
+
 INCLUDE(CPack)
