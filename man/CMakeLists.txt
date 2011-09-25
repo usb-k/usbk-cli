@@ -27,5 +27,5 @@ ADD_CUSTOM_TARGET(man ALL
 
 # Installation of the manuals
 INSTALL(FILES ${PROJECT_BINARY_DIR}/${usbk_man_gz}
-        DESTINATION "share/man/man1"
+        DESTINATION "/usr/share/man/man1"
         PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
