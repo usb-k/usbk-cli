@@ -1,0 +1,7 @@
+ - unify linux/windows usbk_sg_ctl.[h|c] sources and make differences with MACROS
+ - make libusbk fully c source since no need to use c++
+ - make variables fixed sizes (eg. use int32_t or int64_t instead of int (except file descriptors) )
+
+ - c++ bindings can be written, but first qusbk project must be started!
+
+
