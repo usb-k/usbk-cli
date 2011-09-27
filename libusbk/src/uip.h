@@ -63,6 +63,8 @@
 #  error unsupported environment
 #endif
 
+#define NB_AESKEY         3
+
 #define PROTOCOL_HEADER "USBK"
 
 typedef uint32_t t_UIP_TAGNUMBER;

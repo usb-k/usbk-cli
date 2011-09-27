@@ -33,6 +33,35 @@
 #include "libusbk.h"
 #include "usbk_scsi.h"
 
+typedef struct __USBK
+{
+    int32_t   lastopr;
+
+    char      *dev;
+    char      *dev_path;
+    char      *backdisk;
+    char      *backdisk_path;
+
+    bool      supported;
+
+    char      *product;
+    char      *model;
+    char      *serial;
+    char      *usb_serial;
+    char      *firmware_ver;
+    int32_t   multikey_cap;
+    char      *dev_label;
+    USBK_DS   dev_state;
+    int       current_key;
+    int       autoact_keyno;
+    int       retry_num;
+    char      **key_names;
+
+    struct __USBK *next;
+    struct __USBK *previous;
+
+} USBK;
+
 using namespace std;
 
 #if  defined(__linux__)
@@ -114,35 +143,6 @@ LIBUSBK_SUPPORTED_PRODUCTS products[] = {
 #define USBK_USB_IDPRODUCT_A101    "a101"
 #define USBK_SCSI_VENDOR           "USBK"
 #define USBK_SCSI_BACKDISK_VENDOR  "BackDisk"
-
-typedef struct __USBK
-{
-    int32_t   lastopr;
-
-    char      *dev;
-    char      *dev_path;
-    char      *backdisk;
-    char      *backdisk_path;
-
-    bool      supported;
-
-    char      *product;
-    char      *model;
-    char      *serial;
-    char      *usb_serial;
-    char      *firmware_ver;
-    int32_t   multikey_cap;
-    char      *dev_label;
-    USBK_DS   dev_state;
-    int       current_key;
-    int       autoact_keyno;
-    int       retry_num;
-    char      **key_names;
-
-    struct __USBK *next;
-    struct __USBK *previous;
-
-}USBK;
 
 
 static bool debug_enable = false;
@@ -360,6 +360,10 @@ int usbk_changepassword(USBK* usbk, const char* old_pass, const char* new_pass) 
 
     DBG_LASTOPR_STRING(usbk->lastopr);
     return (-1) * usbk->lastopr;
+}
+
+int usbk_setkeyname(USBK* usbk, const char* pass, uint8_t key_no, const char* key_name)     {
+    return usbk_setkey_keyname(usbk, pass, key_no, key_name, KEYSIZE_NULL, NULL);
 }
 
 int usbk_setdevicelabel(USBK* usbk, const char* pass, const char* device_label) {
@@ -702,78 +706,6 @@ static unsigned int keysize_byte(KEYSIZE keysize) {
     return size_byte;
 }
 
-const char* usbk_get_dev(USBK* usbk){
-    return usbk->dev;
-}
-
-const char* usbk_get_dev_path(USBK* usbk){
-    return usbk->dev_path;
-}
-
-const char* usbk_get_backdisk(USBK* usbk){
-    return usbk->backdisk;
-}
-
-const char* usbk_get_backdisk_path(USBK* usbk){
-    return usbk->backdisk_path;
-}
-
-const char* usbk_get_product(USBK* usbk){
-    return usbk->product;
-}
-
-const char* usbk_get_model(USBK* usbk){
-    return usbk->model;
-}
-
-const char* usbk_get_serial(USBK* usbk){
-    return usbk->serial;
-}
-
-const char* usbk_get_usb_serial(USBK* usbk){
-    return usbk->usb_serial;
-}
-
-const char* usbk_get_firmware_ver(USBK* usbk){
-    return usbk->firmware_ver;
-}
-
-const char* usbk_get_dev_label(USBK* usbk){
-    return usbk->dev_label;
-}
-
-const char* usbk_get_keyname(USBK* usbk, int key_no){
-    return usbk->key_names[key_no];
-}
-
-int usbk_get_lastopr_status(USBK* usbk){
-    return usbk->lastopr;
-}
-
-bool usbk_check_support(USBK* usbk){
-    return usbk->supported;
-}
-
-int usbk_get_multikeycap(USBK* usbk){
-    return usbk->multikey_cap;
-}
-
-int usbk_get_current_keyno(USBK* usbk){
-    return usbk->current_key;
-}
-
-int usbk_get_autoactivation_keyno(USBK* usbk){
-    return usbk->autoact_keyno;
-}
-
-int usbk_get_retry_number(USBK* usbk){
-    return usbk->retry_num;
-}
-
-USBK_DS usbk_get_state(USBK* usbk){
-    return usbk->dev_state;
-}
-
 #if  defined(__linux__)
 static int getudevinfo(USBK* usbk, const char *device) {
     int rtn;
@@ -1054,36 +986,28 @@ int usbk_list_get_lastoprstatus(USBKS* usbks){
 
 #endif
 
-void usbk_debug_enable(void){
+void usbk_debug_enable(void)
+{
     debug_enable = true;
 }
-void usbk_debug_disable(void){
+
+void usbk_debug_disable(void)
+{
     debug_enable = false;
 }
-void usbk_debug(bool enable){
+
+void usbk_debug(bool enable)
+{
     debug_enable = enable;
 }
+
 bool usbk_debug_check(void)
 {
     return debug_enable;
 }
 
-const char* usbk_libversion(void){
+const char* usbk_libversion(void)
+{
     return VERSION;
 }
-
-
-int usbk_assignpassword(USBK* usbk, const char* new_pass)                                       {return usbk_changepassword(usbk, NULL, new_pass)                               ;}
-int usbk_setkeyname(USBK* usbk, const char* pass, uint8_t key_no, const char* key_name)         {return usbk_setkey_keyname(usbk, pass, key_no, key_name, KEYSIZE_NULL, NULL)   ;}
-int usbk_setkey_128bit_hex(USBK* usbk, const char* pass, uint8_t key_no, uint8_t* key)          {return usbk_setkey_hex(usbk, pass, key_no, KEYSIZE_128BIT, key)                ;}
-int usbk_setkey_192bit_hex(USBK* usbk, const char* pass, uint8_t key_no, uint8_t* key)          {return usbk_setkey_hex(usbk, pass, key_no, KEYSIZE_192BIT, key)                ;}
-int usbk_setkey_256bit_hex(USBK* usbk, const char* pass, uint8_t key_no, uint8_t* key)          {return usbk_setkey_hex(usbk, pass, key_no, KEYSIZE_256BIT, key)                ;}
-int usbk_setkey_128bit_decimal(USBK* usbk, const char* pass, uint8_t key_no, const char* key)   {return usbk_setkey_decimal(usbk, pass, key_no, KEYSIZE_128BIT, key)            ;}
-int usbk_setkey_192bit_decimal(USBK* usbk, const char* pass, uint8_t key_no, const char* key)   {return usbk_setkey_decimal(usbk, pass, key_no, KEYSIZE_192BIT, key)            ;}
-int usbk_setkey_256bit_decimal(USBK* usbk, const char* pass, uint8_t key_no, const char* key)   {return usbk_setkey_decimal(usbk, pass, key_no, KEYSIZE_256BIT, key)            ;}
-int usbk_setkey_128bit_text(USBK* usbk, const char* pass, uint8_t key_no, const char* key)      {return usbk_setkey_text(usbk, pass, key_no, KEYSIZE_128BIT, key)               ;}
-int usbk_setkey_192bit_text(USBK* usbk, const char* pass, uint8_t key_no, const char* key)      {return usbk_setkey_text(usbk, pass, key_no, KEYSIZE_192BIT, key)               ;}
-int usbk_setkey_256bit_text(USBK* usbk, const char* pass, uint8_t key_no, const char* key)      {return usbk_setkey_text(usbk, pass, key_no, KEYSIZE_256BIT, key)               ;}
-int usbk_enableautact(USBK* usbk, const char* pass, uint8_t key_no)                             {return usbk_setautact(usbk, pass, key_no)                                      ;}
-int usbk_disableautact(USBK* usbk, const char* pass)                                            {return usbk_setautact(usbk, pass, 0);                                          ;}
 

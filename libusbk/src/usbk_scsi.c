@@ -22,6 +22,8 @@
 #include "usbk_scsi.h"
 #include "usbk_sg_ctl.h"
 
+#define _PACK_BUFF_SIZE       512
+
 //PRIVATE VARIABLES
 //-VENDOR SPECIFIC CMD COMMAND
 const ST_CMD_T scsi_cmd[9] = {
@@ -41,7 +43,7 @@ int send_scsi_command(const char *usbk_path, unsigned char *buff, int cmd_index,
 {
     short int cmdlen = sizeof(ST_CMD_T);
     ST_PACKET_T packet;
-    unsigned char buffer[512];
+    unsigned char buffer[_PACK_BUFF_SIZE];
 
     if (usbk_sg_open(usbk_path) < 0) {
         fprintf(stderr, "Error! Wrong device name or you don't have root permission!");
@@ -60,7 +62,7 @@ int send_scsi_command(const char *usbk_path, unsigned char *buff, int cmd_index,
     packet.cmdlen = cmdlen;
     packet.cmddir = (rw == WRITE_SCSI) ? OUTDIR : INDIR;
     packet.data = buffer;
-    packet.datalen = 512;
+    packet.datalen = _PACK_BUFF_SIZE;
 
     if (usbk_sg_tansfer(&packet) < 0) {
         fprintf(stderr, "Error! SCSI Read error!");
@@ -72,7 +74,9 @@ int send_scsi_command(const char *usbk_path, unsigned char *buff, int cmd_index,
             memcpy(buff, buffer, len);
         }
     }
+
     usbk_sg_close();
+
     return USBK_SCSI_PASS;
 }
 

@@ -35,7 +35,8 @@ typedef enum __USBK_SG_RET
 //! @}
 
 //PUBLIC STRUCTURES
-typedef struct __ST_CMD {
+typedef struct __ST_CMD
+{
     char opcode;
     char lun;
     char v_opcode;
@@ -48,7 +49,8 @@ typedef struct __ST_CMD {
     char cntrl;
 } ST_CMD_T;
 
-typedef struct __ST_PACKET {
+typedef struct __ST_PACKET
+{
     int  sg_fd;
     char cmdtype;
     int  cmddir;
@@ -75,7 +77,7 @@ typedef struct __ST_PACKET {
  * \ingroup ScsiGeneric
  *
  */
-int usbk_sg_open(const char* DevicePath);
+int usbk_sg_open(const char* device_path);
 
 
 /**

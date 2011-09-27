@@ -30,9 +30,9 @@ static int sg_fd;
 
 //PUBLIC FUNCTIONS
 
-int usbk_sg_open(const char* DevicePath)
+int usbk_sg_open(const char* device_path)
 {
-    sg_fd  = open(DevicePath , O_RDWR);
+    sg_fd  = open(device_path, O_RDWR);
 
     if (sg_fd < 0) {
         fprintf(stderr, "Error! Device not found!");

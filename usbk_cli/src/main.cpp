@@ -318,7 +318,7 @@ int main(int argc, char *argv[]) {
     // ENABLE AUTO ACTIVATE
     /////////////////////////////////////////////
     if (pflag & tflag & kflag) {
-        res = usbk_enableautact(myusbk, opt_parola, opt_key);
+        res = USBK_ENABLE_AUTACT(myusbk, opt_parola, opt_key);
         printf("%d\n", res);
         print_result(myusbk);
     }
@@ -327,7 +327,7 @@ int main(int argc, char *argv[]) {
     // DISABLE AUTO ACTIVATE
     /////////////////////////////////////////////
     if (pflag & Tflag) {
-        res = usbk_disableautact(myusbk, opt_parola);
+        res = USBK_DISABLE_AUTACT(myusbk, opt_parola);
         printf("%d\n", res);
         print_result(myusbk);
     }
