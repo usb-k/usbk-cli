@@ -69,7 +69,7 @@ using namespace std;
 
 //PRIVATE FUNCTION DECLARATIONS
 static int _parse_options(int *argc, char** argv[]);
-KEYSIZE parse_keysize(char *s);
+usbk_keysize_t parse_keysize(char *s);
 int parse_keysize_inbyte(char *s);
 
 static void linuxcli_show_devices(void);
@@ -344,15 +344,15 @@ int main(int argc, char *argv[]) {
     exit(0);
 }
 
-KEYSIZE parse_keysize(char *s){
+usbk_keysize_t parse_keysize(char *s){
     if (!strcmp(s, "128")) {
-        return KEYSIZE_128BIT;
+        return USBK_KEYSIZE_128BIT;
     } else if (!strcmp(s, "192")) {
-        return KEYSIZE_192BIT;
+        return USBK_KEYSIZE_192BIT;
     } else if (!strcmp(s, "256")) {
-        return KEYSIZE_256BIT;
+        return USBK_KEYSIZE_256BIT;
     } else {
-      return KEYSIZE_NULL;
+      return USBK_KEYSIZE_NULL;
     }
 }
 
