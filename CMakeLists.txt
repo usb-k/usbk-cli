@@ -54,6 +54,8 @@ IF (UNIX)
          cmake.check_depends
          CMakeCache.txt
          */CMakeCache.txt
+         install_manifest.txt
+
          cmake.check_cache
          *.cmake
          Makefile
@@ -75,6 +77,7 @@ IF (UNIX)
          ARGS    -Rf CMakeTmp ${DISTCLEANED}
          TARGET  distclean
     )
+
 ENDIF(UNIX)
 
 # Settings for debian package

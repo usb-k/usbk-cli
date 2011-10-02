@@ -23,30 +23,30 @@ extern "C" {
 
 //PUBLIC DEFINES
 //-DIRECTIONS
-#define INDIR             0X01
-#define OUTDIR            0X00
+#define USBK_INDIR             0X01
+#define USBK_OUTDIR            0X00
 
 //-SCSI CMD DIRECTION
-#define WRITE_SCSI           OUTDIR
-#define READ_SCSI            INDIR
+#define USBK_WRITE_SCSI           USBK_OUTDIR
+#define USBK_READ_SCSI            USBK_INDIR
 
 //!\name VENDOR SPECIFIC SCSI COMMAND FOR USBK
 //! @{
-#define GET_STATUS           0x01      //!< Get Status of Current Command
-#define GET_DEV_INFO         0x02      //!< Get Detail Information about USBK
-#define ACTIVATE_KEY         0x03      //!< Activate USBK with Selected Key
-#define DEACTIVATE_KEY       0x04      //!< Deactivate USBK
-#define CHANGE_PASS          0x05      //!< Change Password
-#define SET_DEV_NAME         0x06      //!< Set Device Label
-#define SET_AUTO_ACTIVE      0x07      //!< Change AutoActivation Setting (Enable with Selected Key / Disable)
-#define SET_KEY              0x08      //!< Set Key
-#define GENERATE_KEY         0x09      //!< Generate 256-Bit Random Key
+#define USBK_GET_STATUS           0x01      //!< Get Status of Current Command
+#define USBK_GET_DEV_INFO         0x02      //!< Get Detail Information about USBK
+#define USBK_ACTIVATE_KEY         0x03      //!< Activate USBK with Selected Key
+#define USBK_DEACTIVATE_KEY       0x04      //!< Deactivate USBK
+#define USBK_CHANGE_PASS          0x05      //!< Change Password
+#define USBK_SET_DEV_NAME         0x06      //!< Set Device Label
+#define USBK_SET_AUTO_ACTIVE      0x07      //!< Change AutoActivation Setting (Enable with Selected Key / Disable)
+#define USBK_SET_KEY              0x08      //!< Set Key
+#define USBK_GENERATE_KEY         0x09      //!< Generate 256-Bit Random Key
 //! @}
 
 
 //!\name -RETURN VALUES OF SCSI LAYER
 //! @{
-enum usbk_scsi_ret {
+enum E_USBK_SCSI_RET {
     USBK_SCSI_PASS          =  0,      //!< Pass
     USBK_SCSI_OPEN_FAIL     = -1,      //!< Device Open Error
     USBK_SCSI_TRANSFER_FAIL = -2,      //!< Transfer Error
