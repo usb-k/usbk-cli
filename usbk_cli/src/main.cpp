@@ -23,7 +23,7 @@
 #include <sstream>
 #include <string.h>
 
-#include "libusbk.h"
+#include "../../libusbk/src/libusbk.h"
 
 using namespace std;
 
@@ -229,7 +229,7 @@ int main(int argc, char *argv[]) {
     // ACTIVATE
     /////////////////////////////////////////////
     if (pflag & aflag & kflag) {
-        res = usbk_activatekey(myusbk, opt_parola, (int) opt_key);
+        res = usbk_key_activate(myusbk, opt_parola, (int) opt_key);
         printf("%d\n", res);
         print_result(myusbk);
     }
@@ -238,7 +238,7 @@ int main(int argc, char *argv[]) {
     // DEACTIVATE
     /////////////////////////////////////////////
     if (dflag) {
-        res = usbk_deactivatekey(myusbk);
+        res = usbk_key_deactivate(myusbk);
         printf("%d\n", res);
         print_result(myusbk);
     }
@@ -247,7 +247,7 @@ int main(int argc, char *argv[]) {
     // CHANGE PASSWORD
     /////////////////////////////////////////////
     if (cflag) {
-        res = usbk_changepassword(myusbk, opt_parola, opt_new_password);
+        res = usbk_change_password(myusbk, opt_parola, opt_new_password);
         printf("%d\n", res);
         print_result(myusbk);
     }
@@ -256,7 +256,7 @@ int main(int argc, char *argv[]) {
     // SET DEVICE NAME
     /////////////////////////////////////////////
     if (pflag & nflag) {
-        res = usbk_setdevicelabel(myusbk, opt_parola, opt_dev_label);
+        res = usbk_set_devicelabel(myusbk, opt_parola, opt_dev_label);
         printf("%d\n", res);
         print_result(myusbk);
     }
@@ -267,10 +267,13 @@ int main(int argc, char *argv[]) {
     if (pflag & xflag & kflag & Fflag) {
         switch (opt_key_format) {
         case 'd':
-            res = usbk_setkey_decimal(myusbk, opt_parola, opt_key, parse_keysize(opt_key_size_str), opt_string_key);
+            printf("ERROR: Depreciated function!\n");
+            res=-1;
+
+            //res = usbk_setkey_decimal(myusbk, opt_parola, opt_key, parse_keysize(opt_key_size_str), opt_string_key);
             break;
         case 't':
-            res = usbk_setkey_text(myusbk, opt_parola, opt_key, parse_keysize(opt_key_size_str), opt_string_key);
+            res = usbk_set_key_text(myusbk, opt_parola, opt_key, parse_keysize(opt_key_size_str), opt_string_key);
             break;
         default:
             break;
@@ -285,11 +288,10 @@ int main(int argc, char *argv[]) {
     if (pflag & Xflag & kflag & Fflag) {
         int i;
         uint8_t randomkey[32];
-        res = usbk_getrandomkey(myusbk, randomkey, parse_keysize(opt_key_size_str));
+        res = usbk_get_randomkey(myusbk, randomkey, parse_keysize(opt_key_size_str));
 
         if (res == USBK_LO_PASS) {
-            res =
-                    usbk_setkey_hex(myusbk, opt_parola, opt_key, parse_keysize(opt_key_size_str), randomkey);
+            res = usbk_set_key_hex(myusbk, opt_parola, opt_key, parse_keysize(opt_key_size_str), randomkey);
             if (res == USBK_LO_PASS) {
                 for (i = 0; i < parse_keysize_inbyte(opt_key_size_str); i++) {
                     fprintf(stdout, "%d", randomkey[i]);
@@ -308,7 +310,7 @@ int main(int argc, char *argv[]) {
     /////////////////////////////////////////////
     if (mflag & !xflag & !Xflag) {
         if (pflag & kflag) {
-            res = usbk_setkeyname(myusbk, opt_parola, opt_key, opt_aes_name);
+            res = usbk_set_keyname(myusbk, opt_parola, opt_key, opt_aes_name);
             printf("%d\n", res);
             print_result(myusbk);
         }
@@ -568,7 +570,7 @@ void linuxcli_show_dev_info(USBK* myusbk) {
         char autoactive[64];
         char model[32];
 
-        usbk_refreshusbkinfo(myusbk);
+        usbk_refresh_usbkinfo(myusbk);
 
         sprintf(backdisk, "-");
 

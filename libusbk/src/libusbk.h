@@ -42,7 +42,7 @@ enum E_USBK_KEYSIZE
     USBK_KEYSIZE_256BIT = 0x03,
 };
 typedef enum E_USBK_KEYSIZE E_USBK_KEYSIZE;
-typedef uint8_t usbk_keysize_t;
+typedef int8_t usbk_keysize_t;
 
 /*
  * usbk device status type values
@@ -58,7 +58,7 @@ enum E_USBK_DEVICE_STATUS
     USBK_DS_MUST_REMOVE             = 0x05,
 };
 typedef enum E_USBK_DEVICE_STATUS E_USBK_DEVICE_STATUS;
-typedef uint8_t usbk_ds_t;
+typedef int8_t usbk_ds_t;
 
 /*
  * usbk last operation type values
@@ -87,7 +87,7 @@ enum E_USBK_LASTOPP
     USBK_LO_MEM_ERROR           = 0x0f,
 };
 typedef enum E_USBK_LASTOPP E_USBK_LASTOPP;
-typedef uint8_t usbk_lo_t;
+typedef int8_t usbk_lo_t;
 
 #ifndef __cplusplus
 /*
@@ -200,12 +200,17 @@ typedef struct USBK USBK;
     usbk_setkey_hex(usbk, pass, key_no, USBK_KEYSIZE_192BIT, key)
 #define USBK_SETKEY_256BIT_HEX(usbk, pass, key_no, key) \
     usbk_setkey_hex(usbk, pass, key_no, USBK_KEYSIZE_256BIT, key)
+
+#if 0
+/* FIXME macros of the depreciated function usbk_setkey_decimal */
 #define USBK_SETKEY_128BIT_DECIMAL(usbk, pass, key_no, key) \
     usbk_setkey_decimal(usbk, pass, key_no, USBK_KEYSIZE_128BIT, key)
 #define USBK_SETKEY_192BIT_DECIMAL(usbk, pass, key_no, key) \
     usbk_setkey_decimal(usbk, pass, key_no, USBK_KEYSIZE_192BIT, key)
 #define USBK_SETKEY_256BIT_DECIMAL(usbk, pass, key_no, key) \
     usbk_setkey_decimal(usbk, pass, key_no, USBK_KEYSIZE_256BIT, key)
+#endif
+
 #define USBK_SETKEY_128BIT_TEXT(usbk, pass, key_no, key) \
     usbk_setkey_text(usbk, pass, key_no, USBK_KEYSIZE_128BIT, key)
 #define USBK_SETKEY_192BIT_TEXT(usbk, pass, key_no, key) \
@@ -213,11 +218,11 @@ typedef struct USBK USBK;
 #define USBK_SETKEY_256BIT_TEXT(usbk, pass, key_no, key) \
     usbk_setkey_text(usbk, pass, key_no, USBK_KEYSIZE_256BIT, key)
 #define USBK_ENABLE_AUTACT(usbk, pass, key_no) \
-    usbk_setautact(usbk, pass, key_no)
+    usbk_set_autact(usbk, pass, key_no)
 #define USBK_DISABLE_AUTACT(usbk, pass) \
-    usbk_setautact(usbk, pass, 0)
+    usbk_set_autact(usbk, pass, 0)
 
-USBK* usbk_new(const char* dev);
+extern USBK* usbk_new(const char* dev);
 extern int usbk_release(USBK* usbk);
 
 /*
@@ -226,6 +231,41 @@ extern int usbk_release(USBK* usbk);
 
 /* This is the helper macro for reaching the USBK structure */
 #define USBK_GET_ELEMENT(usbk, element)   (usbk->element)
+
+#if defined(__GNUC__)
+#  define inline inline __attribute__((always_inline))
+#endif
+
+/* Debugging informations */
+extern void usbk_debug_enable(void);
+extern void usbk_debug_disable(void);
+extern void usbk_debug(bool enable);
+extern bool usbk_debug_check(void);
+
+extern const char* usbk_libversion(void);
+
+/*
+ * And all the setter and other functions which interacts
+ * directly with USBK
+ *
+ * */
+extern int usbk_key_activate(USBK* usbk, const char* pass, uint8_t key_no);
+extern int usbk_key_deactivate(USBK* usbk);
+extern int usbk_change_password(USBK* usbk, const char* old_pass, const char* new_pass);
+extern int usbk_set_devicelabel(USBK* usbk, const char* pass, const char* device_label);
+extern int usbk_set_keyname(USBK* usbk, const char* pass, uint8_t key_no, const char* key_name);
+extern int usbk_set_key_hex(USBK* usbk, const char* pass, uint8_t key_no, usbk_keysize_t key_size, const uint8_t* key);
+extern int usbk_set_key_text(USBK* usbk, const char* pass, uint8_t key_no, usbk_keysize_t key_size, const char* key);
+
+#if 0
+/* FIXME depreciated function */
+extern int usbk_set_key_decimal(USBK* usbk, const char* pass, uint8_t key_no, usbk_keysize_t key_size, const char* key);
+#endif
+
+extern int usbk_set_key_and_keyname(USBK* usbk, const char* pass, int key_no, const char* key_name, usbk_keysize_t key_size, const uint8_t* key);
+extern int usbk_set_autact(USBK* usbk, const char* pass, int key_no);
+extern int usbk_get_randomkey(USBK* usbk, uint8_t*random_key, usbk_keysize_t keysize);
+extern int usbk_refresh_usbkinfo(USBK* usbk);
 
 inline const char* usbk_get_dev(USBK* usbk)
     { return USBK_GET_ELEMENT(usbk, dev_node); }
@@ -266,35 +306,12 @@ inline int usbk_get_retry_number(USBK* usbk)
 inline usbk_ds_t usbk_get_state(USBK* usbk)
     { return USBK_GET_ELEMENT(usbk, dev_state); }
 
-/* Debugging informations */
-extern void usbk_debug_enable(void);
-extern void usbk_debug_disable(void);
-extern void usbk_debug(bool enable);
-extern bool usbk_debug_check(void);
-
-extern const char* usbk_libversion(void);
-
-/*
- * And all the setter and other functions which interacts
- * directly with USBK
- *
- * */
-extern int usbk_activatekey(USBK* usbk, const char* pass, uint8_t key_no);
-extern int usbk_deactivatekey(USBK* usbk);
-extern int usbk_changepassword(USBK* usbk, const char* old_pass, const char* new_pass);
-extern int usbk_setdevicelabel(USBK* usbk, const char* pass, const char* device_label);
-extern int usbk_setkeyname(USBK* usbk, const char* pass, uint8_t key_no, const char* key_name);
-extern int usbk_setkey_keyname(USBK* usbk, const char* pass, int key_no, const char* key_name, usbk_keysize_t key_size, const uint8_t* key);
-extern int usbk_setkey_hex(USBK* usbk, const char* pass, uint8_t key_no, usbk_keysize_t key_size, const uint8_t* key);
-extern int usbk_setkey_decimal(USBK* usbk, const char* pass, uint8_t key_no, usbk_keysize_t key_size, const char* key);
-extern int usbk_setkey_text(USBK* usbk, const char* pass, uint8_t key_no, usbk_keysize_t key_size, const char* key);
-extern int usbk_setautact(USBK* usbk, const char* pass, int key_no);
-extern int usbk_getrandomkey(USBK* usbk, uint8_t*random_key, usbk_keysize_t keysize);
-extern int usbk_refreshusbkinfo(USBK* usbk);
+inline int usbk_set_keyname(USBK* usbk, const char* pass, uint8_t key_no, const char* key_name)
+	{ return usbk_set_key_and_keyname(usbk, pass, key_no, key_name, USBK_KEYSIZE_NULL, NULL); }
 
 #if defined(__linux__)
 
-typedef struct __USBKS USBKS;
+typedef struct USBKS USBKS;
 
 extern USBKS* usbk_list_new(void);
 extern int usbk_list_release(USBKS* usbks);
