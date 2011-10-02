@@ -55,11 +55,11 @@
 #define USBK_SCSI_BACKDISK_VENDOR  "BackDisk"
 
 #define USBK_CHECK_SUPPORTED \
-	if (!usbk->is_supported) { \
-		usbk->lastopr = USBK_LO_UNSUPPORTED_USBK; \
-		DBG_LASTOPR_STRING(usbk->lastopr); \
-		return - usbk->lastopr; \
-	}
+    if (!usbk->is_supported) { \
+        usbk->lastopr = USBK_LO_UNSUPPORTED_USBK; \
+        DBG_LASTOPR_STRING(usbk->lastopr); \
+        return - usbk->lastopr; \
+    }
 
 typedef struct __RTRN_STRING {
     int rtrn;
@@ -160,17 +160,17 @@ USBK* usbk_new(const char* dev)
     }
 
 #elif defined(WIN32)
-	usbk->dev_node = strdup(dev);
-	usbk->dev_node_path = strdup(dev);
+    usbk->dev_node = strdup(dev);
+    usbk->dev_node_path = strdup(dev);
 #endif
 
     t_UIP_DEVINFO usbk_info;
     ret = send_scsi_command(
-    		usbk->dev_node_path,
-    		(unsigned char*) &usbk_info,
-    		USBK_GET_DEV_INFO,
-    		sizeof(usbk_info),
-    		USBK_READ_SCSI);
+            usbk->dev_node_path,
+            (unsigned char*) &usbk_info,
+            USBK_GET_DEV_INFO,
+            sizeof(usbk_info),
+            USBK_READ_SCSI);
     if (ret < 0) {
         free(usbk);
         usbk->lastopr = USBK_LO_SCSI_ERROR;
@@ -184,23 +184,23 @@ USBK* usbk_new(const char* dev)
     usbk->firmware_ver = strdup(usbk_info.firmware_ver.s);
     usbk->is_supported = true;
 
-	usbk->multikey_cap = usbk_info.multikeycap;
-	usbk->current_key = usbk_info.current_keyno;
-	usbk->autoact_keyno = usbk_info.autoactivate_keyno;
-	usbk->retry_num = usbk_info.retry_num;
-	usbk->dev_state = (usbk_ds_t) usbk_info.devstate.me;
-	usbk->dev_label = strdup(usbk_info.devlabel.s);
+    usbk->multikey_cap = usbk_info.multikeycap;
+    usbk->current_key = usbk_info.current_keyno;
+    usbk->autoact_keyno = usbk_info.autoactivate_keyno;
+    usbk->retry_num = usbk_info.retry_num;
+    usbk->dev_state = (usbk_ds_t) usbk_info.devstate.me;
+    usbk->dev_label = strdup(usbk_info.devlabel.s);
 
-	/* FIXME why we need this much space */
-	usbk->serial = (char*) calloc((sizeof(usbk_info.serial) * 2) + 2, sizeof(char));
-	for (i = 0; i < UIP_SERIAL_SIZE; i++) {
-		sprintf((usbk->serial + i * 2), "%2.2X", usbk_info.serial.u8[i]);
-	}
+    /* FIXME why we need this much space */
+    usbk->serial = (char*) calloc((sizeof(usbk_info.serial) * 2) + 2, sizeof(char));
+    for (i = 0; i < UIP_SERIAL_SIZE; i++) {
+        sprintf((usbk->serial + i * 2), "%2.2X", usbk_info.serial.u8[i]);
+    }
 
-	usbk->key_names = (char**) calloc(usbk->multikey_cap, sizeof(char*));
-	for (i = 0; i < usbk->multikey_cap; i++) {
-		usbk->key_names[i] = strdup(usbk_info.keyname[i].s);
-	}
+    usbk->key_names = (char**) calloc(usbk->multikey_cap, sizeof(char*));
+    for (i = 0; i < usbk->multikey_cap; i++) {
+        usbk->key_names[i] = strdup(usbk_info.keyname[i].s);
+    }
 
     usbk->lastopr = USBK_LO_PASS;
     DBG_LASTOPR_STRING(usbk->lastopr);
@@ -410,7 +410,7 @@ int usbk_set_key_and_keyname(USBK* usbk, const char *pass, int key_no, const cha
         if (key_name != NULL) {
             strncpy(setkey.keyname.s, key_name, sizeof(setkey.keyname.s));
         } else {
-        	/* preserve old keyname if keyname is not changed */
+            /* preserve old keyname if keyname is not changed */
             strncpy(setkey.keyname.s, usbk->key_names[key_no - 1], sizeof(setkey.keyname.s));
         }
 
@@ -467,7 +467,7 @@ int usbk_set_key_decimal(USBK* usbk, const char *pass, uint8_t key_no, usbk_keys
 
 int usbk_set_key_hex(USBK* usbk, const char *pass, uint8_t key_no, usbk_keysize_t key_size, const uint8_t* key)
 {
-	USBK_CHECK_SUPPORTED
+    USBK_CHECK_SUPPORTED
 
     return usbk_set_key_and_keyname(usbk, pass, key_no, NULL, key_size, key);
 }
@@ -626,27 +626,27 @@ static int _convert_key_decimal2hex(uint8_t *key_hex, const char* key_decimal, u
     // 6) 16 adet sayı cikartabildin mi?
     // 7) sayılar 0 ile 255 arasinda mi?
 
-	unsigned int key_len = _keysize_as_byte(keysize);
-	int i;
+    unsigned int key_len = _keysize_as_byte(keysize);
+    int i;
 
-	/* check key_text if it is null or not */
-	if (key_decimal == NULL || key_hex == NULL)
-		return USBK_LO_INVALID_KEY;
+    /* check key_text if it is null or not */
+    if (key_decimal == NULL || key_hex == NULL)
+        return USBK_LO_INVALID_KEY;
 
-	/* check key length if it is proper or not */
-	if(strlen(key_hex) > key_len) {
-		/* FIXME USBK_LO_INVALID_KEYSIZE? */
-		return USBK_LO_INVALID_KEY;
-	}
+    /* check key length if it is proper or not */
+    if(strlen(key_hex) > key_len) {
+        /* FIXME USBK_LO_INVALID_KEYSIZE? */
+        return USBK_LO_INVALID_KEY;
+    }
 
-	for(i=0; i<key_len; i++) {
-		/* check key_text[i] is a valid hexadecimal or not */
-		char k = key_decimal[i];
-		if (!isxdigit(k))
-			return USBK_LO_INVALID_KEY;
+    for(i=0; i<key_len; i++) {
+        /* check key_text[i] is a valid hexadecimal or not */
+        char k = key_decimal[i];
+        if (!isxdigit(k))
+            return USBK_LO_INVALID_KEY;
 
-		key_hex[i] = k;
-	}
+        key_hex[i] = k;
+    }
 
 
     //int ikey[this->_keysize_as_byte(keysize)];
@@ -711,38 +711,38 @@ static int _convert_key_decimal2hex(uint8_t *key_hex, const char* key_decimal, u
 
 static inline int16_t _xtod(const char c)
 {
-	if (c>='0' && c<='9') return c-'0';
-	if (c>='A' && c<='F') return c-'A'+10;
-	if (c>='a' && c<='f') return c-'a'+10;
+    if (c>='0' && c<='9') return c-'0';
+    if (c>='A' && c<='F') return c-'A'+10;
+    if (c>='a' && c<='f') return c-'a'+10;
 
-	return -1;
+    return -1;
 }
 
 static int _convert_key_text2hex(uint8_t *key_hex, const char* key_text, usbk_keysize_t keysize)
 {
-	unsigned int key_len = _keysize_as_byte(keysize);
-	int i;
+    unsigned int key_len = _keysize_as_byte(keysize);
+    int i;
 
-	/* check key_text if it is null or not */
-	if (key_text == NULL || key_hex == NULL)
-		return USBK_LO_INVALID_KEY;
+    /* check key_text if it is null or not */
+    if (key_text == NULL || key_hex == NULL)
+        return USBK_LO_INVALID_KEY;
 
-	/* check key length if it is proper or not */
-	if(strlen(key_hex) > key_len) {
-		/* FIXME USBK_LO_INVALID_KEYSIZE? */
-		return USBK_LO_INVALID_KEY;
-	}
+    /* check key length if it is proper or not */
+    if(strlen(key_hex) > key_len) {
+        /* FIXME USBK_LO_INVALID_KEYSIZE? */
+        return USBK_LO_INVALID_KEY;
+    }
 
-	for(i=0; i<key_len; i++) {
-		/* check key_text[i] is a valid hexadecimal or not */
-		char k = key_text[i];
-		int16_t ret = _xtod(k);
+    for(i=0; i<key_len; i++) {
+        /* check key_text[i] is a valid hexadecimal or not */
+        char k = key_text[i];
+        int16_t ret = _xtod(k);
 
-		if (ret == -1)
-			return USBK_LO_INVALID_KEY;
+        if (ret == -1)
+            return USBK_LO_INVALID_KEY;
 
-		key_hex[i] = ret;
-	}
+        key_hex[i] = ret;
+    }
 
     return USBK_LO_PASS;
 }
@@ -832,7 +832,7 @@ static int _get_udev_info(USBK* usbk, const char *device)
         dev = udev_device_new_from_devnum(udev, dev_type, statbuf.st_rdev);
 
         if (dev == NULL) {
-        	udev_unref(udev);
+            udev_unref(udev);
             usbk->lastopr = USBK_LO_UDEV_ERROR;
             DBG_LASTOPR_STRING(usbk->lastopr);
 
@@ -942,7 +942,7 @@ static int _get_udev_backdisk(USBK* usbk)
 
 int get_usbk_count()
 {
-	return usbk_disk_count;
+    return usbk_disk_count;
 }
 
 USBK* usbk_list_new(void)
@@ -953,7 +953,7 @@ USBK* usbk_list_new(void)
     struct udev_list_entry *_udev_enumerated_device = NULL;
 
     struct udev_device *_udev_device = NULL;
-	struct udev_device *_udev_device_scsi = NULL;
+    struct udev_device *_udev_device_scsi = NULL;
     struct udev_device *_udev_device_usb = NULL;
 
     const char *_udev_enumerated_device_path;
@@ -967,7 +967,7 @@ USBK* usbk_list_new(void)
     /* initialize udev */
     _udev = udev_new();
     if (_udev == NULL) {
-    	fprintf(stderr, "Error! Udev cannot be initialized!\n");
+        fprintf(stderr, "Error! Udev cannot be initialized!\n");
 
         return NULL;
     }
@@ -994,56 +994,56 @@ USBK* usbk_list_new(void)
         _udev_device_usb = udev_device_get_parent_with_subsystem_devtype(_udev_device, "usb", "usb_device");
         if (!_udev_device_usb) continue;
 
-		_udev_device_idvendor = udev_device_get_sysattr_value(_udev_device_usb, "idVendor");
+        _udev_device_idvendor = udev_device_get_sysattr_value(_udev_device_usb, "idVendor");
 
-		ret = strncmp(USBK_USB_IDVENDOR, _udev_device_idvendor, strlen(USBK_USB_IDVENDOR));
-		if (ret) continue;
+        ret = strncmp(USBK_USB_IDVENDOR, _udev_device_idvendor, strlen(USBK_USB_IDVENDOR));
+        if (ret) continue;
 
-		_udev_device_scsi = udev_device_get_parent_with_subsystem_devtype(_udev_device, "scsi", "scsi_device");
-		if (!_udev_device_scsi) continue;
+        _udev_device_scsi = udev_device_get_parent_with_subsystem_devtype(_udev_device, "scsi", "scsi_device");
+        if (!_udev_device_scsi) continue;
 
-		ret = strncmp(USBK_SCSI_VENDOR, udev_device_get_sysattr_value(_udev_device_scsi, "vendor"), strlen(USBK_SCSI_VENDOR));
-		if (ret) continue;
+        ret = strncmp(USBK_SCSI_VENDOR, udev_device_get_sysattr_value(_udev_device_scsi, "vendor"), strlen(USBK_SCSI_VENDOR));
+        if (ret) continue;
 
-		usbk_new_entry = usbk_new(udev_device_get_sysname(_udev_device));
-		if (!usbk_new_entry) {
-			usbk_new_entry->lastopr = USBK_LO_MEM_ERROR;
-			DBG_LASTOPR_STRING(usbk_new_entry->lastopr);
+        usbk_new_entry = usbk_new(udev_device_get_sysname(_udev_device));
+        if (!usbk_new_entry) {
+            usbk_new_entry->lastopr = USBK_LO_MEM_ERROR;
+            DBG_LASTOPR_STRING(usbk_new_entry->lastopr);
 
-			goto done;
-		}
+            goto done;
+        }
 
-		if (!usbk_head) {
-			usbk_head = usbk_last_entry = usbk_new_entry;
-		} else {
-			usbk_last_entry->next = usbk_new_entry;
-			usbk_last_entry = usbk_new_entry;
-		}
+        if (!usbk_head) {
+            usbk_head = usbk_last_entry = usbk_new_entry;
+        } else {
+            usbk_last_entry->next = usbk_new_entry;
+            usbk_last_entry = usbk_new_entry;
+        }
 
-		usbk_disk_count++;
+        usbk_disk_count++;
     }
 
 done:
-	udev_device_unref(_udev_device_usb);
-	udev_device_unref(_udev_device_scsi);
-	udev_device_unref(_udev_device);
-	udev_enumerate_unref(_udev_enumerate);
-	udev_unref(_udev);
+    udev_device_unref(_udev_device_usb);
+    udev_device_unref(_udev_device_scsi);
+    udev_device_unref(_udev_device);
+    udev_enumerate_unref(_udev_enumerate);
+    udev_unref(_udev);
 
     return usbk_head;
 }
 
 int usbk_list_release()
 {
-	USBK *_usbk=usbk_head;
+    USBK *_usbk=usbk_head;
 
-	while (_usbk->next) {
-		usbk_release(_usbk);
-		_usbk = _usbk->next;
-		usbk_disk_count--;
-	}
+    while (_usbk->next) {
+        usbk_release(_usbk);
+        _usbk = _usbk->next;
+        usbk_disk_count--;
+    }
 
-	usbk_head = NULL;
+    usbk_head = NULL;
 
     return 0;
 }

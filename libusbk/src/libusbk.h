@@ -306,7 +306,7 @@ inline usbk_ds_t usbk_get_state(USBK* usbk)
     { return USBK_GET_ELEMENT(usbk, dev_state); }
 
 inline int usbk_set_keyname(USBK* usbk, const char* pass, uint8_t key_no, const char* key_name)
-	{ return usbk_set_key_and_keyname(usbk, pass, key_no, key_name, USBK_KEYSIZE_NULL, NULL); }
+    { return usbk_set_key_and_keyname(usbk, pass, key_no, key_name, USBK_KEYSIZE_NULL, NULL); }
 
 #if defined(__linux__)
 
