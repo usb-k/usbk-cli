@@ -121,6 +121,8 @@ LIBUSBK_SUPPORTED_PRODUCTS products[] = {
 };
 
 static bool debug_enable = false;
+static int usbk_disk_count = 0;
+static USBK *usbk_head;
 
 static int _get_udev_info(USBK* usbk, const char *device);
 static int _get_udev_backdisk(USBK* usbk);
@@ -777,10 +779,11 @@ static int _get_udev_info(USBK* usbk, const char *device)
     struct udev *udev;
     struct udev_enumerate *enumerate;
     struct udev_list_entry *devices, *dev_list_entry;
+    struct udev_list_entry *list_entry;
+
     struct udev_device *dev;
     struct udev_device *dev_usb;
     struct udev_device *dev_scsi;
-    struct udev_list_entry *list_entry;
 
     const char *str;
     size_t len;
@@ -799,6 +802,7 @@ static int _get_udev_info(USBK* usbk, const char *device)
 
     udev_dev_path = udev_get_dev_path(udev);
 
+    /* allocate ram space from stack with alloca */
     char *devname = alloca(strlen(udev_dev_path) + strlen(device) + 1);
     assert(devname != NULL);
     sprintf(devname, "%s/%s", udev_get_dev_path(udev), device);
@@ -809,24 +813,30 @@ static int _get_udev_info(USBK* usbk, const char *device)
 
         return - usbk->lastopr;
     } else {
-        char type;
+        char dev_type;
+
         if (S_ISBLK(statbuf.st_mode)) {
-            type = 'b';
-        } else if (S_ISCHR(statbuf.st_mode)) {
-            type = 'c';
+            dev_type = 'b';
+        }
+        /* FIXME char devtype is legal? */
+        else if (S_ISCHR(statbuf.st_mode)) {
+            dev_type = 'c';
         } else {
             udev_unref(udev);
             usbk->lastopr = USBK_LO_UDEV_ERROR;
             DBG_LASTOPR_STRING(usbk->lastopr);
-            return (-1) * usbk->lastopr;
+
+            return - usbk->lastopr;
         }
 
-        dev = udev_device_new_from_devnum(udev, type, statbuf.st_rdev);
+        dev = udev_device_new_from_devnum(udev, dev_type, statbuf.st_rdev);
 
         if (dev == NULL) {
+        	udev_unref(udev);
             usbk->lastopr = USBK_LO_UDEV_ERROR;
             DBG_LASTOPR_STRING(usbk->lastopr);
-            return (-1) * usbk->lastopr;
+
+            return - usbk->lastopr;
         }
     }
 
@@ -860,28 +870,34 @@ static int _get_udev_info(USBK* usbk, const char *device)
     }
     udev_device_unref(dev);
     udev_unref(udev);
+
     DBG_LASTOPR_STRING(usbk->lastopr);
-    return (-1) * usbk->lastopr;
+
+    return usbk->lastopr;
 }
 #endif
 
 #if  defined(__linux__)
 
-static int _get_udev_backdisk(USBK* usbk) {
-    int rtn;
+static int _get_udev_backdisk(USBK* usbk)
+{
+    int ret;
     struct udev *udev;
     struct udev_enumerate *enumerate;
     struct udev_list_entry *devices, *dev_list_entry;
+
     struct udev_device *dev;
-    struct udev_device *dev_usb = NULL;
+    struct udev_device *dev_usb;
     struct udev_device *dev_scsi;
 
     // Create the udev object
     udev = udev_new();
+
     if (udev == NULL) {
         usbk->lastopr = USBK_LO_UDEV_ERROR;
         DBG_LASTOPR_STRING(usbk->lastopr);
-        return (-1) * usbk->lastopr;
+
+        return - usbk->lastopr;
     }
 
     // Create a list of the devices in the 'abcde' subsystem.
@@ -923,132 +939,135 @@ static int _get_udev_backdisk(USBK* usbk) {
     return (-1) * usbk->lastopr;
 }
 
-struct USBKS
+
+int get_usbk_count()
 {
-    USBK* usbk;
-    int usbk_disk_count;
-    int lastopr;
-};
+	return usbk_disk_count;
+}
 
-USBKS* usbk_list_new(void) {
-    int i;
-    struct udev *udev;
-    struct udev_enumerate *enumerate;
-    struct udev_list_entry *devices, *dev_list_entry;
-    struct udev_device *dev;
-    struct udev_device *dev_usb;
-    struct udev_device *dev_scsi;
+USBK* usbk_list_new(void)
+{
+    struct udev *_udev = NULL;
+    struct udev_enumerate *_udev_enumerate = NULL;
+    struct udev_list_entry *_udev_enumerated_devices = NULL;
+    struct udev_list_entry *_udev_enumerated_device = NULL;
 
-    USBKS* usbks = (USBKS*)calloc(1, sizeof(USBKS));
+    struct udev_device *_udev_device = NULL;
+	struct udev_device *_udev_device_scsi = NULL;
+    struct udev_device *_udev_device_usb = NULL;
 
-    usbks->usbk_disk_count = 0;
+    const char *_udev_enumerated_device_path;
+    const char *_udev_device_idvendor;
 
-    usbks->usbk = NULL;
-    USBK *new_usbk = NULL;
+    int ret;
 
-    // Create the udev object
-    udev = udev_new();
-    if (udev == NULL) {
-        usbks->lastopr = USBK_LO_UDEV_ERROR;
-        DBG_LASTOPR_STRING(usbks->lastopr);
+    USBK *usbk_last_entry = NULL;
+    USBK *usbk_new_entry = NULL;
+
+    /* initialize udev */
+    _udev = udev_new();
+    if (_udev == NULL) {
+    	fprintf(stderr, "Error! Udev cannot be initialized!\n");
+
         return NULL;
     }
 
-    enumerate = udev_enumerate_new(udev);
-    udev_enumerate_add_match_subsystem(enumerate, "block");
-    udev_enumerate_scan_devices(enumerate);
-    devices = udev_enumerate_get_list_entry(enumerate);
+    /* get udev enumerated devices */
+    _udev_enumerate = udev_enumerate_new(_udev);
 
-    udev_list_entry_foreach(dev_list_entry, devices) {
-        const char *path;
-        path = udev_list_entry_get_name(dev_list_entry);
-        dev = udev_device_new_from_syspath(udev, path);
-        // usb device directory
-        dev_usb = udev_device_get_parent_with_subsystem_devtype(dev, "usb", "usb_device");
-        if (dev_usb != NULL) {
-            if (strncmp(USBK_USB_IDVENDOR, udev_device_get_sysattr_value(dev_usb, "idVendor"), strlen(USBK_USB_IDVENDOR)) == 0) {
-//if((strncmp(USBK_USB_IDPRODUCT_A101, udev_device_get_sysattr_value(dev_usb,"idProduct"), strlen(USBK_USB_IDPRODUCT_A101)) == 0) ||
-//(strncmp(USBK_USB_IDPRODUCT_A103, udev_device_get_sysattr_value(dev_usb,"idProduct"), strlen(USBK_USB_IDPRODUCT_A103)) == 0)){
-                dev_scsi = udev_device_get_parent_with_subsystem_devtype(dev, "scsi", "scsi_device");
-                if (dev_scsi != NULL) {
-                    if (strncmp(USBK_SCSI_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_VENDOR)) == 0) {
-                        new_usbk = usbk_new(udev_device_get_sysname(dev));
-                        if (new_usbk ==NULL)
-                        {
-                            // todo: release all mem location
-                            /*
-                             LibUSBK__list_devices_release(usbk_list);
-                             udev_device_unref(dev);
-                             udev_enumerate_unref(enumerate);
-                             udev_unref(udev);
-                             */
-                            usbks->lastopr = USBK_LO_MEM_ERROR;
-                            DBG_LASTOPR_STRING(usbks->lastopr);
-                            return NULL;
-                        }
+    /* add block devices */
+    ret = udev_enumerate_add_match_subsystem(_udev_enumerate, "block");
+    if (ret) goto done;
 
-                        new_usbk->previous = NULL;
-                        new_usbk->next = usbks->usbk;
-                        if (new_usbk->previous != NULL){
-                            new_usbk->next->previous = new_usbk;
-                        }
-                        usbks->usbk = new_usbk;
-                        usbks->usbk_disk_count++;
-                    }
-                }
-            }
-        }
-        udev_device_unref(dev);
+    /* add scan for devices */
+    ret = udev_enumerate_scan_devices(_udev_enumerate);
+    if (ret) goto done;
+
+    /* get device list */
+    _udev_enumerated_devices = udev_enumerate_get_list_entry(_udev_enumerate);
+
+    udev_list_entry_foreach (_udev_enumerated_device, _udev_enumerated_devices) {
+        _udev_enumerated_device_path = udev_list_entry_get_name(_udev_enumerated_device);
+        _udev_device = udev_device_new_from_syspath(_udev, _udev_enumerated_device_path);
+        
+        /* get usb devices */
+        _udev_device_usb = udev_device_get_parent_with_subsystem_devtype(_udev_device, "usb", "usb_device");
+        if (!_udev_device_usb) continue;
+
+		_udev_device_idvendor = udev_device_get_sysattr_value(_udev_device_usb, "idVendor");
+
+		ret = strncmp(USBK_USB_IDVENDOR, _udev_device_idvendor, strlen(USBK_USB_IDVENDOR));
+		if (ret) continue;
+
+		_udev_device_scsi = udev_device_get_parent_with_subsystem_devtype(_udev_device, "scsi", "scsi_device");
+		if (!_udev_device_scsi) continue;
+
+		ret = strncmp(USBK_SCSI_VENDOR, udev_device_get_sysattr_value(_udev_device_scsi, "vendor"), strlen(USBK_SCSI_VENDOR));
+		if (ret) continue;
+
+		usbk_new_entry = usbk_new(udev_device_get_sysname(_udev_device));
+		if (!usbk_new_entry) {
+			usbk_new_entry->lastopr = USBK_LO_MEM_ERROR;
+			DBG_LASTOPR_STRING(usbk_new_entry->lastopr);
+
+			goto done;
+		}
+
+		if (!usbk_head) {
+			usbk_head = usbk_last_entry = usbk_new_entry;
+		} else {
+			usbk_last_entry->next = usbk_new_entry;
+			usbk_last_entry = usbk_new_entry;
+		}
+
+		usbk_disk_count++;
     }
-    udev_enumerate_unref(enumerate);
-    udev_unref(udev);
-    return usbks;
+
+done:
+	udev_device_unref(_udev_device_usb);
+	udev_device_unref(_udev_device_scsi);
+	udev_device_unref(_udev_device);
+	udev_enumerate_unref(_udev_enumerate);
+	udev_unref(_udev);
+
+    return usbk_head;
 }
 
+int usbk_list_release()
+{
+	USBK *_usbk=usbk_head;
 
-int usbk_list_release(USBKS* usbks) {
-    USBK *d_usbks;
-    while (usbks->usbk != NULL) {
-        d_usbks = usbks->usbk->next;
-        usbk_release(usbks->usbk);
-        usbks->usbk->next = NULL;
-        usbks->usbk = d_usbks;
-        usbks->usbk_disk_count--;
-    }
-    free(usbks);
+	while (_usbk->next) {
+		usbk_release(_usbk);
+		_usbk = _usbk->next;
+		usbk_disk_count--;
+	}
+
+	usbk_head = NULL;
+
     return 0;
 }
 
-USBK* usbk_list_get_entry(USBKS* usbks){
-    return usbks->usbk;
-}
-
-USBK* usbk_list_get_next(USBK* usbk){
+USBK* usbk_list_get_next(USBK* usbk)
+{
     return usbk->next;
 }
 
-USBK* usbk_list_get_previous(USBK* usbk){
-    return usbk->previous;
-}
-
-int usbk_list_refreshall(USBKS* usbks){
-
+int usbk_list_refreshall()
+{
     USBK* list_entry;
-    usbk_list_entry_foreach(list_entry, usbks->usbk){
+
+    usbk_list_entry_foreach(list_entry, usbk_head){
         usbk_refresh_usbkinfo(list_entry);
     }
 
-    usbks->lastopr = USBK_LO_PASS;
-    DBG_LASTOPR_STRING(usbks->lastopr);
-    return (-1) * usbks->lastopr;
+    DBG_LASTOPR_STRING(USBK_LO_PASS);
+    return USBK_LO_PASS;
 }
 
-int usbk_list_get_counter(USBKS* usbks){
-    return usbks->usbk_disk_count;
-}
-
-int usbk_list_get_lastoprstatus(USBKS* usbks){
-    return usbks->lastopr;
+int usbk_list_get_counter()
+{
+    return usbk_disk_count;
 }
 
 #endif

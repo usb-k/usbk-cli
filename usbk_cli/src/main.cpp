@@ -537,24 +537,21 @@ void print_device(USBK* myusbk)
     }
 }
 
-void linuxcli_show_devices(void) {
-    int i;
-    int rtn;
+void linuxcli_show_devices(void)
+{
     int counter;
 
-    USBKS* usbks = usbk_list_new();
-    USBK* list_entry;
+    USBK* _usbk_head = usbk_list_new();
+    USBK* _usbk_entry;
 
-    usbk_list_entry_foreach(list_entry, usbk_list_get_entry(usbks))
-    {
-        print_device(list_entry);
+    usbk_list_entry_foreach (_usbk_entry, _usbk_head) {
+        print_device(_usbk_entry);
     }
 
-    counter = usbk_list_get_counter(usbks);
-    (counter > 0) ? printf ("%d",counter):printf ("None");
-    printf (" USBK Found.\n\n");
+    counter = usbk_list_get_counter();
+    printf("%d USBK(s) found", counter);
 
-    usbk_list_release(usbks);
+    usbk_list_release();
 }
 
 void linuxcli_show_dev_info(USBK* myusbk) {
