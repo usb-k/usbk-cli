@@ -54,7 +54,7 @@
 #define USBK_SCSI_VENDOR           "USBK"
 #define USBK_SCSI_BACKDISK_VENDOR  "BackDisk"
 
-#define USBK_CHECK_SUPPORTED \
+#define USBK_CHECK_SUPPORTED(usbk) \
     if (!usbk->is_supported) { \
         usbk->lastopr = USBK_LO_UNSUPPORTED_USBK; \
         DBG_LASTOPR_STRING(usbk->lastopr); \
@@ -87,7 +87,7 @@ RTRN_STRING lastopr_string[] = {
     {USBK_LO_MEM_ERROR,             "memory allocation error"}
 };
 
-typedef struct __LIBUSBK_SUPPORTED_MODELS {
+typedef struct {
     const char* model;
     bool support;
 } LIBUSBK_SUPPORTED_MODELS;
@@ -95,10 +95,10 @@ typedef struct __LIBUSBK_SUPPORTED_MODELS {
 LIBUSBK_SUPPORTED_MODELS models_1_1[] = {
     { "A101", true },
     { "A103", true },
-    {NULL, false }
+    { NULL,   false }
 };
 
-typedef struct __LIBUSBK_SUPPORTED_VERSIONS {
+typedef struct {
     int major_version;
     int minor_version;
     LIBUSBK_SUPPORTED_MODELS* models;
@@ -109,7 +109,7 @@ LIBUSBK_SUPPORTED_VERSIONS versions_1[] = {
      { 0, 0, NULL }
 };
 
-typedef struct __LIBUSBK_SUPPORTED_PRODUCTS {
+typedef struct {
     const char* product;
     LIBUSBK_SUPPORTED_VERSIONS* versions;
 } LIBUSBK_SUPPORTED_PRODUCTS;
@@ -140,10 +140,10 @@ USBK* usbk_new(const char* dev)
     int ret;
     int i;
 
-    USBK* usbk = (USBK*)calloc(1, sizeof(USBK));
+    USBK* usbk = (USBK*) calloc(1, sizeof(USBK));
     if (usbk == NULL) {
-        usbk->lastopr = USBK_LO_MEM_ERROR;
-        DBG_LASTOPR_STRING(usbk->lastopr);
+        free(usbk);
+        DBG_LASTOPR_STRING(USBK_LO_UDEV_ERROR);
 
         return NULL;
     }
@@ -153,19 +153,17 @@ USBK* usbk_new(const char* dev)
     ret = _get_udev_info(usbk, dev);
     if (ret < 0) {
         free(usbk);
-        usbk->lastopr = USBK_LO_UDEV_ERROR;
-        DBG_LASTOPR_STRING(usbk->lastopr);
+        DBG_LASTOPR_STRING(USBK_LO_UDEV_ERROR);
 
         return NULL;
     }
-
 #elif defined(WIN32)
     usbk->dev_node = strdup(dev);
     usbk->dev_node_path = strdup(dev);
 #endif
 
     t_UIP_DEVINFO usbk_info;
-    ret = send_scsi_command(
+    ret = send_scsi_command (
             usbk->dev_node_path,
             (unsigned char*) &usbk_info,
             USBK_GET_DEV_INFO,
@@ -173,8 +171,7 @@ USBK* usbk_new(const char* dev)
             USBK_READ_SCSI);
     if (ret < 0) {
         free(usbk);
-        usbk->lastopr = USBK_LO_SCSI_ERROR;
-        DBG_LASTOPR_STRING(usbk->lastopr);
+        DBG_LASTOPR_STRING(USBK_LO_SCSI_ERROR);
 
         return NULL;
     }
@@ -238,73 +235,94 @@ int usbk_key_activate(USBK* usbk, const char* password, uint8_t key_no)
     int ret;
     t_UIP_ACTIVATE activate;
 
-    USBK_CHECK_SUPPORTED
+    USBK_CHECK_SUPPORTED(usbk)
 
     if (key_no > usbk->multikey_cap) {
         usbk->lastopr = USBK_LO_INVALID_KEYNO;
-        DBG_LASTOPR_STRING(usbk->lastopr);
+        ret = - usbk->lastopr;
 
-        return - usbk->lastopr;
+        goto done;
     }
 
     switch (usbk->dev_state) {
     case USBK_DS_DEACTIVATE:
         memset(&activate, 0, sizeof(activate));
+
+        /* FIXME: check password size */
         strcpy(activate.password.s, password);
         activate.keyno = key_no;
-        ret = send_scsi_command(usbk->dev_node_path, (unsigned char *) &activate, USBK_ACTIVATE_KEY, sizeof(activate), USBK_WRITE_SCSI);
+        ret = send_scsi_command (
+        		usbk->dev_node_path,
+        		(unsigned char *) &activate,
+        		USBK_ACTIVATE_KEY,
+        		sizeof(activate),
+        		USBK_WRITE_SCSI);
         if (ret < 0) {
             usbk->lastopr = USBK_LO_SCSI_ERROR;
-            break;
+            ret = - usbk->lastopr;
+
+            goto done;
         }
         usbk->lastopr = _command_status(usbk);
 
         break;
+
     case USBK_DS_ACTIVATE:
     case USBK_DS_ACTIVATE_WITH_BACKDISK:
     case USBK_DS_FABRIC_DEFAULT:
     case USBK_DS_MUST_REMOVE:
     default:
-        printf("state error");
         usbk->lastopr = USBK_LO_STATE_ERROR;
+        ret = - usbk->lastopr;
 
-        break;
+        goto done;
     }
 
+done:
     DBG_LASTOPR_STRING(usbk->lastopr);
 
-    return usbk->lastopr;
+    return ret;
 }
 
 int usbk_key_deactivate(USBK* usbk)
 {
     int ret;
 
-    USBK_CHECK_SUPPORTED
+    USBK_CHECK_SUPPORTED(usbk)
 
     switch (usbk->dev_state) {
     case USBK_DS_ACTIVATE:
     case USBK_DS_ACTIVATE_WITH_BACKDISK:
-        ret = send_scsi_command(usbk->dev_node_path, (unsigned char*) NULL, USBK_DEACTIVATE_KEY, 0, USBK_WRITE_SCSI);
+        ret = send_scsi_command (
+        		usbk->dev_node_path,
+        		(unsigned char*) NULL,
+        		USBK_DEACTIVATE_KEY,
+        		0,
+        		USBK_WRITE_SCSI);
         if (ret < 0) {
             usbk->lastopr = USBK_LO_SCSI_ERROR;
-            break;
+            ret = - usbk->lastopr;
+
+            goto done;
         }
         usbk->lastopr = _command_status(usbk);
 
         break;
+
     case USBK_DS_DEACTIVATE:
     case USBK_DS_FABRIC_DEFAULT:
     case USBK_DS_MUST_REMOVE:
     default:
         usbk->lastopr = USBK_LO_STATE_ERROR;
+        ret = - usbk->lastopr;
 
-        break;
+        goto done;
     }
 
+done:
     DBG_LASTOPR_STRING(usbk->lastopr);
 
-    return usbk->lastopr;
+    return ret;
 }
 
 int usbk_change_password(USBK* usbk, const char* old_pass, const char* new_pass)
@@ -312,7 +330,7 @@ int usbk_change_password(USBK* usbk, const char* old_pass, const char* new_pass)
     int ret;
     t_UIP_CHPASS chpass;
 
-    USBK_CHECK_SUPPORTED
+    USBK_CHECK_SUPPORTED(usbk)
 
     switch (usbk->dev_state) {
     case USBK_DS_DEACTIVATE:
@@ -331,24 +349,28 @@ int usbk_change_password(USBK* usbk, const char* old_pass, const char* new_pass)
         ret = send_scsi_command(usbk->dev_node_path, (unsigned char*) &chpass, USBK_CHANGE_PASS, sizeof(chpass), USBK_WRITE_SCSI);
         if (ret < 0) {
             usbk->lastopr = USBK_LO_SCSI_ERROR;
+            ret = - usbk->lastopr;
 
-            break;
+            goto done;
         }
         usbk->lastopr = _command_status(usbk);
 
         break;
+
     case USBK_DS_ACTIVATE:
     case USBK_DS_ACTIVATE_WITH_BACKDISK:
     case USBK_DS_MUST_REMOVE:
     default:
         usbk->lastopr = USBK_LO_STATE_ERROR;
+        ret = - usbk->lastopr;
 
-        break;
+        goto done;
     }
 
+done:
     DBG_LASTOPR_STRING(usbk->lastopr);
 
-    return usbk->lastopr;
+    return ret;
 }
 
 int usbk_set_devicelabel(USBK* usbk, const char* pass, const char* device_label)
@@ -356,7 +378,7 @@ int usbk_set_devicelabel(USBK* usbk, const char* pass, const char* device_label)
     int ret;
     t_UIP_SETDEVICELABEL devlabel;
 
-    USBK_CHECK_SUPPORTED
+    USBK_CHECK_SUPPORTED(usbk)
 
     switch (usbk->dev_state) {
     case USBK_DS_DEACTIVATE:
@@ -367,7 +389,9 @@ int usbk_set_devicelabel(USBK* usbk, const char* pass, const char* device_label)
 
         if (ret < 0) {
             usbk->lastopr = USBK_LO_SCSI_ERROR;
-            break;
+            ret = - usbk->lastopr;
+
+            goto done;
         }
         usbk->lastopr = _command_status(usbk);
 
@@ -378,13 +402,15 @@ int usbk_set_devicelabel(USBK* usbk, const char* pass, const char* device_label)
     case USBK_DS_MUST_REMOVE:
     default:
         usbk->lastopr = USBK_LO_STATE_ERROR;
+        ret = - usbk->lastopr;
 
-        break;
+        goto done;
     }
 
+done:
     DBG_LASTOPR_STRING(usbk->lastopr);
 
-    return usbk->lastopr;
+    return ret;
 }
 
 int usbk_set_key_and_keyname(USBK* usbk, const char *pass, int key_no, const char* key_name, usbk_keysize_t key_size, const uint8_t* key)
@@ -392,13 +418,13 @@ int usbk_set_key_and_keyname(USBK* usbk, const char *pass, int key_no, const cha
     int ret;
     t_UIP_SETKEY setkey;
 
-    USBK_CHECK_SUPPORTED
+    USBK_CHECK_SUPPORTED(usbk)
 
     if (key_no > usbk->multikey_cap) {
         usbk->lastopr = USBK_LO_INVALID_KEYNO;
-        DBG_LASTOPR_STRING(usbk->lastopr);
+        ret = - usbk->lastopr;
 
-        return - usbk->lastopr;
+        goto done;
     }
 
     switch (usbk->dev_state) {
@@ -422,11 +448,17 @@ int usbk_set_key_and_keyname(USBK* usbk, const char *pass, int key_no, const cha
             setkey.options.me = SETKEY_NAMEONLY;
         }
 
-        ret = send_scsi_command(usbk->dev_node_path, (unsigned char*) &setkey, USBK_SET_KEY, sizeof(setkey), USBK_WRITE_SCSI);
+        ret = send_scsi_command (
+        		usbk->dev_node_path,
+        		(unsigned char*) &setkey,
+        		USBK_SET_KEY,
+        		sizeof(setkey),
+        		USBK_WRITE_SCSI);
         if (ret < 0) {
             usbk->lastopr = USBK_LO_SCSI_ERROR;
+            ret = - usbk->lastopr;
 
-            break;
+            goto done;
         }
         usbk->lastopr = _command_status(usbk);
 
@@ -437,13 +469,15 @@ int usbk_set_key_and_keyname(USBK* usbk, const char *pass, int key_no, const cha
     case USBK_DS_MUST_REMOVE:
     default:
         usbk->lastopr = USBK_LO_STATE_ERROR;
+        ret = - usbk->lastopr;
 
-        break;
+        goto done;
     }
 
+done:
     DBG_LASTOPR_STRING(usbk->lastopr);
 
-    return usbk->lastopr;
+    return ret;
 }
 
 #if 0
@@ -452,7 +486,7 @@ int usbk_set_key_decimal(USBK* usbk, const char *pass, uint8_t key_no, usbk_keys
     int ret = 0;
     uint8_t key_hex[UIP_KEYSIZE_TOTALSIZE];
 
-    USBK_CHECK_SUPPORTED
+    USBK_CHECK_SUPPORTED(usbk)
 
     usbk->lastopr = _convert_key_decimal2hex(key_hex, key, key_size);
     if (ret == USBK_LO_PASS){
@@ -467,26 +501,28 @@ int usbk_set_key_decimal(USBK* usbk, const char *pass, uint8_t key_no, usbk_keys
 
 int usbk_set_key_hex(USBK* usbk, const char *pass, uint8_t key_no, usbk_keysize_t key_size, const uint8_t* key)
 {
-    USBK_CHECK_SUPPORTED
+    USBK_CHECK_SUPPORTED(usbk)
 
     return usbk_set_key_and_keyname(usbk, pass, key_no, NULL, key_size, key);
 }
 
 int usbk_set_key_text(USBK* usbk, const char *pass, uint8_t key_no, usbk_keysize_t key_size, const char* key)
 {
-    int ret = 0;
-    uint8_t key_hex[32];
+    int ret;
+    uint8_t key_hex[32]; /* use macro definition instead of 32 */
 
-    USBK_CHECK_SUPPORTED
+    USBK_CHECK_SUPPORTED(usbk)
 
-    usbk->lastopr = _convert_key_text2hex(key_hex, key, key_size);
+    ret = _convert_key_text2hex(key_hex, key, key_size);
     if (ret == USBK_LO_PASS){
-        usbk->lastopr = usbk_set_key_and_keyname(usbk, pass, key_no, NULL, key_size, key_hex);
+        ret = usbk_set_key_and_keyname(usbk, pass, key_no, NULL, key_size, key_hex);
     }
+
+    usbk->lastopr = ret;
 
     DBG_LASTOPR_STRING(usbk->lastopr);
 
-    return usbk->lastopr;
+    return ret;
 }
 
 int usbk_set_autact(USBK* usbk, const char *pass, int key_no)
@@ -494,13 +530,13 @@ int usbk_set_autact(USBK* usbk, const char *pass, int key_no)
     int ret;
     t_UIP_SETAUTOACTIVATE autoact;
 
-    USBK_CHECK_SUPPORTED
+    USBK_CHECK_SUPPORTED(usbk)
 
     if (key_no > usbk->multikey_cap) {
         usbk->lastopr = USBK_LO_INVALID_KEYNO;
-        DBG_LASTOPR_STRING(usbk->lastopr);
+        ret = - usbk->lastopr;
 
-        return - usbk->lastopr;
+        goto done;
     }
 
     switch (usbk->dev_state) {
@@ -508,11 +544,17 @@ int usbk_set_autact(USBK* usbk, const char *pass, int key_no)
         memset(&autoact, 0, sizeof(autoact));
         strncpy(autoact.password.s, pass, sizeof(autoact.password.s));
         autoact.keyno = key_no;
-        ret = send_scsi_command(usbk->dev_node_path, (unsigned char*) &autoact, USBK_SET_AUTO_ACTIVE, sizeof(autoact), USBK_WRITE_SCSI);
+        ret = send_scsi_command (
+        		usbk->dev_node_path,
+        		(unsigned char*) &autoact,
+        		USBK_SET_AUTO_ACTIVE,
+        		sizeof(autoact),
+        		USBK_WRITE_SCSI);
         if (ret < 0) {
             usbk->lastopr = USBK_LO_SCSI_ERROR;
+            ret = - usbk->lastopr;
 
-            break;
+            goto done;
         }
         usbk->lastopr = _command_status(usbk);
 
@@ -523,13 +565,15 @@ int usbk_set_autact(USBK* usbk, const char *pass, int key_no)
     case USBK_DS_MUST_REMOVE:
     default:
         usbk->lastopr = USBK_LO_STATE_ERROR;
+        ret = - usbk->lastopr;
 
-        break;
+        goto done;
     }
 
+done:
     DBG_LASTOPR_STRING(usbk->lastopr);
 
-    return usbk->lastopr;
+    return ret;
 }
 
 int usbk_get_randomkey(USBK* usbk, uint8_t* random_key, usbk_keysize_t keysize)
@@ -537,22 +581,27 @@ int usbk_get_randomkey(USBK* usbk, uint8_t* random_key, usbk_keysize_t keysize)
     int ret;
     t_UIP_GENERATEKEY genkey;
 
-    USBK_CHECK_SUPPORTED
+    USBK_CHECK_SUPPORTED(usbk)
 
     unsigned int keysize_inbyte = _keysize_as_byte(keysize);
     if ((keysize_inbyte == 0) || (keysize_inbyte > _keysize_as_byte(USBK_KEYSIZE_256BIT))) {
         usbk->lastopr = USBK_LO_INVALID_KEYSIZE;
-        DBG_LASTOPR_STRING(usbk->lastopr);
+        ret = - usbk->lastopr;
 
-        return - usbk->lastopr;
+        goto done;
     }
 
-    ret = send_scsi_command(usbk->dev_node_path, (unsigned char*) &genkey, USBK_GENERATE_KEY, sizeof(genkey), USBK_READ_SCSI);
+    ret = send_scsi_command (
+    		usbk->dev_node_path,
+    		(unsigned char*) &genkey,
+    		USBK_GENERATE_KEY,
+    		sizeof(genkey),
+    		USBK_READ_SCSI);
     if (ret < 0) {
         usbk->lastopr = USBK_LO_SCSI_ERROR;
-        DBG_LASTOPR_STRING(usbk->lastopr);
+        ret = - usbk->lastopr;
 
-        return - usbk->lastopr;
+        goto done;
     }
 
     usbk->lastopr = _command_status(usbk);
@@ -560,9 +609,10 @@ int usbk_get_randomkey(USBK* usbk, uint8_t* random_key, usbk_keysize_t keysize)
         memcpy(random_key, genkey.key.u8, keysize_inbyte);
     }
 
+done:
     DBG_LASTOPR_STRING(usbk->lastopr);
 
-    return usbk->lastopr;
+    return ret;
 }
 
 int usbk_refresh_usbkinfo(USBK* usbk)
@@ -570,15 +620,20 @@ int usbk_refresh_usbkinfo(USBK* usbk)
     int i;
     int ret;
 
-    USBK_CHECK_SUPPORTED
+    USBK_CHECK_SUPPORTED(usbk)
 
     t_UIP_DEVINFO usbk_info;
-    ret = send_scsi_command(usbk->dev_node_path, (unsigned char*) &usbk_info, USBK_GET_DEV_INFO, sizeof(usbk_info), USBK_READ_SCSI);
+    ret = send_scsi_command (
+    		usbk->dev_node_path,
+    		(unsigned char*) &usbk_info,
+    		USBK_GET_DEV_INFO,
+    		sizeof(usbk_info),
+    		USBK_READ_SCSI);
     if (ret < 0) {
         usbk->lastopr = USBK_LO_SCSI_ERROR;
-        DBG_LASTOPR_STRING(usbk->lastopr);
+        ret = - usbk->lastopr;
 
-        return - usbk->lastopr;
+        goto done;
     }
 
     usbk->current_key = usbk_info.current_keyno;
@@ -593,25 +648,33 @@ int usbk_refresh_usbkinfo(USBK* usbk)
     }
     usbk->lastopr = USBK_LO_PASS;
 
+done:
     DBG_LASTOPR_STRING(usbk->lastopr);
 
-    return usbk->lastopr;
+    return ret;
 }
 
 static int _command_status(USBK* usbk)
 {
-    t_UIP_GETSTATUS status;
     int ret;
+    t_UIP_GETSTATUS status;
 
-    ret = send_scsi_command(usbk->dev_node_path, (unsigned char*) &status, USBK_GET_STATUS, sizeof(t_UIP_GETSTATUS), USBK_READ_SCSI);
+    ret = send_scsi_command (
+    		usbk->dev_node_path,
+    		(unsigned char*) &status,
+    		USBK_GET_STATUS,
+    		sizeof(t_UIP_GETSTATUS),
+    		USBK_READ_SCSI);
     if (ret < 0) {
         usbk->lastopr = USBK_LO_SCSI_ERROR;
         DBG_LASTOPR_STRING(usbk->lastopr);
+
         return -  usbk->lastopr;
     }
 
     usbk->retry_num = status.retry_num;
 
+    /* FIXME a new review required!! */
     return (status.lastop.me - 1); //todo versiyon checking'ine göre düzleltilecek.
 }
 
@@ -776,100 +839,89 @@ static int _get_udev_info(USBK* usbk, const char *device)
 {
     int ret;
 
-    struct udev *udev;
-    struct udev_enumerate *enumerate;
-    struct udev_list_entry *devices, *dev_list_entry;
-    struct udev_list_entry *list_entry;
+    struct udev *_udev = NULL;
+    struct udev_enumerate *_udev_enumerate = NULL;
 
-    struct udev_device *dev;
-    struct udev_device *dev_usb;
-    struct udev_device *dev_scsi;
+    struct udev_list_entry *_udev_enumerated_devices;
+    struct udev_list_entry *_udev_enumerated_device = NULL;
+    struct udev_list_entry *_udev_list_entry;
 
-    const char *str;
-    size_t len;
-    int i;
-    const char *udev_dev_path;
+    struct udev_device *_udev_device = NULL;
+    struct udev_device *_udev_device_scsi = NULL;
+    struct udev_device *_udev_device_usb = NULL;
+
+    const char *_udev_enumerated_device_path;
+    const char *_udev_device_idvendor;
+    const char *_udev_device_idproduct;
+
+    const char *_udev_dev_path;
+    char *_udev_devname;
+    char dev_type;
 
     struct stat statbuf;
 
-    udev = udev_new();
-    if (udev == NULL) {
-        usbk->lastopr = USBK_LO_UDEV_ERROR;
-        DBG_LASTOPR_STRING(usbk->lastopr);
+    usbk->lastopr = USBK_LO_UDEV_ERROR;
 
-        return - usbk->lastopr;
-    }
+    _udev = udev_new();
+    if (!_udev) goto done;
 
-    udev_dev_path = udev_get_dev_path(udev);
+    _udev_dev_path = udev_get_dev_path(_udev);
 
     /* allocate ram space from stack with alloca */
-    char *devname = alloca(strlen(udev_dev_path) + strlen(device) + 1);
-    assert(devname != NULL);
-    sprintf(devname, "%s/%s", udev_get_dev_path(udev), device);
+    _udev_devname = alloca(strlen(_udev_dev_path) + strlen(device) + 1);
+    assert(_udev_devname != NULL);
+    sprintf(_udev_devname, "%s/%s", udev_get_dev_path(_udev), device);
 
-    if (stat(devname, &statbuf) < 0) {
-        usbk->lastopr = USBK_LO_UDEV_ERROR;
-        DBG_LASTOPR_STRING(usbk->lastopr);
+    if (stat(_udev_devname, &statbuf) < 0) goto done;
 
-        return - usbk->lastopr;
-    } else {
-        char dev_type;
+	if (S_ISBLK(statbuf.st_mode)) {
+		dev_type = 'b';
+	}
+	/* FIXME char devtype is legal? */
+	else if (S_ISCHR(statbuf.st_mode)) {
+		dev_type = 'c';
+	} else {
+		goto done;
+	}
 
-        if (S_ISBLK(statbuf.st_mode)) {
-            dev_type = 'b';
-        }
-        /* FIXME char devtype is legal? */
-        else if (S_ISCHR(statbuf.st_mode)) {
-            dev_type = 'c';
-        } else {
-            udev_unref(udev);
-            usbk->lastopr = USBK_LO_UDEV_ERROR;
-            DBG_LASTOPR_STRING(usbk->lastopr);
+	_udev_device = udev_device_new_from_devnum(_udev, dev_type, statbuf.st_rdev);
 
-            return - usbk->lastopr;
-        }
+	if (!_udev_device) goto done;
 
-        dev = udev_device_new_from_devnum(udev, dev_type, statbuf.st_rdev);
+    _udev_device_usb = udev_device_get_parent_with_subsystem_devtype(_udev_device, "usb", "usb_device");
+    if (!_udev_device_usb) goto done;
 
-        if (dev == NULL) {
-            udev_unref(udev);
-            usbk->lastopr = USBK_LO_UDEV_ERROR;
-            DBG_LASTOPR_STRING(usbk->lastopr);
+    _udev_device_idvendor = udev_device_get_sysattr_value(_udev_device_usb, "idVendor");
 
-            return - usbk->lastopr;
-        }
-    }
+    ret = strncmp(USBK_USB_IDVENDOR, _udev_device_idvendor, strlen(USBK_USB_IDVENDOR));
+    if (ret) goto done;
 
-    dev_usb = udev_device_get_parent_with_subsystem_devtype(dev, "usb", "usb_device");
+    _udev_device_idproduct = udev_device_get_sysattr_value(_udev_device_usb, "idProduct");
 
-    usbk->lastopr = USBK_LO_UDEV_ERROR;
-    if (dev_usb != NULL) {
-        if (strncmp(USBK_USB_IDVENDOR, udev_device_get_sysattr_value(dev_usb, "idVendor"), strlen(USBK_USB_IDVENDOR)) == 0) {
-            if ((strncmp(USBK_USB_IDPRODUCT_A101, udev_device_get_sysattr_value(dev_usb, "idProduct"), strlen(USBK_USB_IDPRODUCT_A101)) == 0)
-                    || (strncmp(USBK_USB_IDPRODUCT_A103, udev_device_get_sysattr_value(dev_usb, "idProduct"), strlen(USBK_USB_IDPRODUCT_A103)) == 0)) {
-                dev_scsi = udev_device_get_parent_with_subsystem_devtype(dev, "scsi", "scsi_device");
-                if (dev_scsi != NULL) {
-                    if (strncmp(USBK_SCSI_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_VENDOR)) == 0) {
-                        usbk->dev_node = strdup(udev_device_get_sysname(dev));
-                        usbk->dev_node_path = strdup(udev_device_get_devnode(dev));
-                        usbk->usb_serial = strdup(udev_device_get_sysattr_value(dev_usb, "serial"));
+    if (!strncmp(USBK_USB_IDPRODUCT_A101, _udev_device_idproduct, strlen(_udev_device_idproduct)) &&
+    	!strncmp(USBK_USB_IDPRODUCT_A103, _udev_device_idproduct, strlen(_udev_device_idproduct)))
+    	goto done;
 
-                        ret = _get_udev_backdisk(usbk);
-                        if (ret < 0) {
-                            udev_device_unref(dev);
-                            udev_unref(udev);
-                            usbk->lastopr = USBK_LO_UDEV_ERROR;
-                            DBG_LASTOPR_STRING(usbk->lastopr);
-                            return (-1) * usbk->lastopr;
-                        }
-                        usbk->lastopr = USBK_LO_PASS;
-                    }
-                }
-            }
-        }
-    }
-    udev_device_unref(dev);
-    udev_unref(udev);
+    _udev_device_scsi = udev_device_get_parent_with_subsystem_devtype(_udev_device, "scsi", "scsi_device");
+    if (!_udev_device_scsi) goto done;
+
+    ret = strncmp(USBK_SCSI_BACKDISK_VENDOR, udev_device_get_sysattr_value(_udev_device_scsi, "vendor"), strlen(USBK_SCSI_BACKDISK_VENDOR));
+    if (!ret) goto done;
+
+	usbk->dev_node = strdup(udev_device_get_sysname(_udev_device));
+	usbk->dev_node_path = strdup(udev_device_get_devnode(_udev_device));
+	usbk->usb_serial = strdup(udev_device_get_sysattr_value(_udev_device_usb, "serial"));
+
+	/* another usbk_lo_** required for backdisk error */
+	ret = _get_udev_backdisk(usbk);
+	if (ret < 0) goto done;
+
+	usbk->lastopr = USBK_LO_PASS;
+
+done:
+	udev_device_unref(_udev_device);
+	udev_enumerate_unref(_udev_enumerate);
+	udev_unref(_udev);
 
     DBG_LASTOPR_STRING(usbk->lastopr);
 
@@ -882,61 +934,87 @@ static int _get_udev_info(USBK* usbk, const char *device)
 static int _get_udev_backdisk(USBK* usbk)
 {
     int ret;
-    struct udev *udev;
-    struct udev_enumerate *enumerate;
-    struct udev_list_entry *devices, *dev_list_entry;
 
-    struct udev_device *dev;
-    struct udev_device *dev_usb;
-    struct udev_device *dev_scsi;
+    struct udev *_udev = NULL;
+    struct udev_enumerate *_udev_enumerate = NULL;
+    struct udev_list_entry *_udev_enumerated_devices = NULL;
+    struct udev_list_entry *_udev_enumerated_device = NULL;
 
-    // Create the udev object
-    udev = udev_new();
+    struct udev_device *_udev_device = NULL;
+    struct udev_device *_udev_device_scsi = NULL;
+    struct udev_device *_udev_device_usb = NULL;
 
-    if (udev == NULL) {
-        usbk->lastopr = USBK_LO_UDEV_ERROR;
-        DBG_LASTOPR_STRING(usbk->lastopr);
-
-        return - usbk->lastopr;
-    }
-
-    // Create a list of the devices in the 'abcde' subsystem.
-    enumerate = udev_enumerate_new(udev);
-    udev_enumerate_add_match_subsystem(enumerate, "block");
-    udev_enumerate_scan_devices(enumerate);
-    devices = udev_enumerate_get_list_entry(enumerate);
+    const char *_udev_enumerated_device_path;
+    const char *_udev_device_idvendor;
+    const char *_udev_device_idproduct;
+    const char *_udev_device_usb_serial;
 
     usbk->lastopr = USBK_LO_UDEV_ERROR;
 
-    udev_list_entry_foreach(dev_list_entry, devices) {
-        const char *path;
-        path = udev_list_entry_get_name(dev_list_entry);
-        dev = udev_device_new_from_syspath(udev, path);
-        // usb device directory
-        dev_usb = udev_device_get_parent_with_subsystem_devtype(dev, "usb", "usb_device");
-        if (dev_usb != NULL) {
-            if (strncmp(USBK_USB_IDVENDOR, udev_device_get_sysattr_value(dev_usb, "idVendor"), strlen(USBK_USB_IDVENDOR)) == 0) {
-                if ((strncmp(USBK_USB_IDPRODUCT_A101, udev_device_get_sysattr_value(dev_usb, "idProduct"), strlen(USBK_USB_IDPRODUCT_A101)) == 0)
-                        || (strncmp(USBK_USB_IDPRODUCT_A103, udev_device_get_sysattr_value(dev_usb, "idProduct"), strlen(USBK_USB_IDPRODUCT_A103)) == 0)) {
-                    if (strcmp(usbk->usb_serial, udev_device_get_sysattr_value(dev_usb, "serial")) == 0) {
-                        dev_scsi = udev_device_get_parent_with_subsystem_devtype(dev, "scsi", "scsi_device");
-                        if (dev_scsi != NULL) {
-                            if (strncmp(USBK_SCSI_BACKDISK_VENDOR, udev_device_get_sysattr_value(dev_scsi, "vendor"), strlen(USBK_SCSI_BACKDISK_VENDOR)) == 0) {
-                                usbk->backdisk_node= strdup(udev_device_get_sysname(dev));
-                                usbk->backdisk_node_path = strdup(udev_device_get_devnode(dev));
-                                usbk->lastopr = USBK_LO_PASS;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        udev_device_unref(dev);
+    // Create the _udev object
+    _udev = udev_new();
+
+    if (!_udev) goto done;
+
+    /* get udev enumerated devices */
+    _udev_enumerate = udev_enumerate_new(_udev);
+
+    /* add block devices */
+    ret = udev_enumerate_add_match_subsystem(_udev_enumerate, "block");
+    if (ret) goto done;
+
+    /* add scan for devices */
+    ret = udev_enumerate_scan_devices(_udev_enumerate);
+    if (ret) goto done;
+
+    /* get device list */
+    _udev_enumerated_devices = udev_enumerate_get_list_entry(_udev_enumerate);
+
+    udev_list_entry_foreach (_udev_enumerated_device, _udev_enumerated_devices) {
+        _udev_enumerated_device_path = udev_list_entry_get_name(_udev_enumerated_device);
+        _udev_device = udev_device_new_from_syspath(_udev, _udev_enumerated_device_path);
+
+        /* get usb devices */
+        _udev_device_usb = udev_device_get_parent_with_subsystem_devtype(_udev_device, "usb", "usb_device");
+        if (!_udev_device_usb) continue;
+
+        _udev_device_idvendor = udev_device_get_sysattr_value(_udev_device_usb, "idVendor");
+
+        ret = strncmp(USBK_USB_IDVENDOR, _udev_device_idvendor, strlen(USBK_USB_IDVENDOR));
+        if (ret) continue;
+
+        _udev_device_idproduct = udev_device_get_sysattr_value(_udev_device_usb, "idProduct");
+
+        if (!strncmp(USBK_USB_IDPRODUCT_A101, _udev_device_idproduct, strlen(_udev_device_idproduct)) &&
+        	!strncmp(USBK_USB_IDPRODUCT_A103, _udev_device_idproduct, strlen(_udev_device_idproduct)))
+        	continue;
+
+        _udev_device_usb_serial = udev_device_get_sysattr_value(_udev_device_usb, "serial");
+
+        ret = strcmp(usbk->usb_serial, _udev_device_usb_serial);
+        if (ret) continue;
+
+		_udev_device_scsi = udev_device_get_parent_with_subsystem_devtype(_udev_device, "scsi", "scsi_device");
+		if (!_udev_device_scsi) continue;
+
+		ret = strncmp(USBK_SCSI_BACKDISK_VENDOR, udev_device_get_sysattr_value(_udev_device_scsi, "vendor"), strlen(USBK_SCSI_BACKDISK_VENDOR));
+        if (!ret) continue;
+
+		usbk->backdisk_node= strdup(udev_device_get_sysname(_udev_device));
+		usbk->backdisk_node_path = strdup(udev_device_get_devnode(_udev_device));
+
+		usbk->lastopr = USBK_LO_PASS;
+		break;
     }
-    udev_enumerate_unref(enumerate);
-    udev_unref(udev);
+
+done:
+	udev_device_unref(_udev_device);
+	udev_enumerate_unref(_udev_enumerate);
+	udev_unref(_udev);
+
     DBG_LASTOPR_STRING(usbk->lastopr);
-    return (-1) * usbk->lastopr;
+
+	return usbk->lastopr;
 }
 
 
@@ -1007,8 +1085,7 @@ USBK* usbk_list_new(void)
 
         usbk_new_entry = usbk_new(udev_device_get_sysname(_udev_device));
         if (!usbk_new_entry) {
-            usbk_new_entry->lastopr = USBK_LO_MEM_ERROR;
-            DBG_LASTOPR_STRING(usbk_new_entry->lastopr);
+            DBG_LASTOPR_STRING(USBK_LO_MEM_ERROR);
 
             goto done;
         }
@@ -1024,8 +1101,6 @@ USBK* usbk_list_new(void)
     }
 
 done:
-    udev_device_unref(_udev_device_usb);
-    udev_device_unref(_udev_device_scsi);
     udev_device_unref(_udev_device);
     udev_enumerate_unref(_udev_enumerate);
     udev_unref(_udev);
