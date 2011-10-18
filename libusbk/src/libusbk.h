@@ -184,7 +184,6 @@ struct USBK
      * default values are "" */
     char **key_names;
 
-    /* FIXME: remove this double-linked list structure */
     struct USBK *next;
 };
 typedef struct USBK USBK;
@@ -310,17 +309,26 @@ inline int usbk_set_keyname(USBK* usbk, const char* pass, uint8_t key_no, const 
 
 #if defined(__linux__)
 
-extern int get_usbk_count();
+struct USBK_LIST
+{
+    USBK* usbk_head;
 
-extern USBK* usbk_list_new();
-extern int usbk_list_release();
-extern USBK* usbk_list_get_next(USBK* usbk);
-extern int usbk_list_get_counter();
+    int count;
+    int lastopr;
+};
+typedef struct USBK_LIST USBK_LIST;
+
+extern int usbk_list_get_count(USBK_LIST *usbk_list);
+
+extern USBK_LIST* usbk_list_new(void);
+extern int usbk_list_release(USBK_LIST *usbk_list);
+extern USBK* usbk_list_get_next(USBK *usbk);
+extern int usbk_list_get_count(USBK_LIST *usbk_list);
 
 extern int usbk_list_refreshall();
 
-#define usbk_list_entry_foreach(list_entry, first_entry) \
-    for (list_entry = first_entry; \
+#define usbk_list_entry_foreach(list_entry, usbk_list) \
+    for (list_entry = usbk_list->usbk_head; \
          list_entry != NULL; \
          list_entry = usbk_list_get_next(list_entry))
 
