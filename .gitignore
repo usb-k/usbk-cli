@@ -18,6 +18,8 @@ CPackSourceConfig.cmake
 *.o
 *.so*
 usbk_cli/usbk
+config.h
+config.hpp
 
 # vim swap files
 *.swp

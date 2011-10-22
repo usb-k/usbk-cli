@@ -1,5 +1,5 @@
 /*
- * @file libusbk.c
+ * @file libusbk.cpp
  *
  * Copyright (C) 2010 USB-K Team
  *
@@ -17,6 +17,9 @@
  *
  */
 
+#include "libusbk.hpp"
+
+#if 0
 #if defined(__linux__)
 #  include <libudev.h>
 #  include <alloca.h>
@@ -126,13 +129,231 @@ static int _get_udev_info(USBK* usbk, const char *device);
 static int _get_udev_backdisk(USBK* usbk);
 static int _command_status(USBK* usbk);
 
-#if 0
 static int _convert_key_decimal2hex(uint8_t *key_hex, const char* key_decimal, usbk_keysize_t keysize);
-#endif
 
 static int _convert_key_text2hex(uint8_t *key_hex, const char* key_text, usbk_keysize_t keysize);
 static unsigned int _keysize_as_byte(usbk_keysize_t keysize);
+#endif
 
+usbk_lo_t UsbkDevice::lastOperation() const
+{
+	usbk_lo_t ret = 0;
+
+	return ret;
+}
+
+bool UsbkDevice::supported() const
+{
+	bool ret = true;
+
+	return ret;
+}
+
+std::string UsbkDevice::deviceNode() const
+{
+	std::string ret;
+
+	return ret;
+}
+
+std::string UsbkDevice::deviceNodePath() const
+{
+	std::string ret;
+
+	return ret;
+}
+
+std::string UsbkDevice::backdiskNode() const
+{
+	std::string ret;
+
+	return ret;
+
+}
+
+std::string UsbkDevice::backdiskNodePath() const
+{
+	std::string ret;
+
+	return ret;
+
+}
+
+std::string UsbkDevice::product() const
+{
+
+	std::string ret;
+
+	return ret;
+}
+
+std::string UsbkDevice::model() const
+{
+
+	std::string ret;
+
+	return ret;
+}
+
+std::string UsbkDevice::serial() const
+{
+
+	std::string ret;
+
+	return ret;
+}
+
+std::string UsbkDevice::usbSerial() const
+{
+
+	std::string ret;
+
+	return ret;
+}
+
+std::string UsbkDevice::firmwareVersion() const
+{
+	std::string ret;
+
+	return ret;
+
+}
+
+std::string UsbkDevice::deviceLabel() const
+{
+	std::string ret;
+
+	return ret;
+
+}
+
+uint8_t UsbkDevice::multikeyCapability() const
+{
+	uint8_t ret;
+
+	return ret;
+}
+
+usbk_ds_t UsbkDevice::deviceState() const
+{
+	usbk_ds_t ret = USBK_DS_ACTIVATE_WITH_BACKDISK;
+
+	return ret;
+}
+
+int UsbkDevice::currentKey() const
+{
+	int ret;
+
+	return ret;
+}
+
+int UsbkDevice::autoactivateKeyNo() const
+{
+	int ret;
+
+	return ret;
+}
+
+std::vector<std::string> UsbkDevice::keyNames() const
+{
+	std::vector<std::string> ret;
+
+	return ret;
+}
+
+bool UsbkDevice::activateKey(int /*keyno*/)
+{
+	bool ret;
+
+	return ret;
+}
+
+bool UsbkDevice::deactivate()
+{
+	bool ret;
+
+	return ret;
+
+}
+
+bool UsbkDevice::changePassword(const std::string &old_password, const std::string &new_password)
+{
+	bool ret;
+
+	return ret;
+
+
+}
+
+bool UsbkDevice::setDeviceLabel(const std::string &password, const std::string &label)
+{
+	bool ret;
+
+	return ret;
+
+}
+
+bool UsbkDevice::setKeyname(const std::string &password, int keyno, const std::string &keyname)
+{
+
+	bool ret;
+
+	return ret;
+}
+
+bool UsbkDevice::setKey(const std::string &password, int keyno, usbk_keysize_t keysize, const std::string &key)
+{
+	bool ret;
+
+	return ret;
+
+}
+
+bool UsbkDevice::setAutoactivateKeyno(const std::string &password, int keyno)
+{
+
+	bool ret;
+
+	return ret;
+}
+
+std::string UsbkDevice::getRandomKey(usbk_keysize_t keysize) const
+{
+	std::string ret;
+
+	return ret;
+}
+
+bool UsbkDevice::refreshUsbkInfo()
+{
+
+	bool ret;
+
+	return ret;
+}
+
+bool UsbkDevice::isDebugEnabled()
+{
+
+	bool ret;
+
+	return ret;
+}
+
+void UsbkDevice::setDebug(bool enabled)
+{
+
+}
+
+std::string UsbkDevice::libusbkVersion()
+{
+	std::string ret;
+
+	return ret;
+}
+
+#if 0
 USBK* usbk_new(const char* dev)
 {
     int ret;
@@ -478,7 +699,6 @@ done:
     return ret;
 }
 
-#if 0
 int usbk_set_key_decimal(USBK* usbk_head, const char *pass, uint8_t key_no, usbk_keysize_t key_size, const char* key)
 {
     int ret = 0;
@@ -495,7 +715,6 @@ int usbk_set_key_decimal(USBK* usbk_head, const char *pass, uint8_t key_no, usbk
 
     return usbk_head->lastopr;
 }
-#endif
 
 int usbk_set_key_hex(USBK* usbk, const char *pass, uint8_t key_no, usbk_keysize_t key_size, const uint8_t* key)
 {
@@ -1172,6 +1391,6 @@ bool usbk_debug_check(void)
 
 const char* usbk_libversion(void)
 {
-    return USBK_LIB_VERSION_FULL;
+    return VERSION;
 }
-
+#endif
