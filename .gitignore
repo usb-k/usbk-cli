@@ -17,6 +17,7 @@ CPackSourceConfig.cmake
 # compiled files
 *.o
 *.so*
+*~
 usbk_cli/usbk
 usbk_cli_pp/usbk++
 config.h

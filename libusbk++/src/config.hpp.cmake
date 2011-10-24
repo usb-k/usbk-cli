@@ -1,14 +1,14 @@
 /**
  *
  * @project @PROJECT_NAME@
- * @file config.h
+ * @file config.hpp
  *
  */
 
-#ifndef CONFIG_HPP_
-#define CONFIG_HPP_
+#ifndef LIBUSBK_PP_CONFIG_HPP_
+#define LIBUSBK_PP_CONFIG_HPP_
 
 #define USBK_CPP_LIB_VERSION_FULL "@USBK_LIB_CPP_BINDING_VERSION_FULL@"
 
-#endif // CONFIG_HPP_
+#endif // LIBUSBK_PP_CONFIG_HPP_
 

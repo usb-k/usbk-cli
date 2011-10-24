@@ -17,71 +17,33 @@
 
 //TODO: BackDisk mount edilmiş ise deactive işlemi sırasında kullanıcıya uyarı ver ve emin misin diye sor. FORCE EKLENEBİLİR
 
+#include "config.hpp"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
 
 #include <iostream>
+#include <sstream>
 #include <string.h>
 
 #include "../../libusbk/src/libusbk.h"
 #include "../../libusbk++/src/libusbk.hpp"
 
-using namespace std;
-
-#define MSG_PASS                        "Pass.\n"
-#define MSG_GEN_FAIL                    "Fail.\n"
-#define MSG_FAILED_PASS                 "Failed Password, Retry Number = %d.\n", myusbk->info.retry_num
-#define MSG_FABRIC_RESET                "\n"\
-                                        "***********************************************\n"\
-                                        " All keys and your password is erased.         \n"\
-                                        " Please, re-configure your device.             \n"\
-                                        "***********************************************\n"\
-                                        "\n"
-#define MSG_USBK_UNPLUGING              "Must remove. Please remove and re-plug the USBK.\n"
-#define MSG_INVALID_KEYNO               "Invalid Key Number.\n"
-#define MSG_INVALID_KEYSIZE             "Invalid Key Size.\n"
-#define MSG_INVALID_DEVICELABEL         "Invalid Device Label\n"
-#define MSG_INVALID_NEWPASS             "Invalid New Password.\n"
-
-#define MSG_DSE_ACTIVATE                "USBK in active. This operation is not able to done in this state."
-#define MSG_DSE_ACTIVATE_WITH_BACKDISK  "The backdisk is plugged to USBK.  This operation is not able to done in this state."
-#define MSG_DSE_DEACTIVATE              "USBK in deactive. This operation is not able to done in this state."
-#define MSG_DSE_FABRIC_DEFAULT          "USBK in fabric default. Please first set your password."
-#define MSG_DSE_MUST_REMOVE             "USBK in must remove. This operation is not able to done in this state."
-#define MSG_DSE_UNKNOWN                 "The state of USBK  is unknown. This operation is not able to done in this state."
-
-#define MSG_SCSI_ERROR                  "No Device Found (scsi error).\n"
-#define MSG_UNSUPPORTED_USBK            "Unsupported USBK.\n"
-#define MSG_INVALID_KEY                 "Invalid Key.\n"
-#define MSG_UDEV_ERROR                  "No Device Found (udev error).\n"
-#define MSG_MEM_ERROR                   "No Device Found (mem error).\n"
-#define MSG_UNKOWN_ERROR                "Unkown Error.\n"
-
-
-//MESSAGES OF LINUX CLI
-#define ARG_PARSE_ERROR                     "Parse error\n"
-#define MISSING_PARAMETER                   "Missing parameter(s)\n"
-#define MAIN_OPERTAION_MORE                 "You may not specify more than one `-adcnmxXtTls' option\n"
-#define TRY_HELP                            "Try `usbk --help' for more information.\n"
-#define MUST_SUPERUSER                      "requested operation requires superuser privilege\n"
-#define MISSING_PARAM_DEV                   "Dev paramter missing\n"
-
-
 //PRIVATE FUNCTION DECLARATIONS
 static int _parse_options(int *argc, char** argv[]);
+
+// FIXME: remove these and find another way to deal with it.
 usbk_keysize_t parse_keysize(char *s);
 int parse_keysize_inbyte(char *s);
 
 static void linuxcli_show_devices(void);
 static void linuxcli_show_dev_info(UsbkDevice* device);
 
-static void print_result(USBK* myusbk);
 static void print_result(UsbkDevice* device);
 
-static void print_help(int exval);
-static void print_version(void);
-static bool check_superuser(void);
+static void print_help();
+static void print_version();
 
 //PRIVATE VARIABLES
 //-FLAGS
@@ -168,8 +130,18 @@ int main(int argc, char *argv[]) {
     Fflag = 1; opt_key_size_str = strdup("256");
 
     if (!_parse_options(&argc, &argv)) {
-        fprintf(stderr, ARG_PARSE_ERROR);
-        exit(0);
+    	std::cerr << "Parse Error!";
+        exit(EXIT_FAILURE);
+    }
+
+    if (question_flag) {
+        print_help();
+        exit(EXIT_SUCCESS);
+    }
+
+    if (vflag) {
+        print_version();
+        exit(EXIT_SUCCESS);
     }
 
     if (Dflag) {
@@ -177,49 +149,40 @@ int main(int argc, char *argv[]) {
     	libusbk_plusplus_enable_debug();
     }
 
-    if (question_flag) {
-        print_help(0);
-        exit(0);
-    }
-
-    if (vflag) {
-        print_version();
-        exit(0);
-    }
-
     if (main_operation > 1) {
-        fprintf(stderr, MAIN_OPERTAION_MORE);
-        fprintf(stderr, TRY_HELP);
-        exit(1);
+    	std::cerr
+    		<< "You may not specify more than one `-adcnmxXtTls' option\n"
+    		<< "Try `usbk --help' for more information.\n";
+        exit(EXIT_FAILURE);
     }
 
     if (!iflag && main_operation == 0) {
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
 
-    if (check_superuser() == false) {
-        fprintf(stderr, MUST_SUPERUSER);
-        exit(0);
+    if (geteuid() != 0) {
+    	std::cerr << "Requested operation requires superuser privilege\n";
+        exit(EXIT_FAILURE);
     }
 
     if (sflag) {
         linuxcli_show_devices();
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
 
     if (uflag == 0) {
-        fprintf(stderr, MISSING_PARAM_DEV);
-        fprintf(stderr, TRY_HELP);
-        exit(0);
+    	std::cerr
+    		<< "Dev paramter missing\n"
+    		<< "Try `usbk --help' for more information.\n";
+        exit(EXIT_SUCCESS);
     }
 
     /* FIXME: write exception handlers */
     UsbkDevice *device = new UsbkDevice(usbk_dev);
 
     if (device->lastOperation() != USBK_LO_PASS) {
-        std::cerr << __LINE__ << ": device " << device->deviceNode() << " sucked!";
-    	//print_result(myusbk);
-        //usbk_release(myusbk);
+    	print_result(device);
+    	delete device;
 
         exit(0);
     }
@@ -228,6 +191,7 @@ int main(int argc, char *argv[]) {
 
     /////////////////////////////////////////////
     // ACTIVATE
+    // FIXME: ask password from command line
     /////////////////////////////////////////////
     if (pflag & aflag & kflag) {
     	ret = device->activateKey(opt_parola, opt_key);
@@ -381,12 +345,9 @@ static int _parse_options(int *argc, char** argv[]) {
     int option_index = 0;
     int opt;
 
-    if (*argc == 1)
-    {
+    if (*argc == 1) {
         question_flag = 1;
-    }
-    else
-    {
+    } else {
         while (( opt = getopt_long(*argc, *argv, "u:adc:n:m:x:XtTlsk:p:F:f:ivD?", long_options, &option_index)) != -1) {
             switch (opt) {
             case 0:
@@ -478,7 +439,7 @@ static int _parse_options(int *argc, char** argv[]) {
                 } else if (!strcmp(optarg, "t")) {
                     opt_key_format = 't';
                 } else {
-                    fprintf(stderr, MISSING_PARAMETER);
+                	std::cerr << "Missing parameter!\n";
                     exit(1);
                 }
                 break;
@@ -530,224 +491,168 @@ void linuxcli_show_dev_info(UsbkDevice* myusbk)
     std::cout << *myusbk;
 }
 
-static void print_result(USBK* myusbk)
-{
-    switch (usbk_get_lastopr_status(myusbk)) {
-    case USBK_LO_PASS:
-        fprintf(stdout, "Pass.\n");
-        break;
-    case USBK_LO_GEN_FAIL:
-        fprintf(stderr, "Fail.\n");
-        break;
-    case USBK_LO_FAILED_PASS:
-        fprintf(stderr, "Failed Password, Retry Number = %d.\n", usbk_get_retry_number(myusbk));
-        break;
-    case USBK_LO_FABRIC_RESET:
-        printf("\n");
-        printf("***********************************************\n");
-        printf(" All keys and your password is erased.         \n");
-        printf(" Please, re-configure your device.             \n");
-        printf("***********************************************\n");
-        printf("\n");
-        break;
-    case USBK_LO_USBK_UNPLUGING:
-        fprintf(stderr, "Must remove. Please remove and re-plug the USBK.\n");
-        break;
-    case USBK_LO_INVALID_KEYNO:
-        fprintf(stderr, "Invalid Key Number.\n");
-        break;
-    case USBK_LO_INVALID_KEYSIZE:
-        fprintf(stderr, "Invalid Key Size.\n");
-        break;
-    case USBK_LO_INVALID_DEVICELABEL:
-        fprintf(stderr, "Invalid Device Label\n");
-        break;
-    case USBK_LO_INVALID_NEWPASS:
-        fprintf(stderr, "Invalid New Password.\n");
-        break;
-    case USBK_LO_STATE_ERROR:
-
-        switch (usbk_get_state(myusbk)) {
-        case USBK_DS_ACTIVATE:
-            fprintf(stderr, MSG_DSE_ACTIVATE);
-            break;
-        case USBK_DS_ACTIVATE_WITH_BACKDISK:
-            fprintf(stderr, MSG_DSE_ACTIVATE_WITH_BACKDISK);
-            break;
-        case USBK_DS_DEACTIVATE:
-            fprintf(stderr, MSG_DSE_DEACTIVATE);
-            break;
-        case USBK_DS_FABRIC_DEFAULT:
-            fprintf(stderr, MSG_DSE_FABRIC_DEFAULT);
-            break;
-        case USBK_DS_MUST_REMOVE:
-            fprintf(stderr, MSG_DSE_MUST_REMOVE);
-            break;
-        default:
-            fprintf(stderr, MSG_DSE_UNKNOWN);
-            break;
-        }
-
-        break;
-    case USBK_LO_SCSI_ERROR:
-        fprintf(stderr, MSG_SCSI_ERROR);
-        break;
-    case USBK_LO_UNSUPPORTED_USBK:
-        fprintf(stderr, MSG_UNSUPPORTED_USBK);
-        break;
-    case USBK_LO_INVALID_KEY:
-        fprintf(stderr, MSG_INVALID_KEY);
-        break;
-    case USBK_LO_UDEV_ERROR:
-        fprintf(stderr, MSG_UDEV_ERROR);
-        break;
-    case USBK_LO_MEM_ERROR:
-        fprintf(stderr, MSG_MEM_ERROR);
-        break;
-    case USBK_LO_INVALID_PASS:
-    default:
-        fprintf(stderr, MSG_MEM_ERROR);
-        break;
-    }
-}
-
 static void print_result(UsbkDevice* device)
 {
+	std::string result;
+
     switch (device->lastOperation()) {
     case USBK_LO_PASS:
-        fprintf(stdout, "Pass.\n");
+    	result = "Operation Successful";
         break;
+
     case USBK_LO_GEN_FAIL:
-        fprintf(stderr, "Fail.\n");
+    	result = "Operation Failed!";
         break;
+
     case USBK_LO_FAILED_PASS:
-        fprintf(stderr, "Failed Password, Retry Number = %d.\n", device->retryNumber());
+    	{
+    		std::stringstream s;
+
+    		s << "Password Incorrect, Retry Number = "
+    		  << device->retryNumber();
+
+    		result = s.str();
+    	}
+
         break;
+
     case USBK_LO_FABRIC_RESET:
-        printf("\n");
-        printf("***********************************************\n");
-        printf(" All keys and your password is erased.         \n");
-        printf(" Please, re-configure your device.             \n");
-        printf("***********************************************\n");
-        printf("\n");
+        result =
+        	"****************************************\n"
+        	" All keys and your password is erased.  \n"
+        	" Please, re-configure your device.      \n"
+        	"****************************************";
         break;
+
     case USBK_LO_USBK_UNPLUGING:
-        fprintf(stderr, "Must remove. Please remove and re-plug the USBK.\n");
+    	result = "USBK must be removed and replugged.";
         break;
+
     case USBK_LO_INVALID_KEYNO:
-        fprintf(stderr, "Invalid Key Number.\n");
+        result = "Invalid Key Number.";
         break;
+
     case USBK_LO_INVALID_KEYSIZE:
-        fprintf(stderr, "Invalid Key Size.\n");
+        result = "Invalid Key Size.";
         break;
+
     case USBK_LO_INVALID_DEVICELABEL:
-        fprintf(stderr, "Invalid Device Label\n");
+        result = "Invalid Device Label";
         break;
+
     case USBK_LO_INVALID_NEWPASS:
-        fprintf(stderr, "Invalid New Password.\n");
+        result = "Invalid New Password.";
         break;
+
     case USBK_LO_STATE_ERROR:
 
         switch (device->deviceState()) {
         case USBK_DS_ACTIVATE:
-            fprintf(stderr, MSG_DSE_ACTIVATE);
+            result = "USBK in active. This operation is not able to done in this state.";
             break;
+
         case USBK_DS_ACTIVATE_WITH_BACKDISK:
-            fprintf(stderr, MSG_DSE_ACTIVATE_WITH_BACKDISK);
+        	result = "The backdisk is plugged to USBK.  This operation is not able to done in this state.";
             break;
+
         case USBK_DS_DEACTIVATE:
-            fprintf(stderr, MSG_DSE_DEACTIVATE);
+            result = "USBK in deactive. This operation is not able to done in this state.";
             break;
+
         case USBK_DS_FABRIC_DEFAULT:
-            fprintf(stderr, MSG_DSE_FABRIC_DEFAULT);
+        	result = "USBK in fabric default. Please first set your password.";
             break;
+
         case USBK_DS_MUST_REMOVE:
-            fprintf(stderr, MSG_DSE_MUST_REMOVE);
+            result = "USBK in must remove. This operation is not able to done in this state.";
             break;
+
         default:
-            fprintf(stderr, MSG_DSE_UNKNOWN);
+        	result = "The state of USBK is unknown. This operation is not able to done in this state.";
             break;
         }
 
         break;
     case USBK_LO_SCSI_ERROR:
-        fprintf(stderr, MSG_SCSI_ERROR);
+    	result = "SCSI Error! No Device Found!";
         break;
+
     case USBK_LO_UNSUPPORTED_USBK:
-        fprintf(stderr, MSG_UNSUPPORTED_USBK);
+    	result = "Unsupported USBK.";
         break;
+
     case USBK_LO_INVALID_KEY:
-        fprintf(stderr, MSG_INVALID_KEY);
+    	result = "Invalid Key.";
         break;
+
     case USBK_LO_UDEV_ERROR:
-        fprintf(stderr, MSG_UDEV_ERROR);
+        result = "UDEV Error! No Device Found.";
         break;
+
     case USBK_LO_MEM_ERROR:
-        fprintf(stderr, MSG_MEM_ERROR);
+    	result = "Mem Error! No Device Found.";
         break;
+
     case USBK_LO_INVALID_PASS:
+        result = "Invalid Password.";
+        break;
+
     default:
-        fprintf(stderr, MSG_MEM_ERROR);
+        result = "Unknown error!";
         break;
     }
+
+    std::cout << result << std::endl;
 }
 
-static void print_help(int exval) {
+static void print_help()
+{
     print_version();
-    printf(""
-            "Usage: usbk [OPTION...]\n"
-            "\n"
-            "Examples:\n"
-            "  usbk -s                       # Show device list\n"
-            "  usbk sdc -a -k 1 -p foo       # activate device with key 1\n"
-            "  usbk sdc -d                   # deactivate device\n"
-            "\n"
-            " Main operation mode:\n"
-            "\n"
-            "  -u, --dev                     device\n"
-            "  -a, --activate                activate device\n"
-            "  -d, --deactivate              deactivate device\n"
-            "  -c, --newpasswd=NEWPASS       change the password to NEWPASS\n"
-            "  -n, --label=LABEL             change the label to LABEL\n"
-            "  -m, --keyname=KEYNAME         change then key nameto NAME\n"
-            "  -x, --change-key=NEWKEY       change the key to NEWKEY\n"
-            "  -X, --change-key-with-random  change the key to random key\n"
-            "  -t, --enable-auto             enable auto activate\n"
-            "  -T, --disable-auto            disable auto activate\n"
-            "  -l, --gen-key                 generate and set random key\n"
-            "  -s, --show-devices            show device list\n"
-            "\n"
-            " Setting options:\n"
-            "\n"
-            "  -k, --key-no=KEYNO            use KEYNO as key number\n"
-            "  -p, --passwd=PASSWD           checks password with PASSWD\n"
-            "  -F, --key-size=KEY_SIZE       KEYSIZE is 128, 192 or 256\n"
-            "  -f, --key-format=FORMAT       FORMAT=t for text or FORMAT=d for\n"
-            "                                decimal input. default is decimal\n"
-            "\n"
-            " Other options:\n"
-            "\n"
-            "  -i, --show-info               show device info\n"
-            "  -D, --debug                   print debug output\n"
-            "  -v, --version                 print program version\n"
-            "  -?, --help                    give this help list\n"
-            "\n"
-            "defaults for options:\n"
-            "--key-size=256\n"
-            "--key-format=d\n"
-            "--key-no=1\n"
-            "\n");
-    exit(exval);
+    std::cout
+    	<< std::endl << "USBK CryptoBridge Configurator"
+    	<< std::endl << "\tUsage: usbk [options]"
+    	<< std::endl
+    	<< std::endl << "Main operations:"
+    	<< std::endl << "  -u, --dev                     device"
+        << std::endl << "  -a, --activate                activate device"
+        << std::endl << "  -d, --deactivate              deactivate device"
+        << std::endl << "  -c, --newpasswd=NEWPASS       change the password to NEWPASS"
+        << std::endl << "  -n, --label=LABEL             change the label to LABEL"
+        << std::endl << "  -m, --keyname=KEYNAME         change then key nameto NAME"
+        << std::endl << "  -x, --change-key=NEWKEY       change the key to NEWKEY"
+        << std::endl << "  -X, --change-key-with-random  change the key to random key"
+        << std::endl << "  -t, --enable-auto             enable auto activate"
+        << std::endl << "  -T, --disable-auto            disable auto activate"
+        << std::endl << "  -l, --gen-key                 generate and set random key"
+        << std::endl << "  -s, --show-devices            show device list"
+        << std::endl
+        << std::endl << " Setting options:"
+        << std::endl
+        << std::endl << "  -k, --key-no=KEYNO            use KEYNO as key number"
+        << std::endl << "  -p, --passwd=PASSWD           checks password with PASSWD"
+        << std::endl << "  -F, --key-size=KEY_SIZE       KEYSIZE is 128, 192 or 256"
+        << std::endl << "  -f, --key-format=FORMAT       FORMAT=t for text or FORMAT=d for"
+        << std::endl
+        << std::endl << " Other options:\n"
+        << std::endl
+        << std::endl << "  -i, --show-info               show device info"
+        << std::endl << "  -D, --debug                   print debug output"
+        << std::endl << "  -v, --version                 print program version"
+        << std::endl << "  -?, --help                    give this help list"
+        << std::endl
+        << std::endl << "defaults for options:"
+        << std::endl << "--key-size=256"
+        << std::endl << "--key-format=d"
+        << std::endl << "--key-no=1"
+        << std::endl
+        << std::endl << "Examples:"
+        << std::endl << "  usbk -s                       # Show device list"
+        << std::endl << "  usbk sdc -a -k 1 -p foo       # activate device with key 1"
+        << std::endl << "  usbk sdc -d                   # deactivate device"
+        << std::endl << std::endl;
 }
 
-static void print_version(void) {
-    fprintf(stdout, "iyi iyi\n");
-}
-
-static bool check_superuser(void){
-    if(geteuid() == 0){
-        return true;
-    }else{
-        return false;
-    }
+static void print_version(void)
+{
+	std::cout << USBK_CLI_PACKAGE << " " << USBK_CLI_VERSION << std::endl;
 }

@@ -5,10 +5,10 @@
  *
  */
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#ifndef LIBUSBK_CONFIG_H_
+#define LIBUSBK_CONFIG_H_
 
 #define USBK_LIB_VERSION_FULL "@USBK_LIB_VERSION_FULL@"
 
-#endif // CONFIG_H_
+#endif // LIBUSBK_CONFIG_H_
 

@@ -17,6 +17,7 @@
  *
  */
 
+#include "config.hpp"
 #include "libusbk.hpp"
 
 #include <iostream>
@@ -286,7 +287,7 @@ std::ostream &operator<<(std::ostream &out, UsbkDevice &device)
     			(i == device.currentKey() - 1 &&
     			 (device.deviceState() == USBK_DS_ACTIVATE ||
     			  device.deviceState() == USBK_DS_ACTIVATE_WITH_BACKDISK)
-    			    			             ? "[*]" : "[ ]");
+    			    			             ? "[*]" : "   ");
         out << " Key #" << i+1
         	<< " , Name " << device.keyName(i);
 
@@ -295,7 +296,6 @@ std::ostream &operator<<(std::ostream &out, UsbkDevice &device)
 
 	return out;
 }
-
 
 UsbkDeviceList::UsbkDeviceList()
 {

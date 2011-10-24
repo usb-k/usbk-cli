@@ -21,8 +21,6 @@
 extern "C" {
 #endif
 
-#include "config.h"
-
 #if defined(__AVR32__) || defined(__linux__)
 #  include <inttypes.h>
 #  include <stddef.h>

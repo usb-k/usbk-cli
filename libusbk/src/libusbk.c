@@ -17,6 +17,8 @@
  *
  */
 
+#include "config.h"
+
 #if defined(__linux__)
 #  include <libudev.h>
 #  include <alloca.h>
