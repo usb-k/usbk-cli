@@ -18,15 +18,28 @@
 #ifndef LIBUSBK_HPP_
 #define LIBUSBK_HPP_
 
-#include "config.h"
+#include "config.hpp"
 #include "../../libusbk/src/libusbk.h"
 
 #include <vector>
 #include <string>
+#include <ostream>
 
-class UsbkDevice : public USBK
+/* Debugging informations */
+extern void libusbk_plusplus_enable_debug();
+extern void libusbk_plusplus_disable_debug();
+
+/* libusbk version */
+extern const char* libusbk_plusplus_plusplus_version();
+
+class UsbkDevice
 {
 public:
+	UsbkDevice();
+	UsbkDevice(const std::string &device_node);
+	UsbkDevice(USBK *usbk_device);
+
+	~UsbkDevice();
 
 	/**
 	 * All getter functions
@@ -46,13 +59,17 @@ public:
 	std::string deviceLabel() const;
 	uint8_t multikeyCapability() const;
 	usbk_ds_t deviceState() const;
+	int retryNumber() const;
 	int currentKey() const;
 	int autoactivateKeyNo() const;
-	std::vector<std::string> keyNames() const;
+	std::string keyName(int keyno) const;
 
-	bool activateKey(int keyno);
+	/**
+	 * Other control functions
+	 * */
+	bool activateKey(const std::string &password, int keyno);
 	bool deactivate();
-	bool changePassword(const std::string &old_password, const std::string &new_password);
+	bool changePassword(const std::string &oldPassword, const std::string &newPassword);
 	bool setDeviceLabel(const std::string &password, const std::string &label);
 	bool setKeyname(const std::string &password, int keyno, const std::string &keyname);
 	bool setKey(const std::string &password, int keyno, usbk_keysize_t keysize, const std::string &key);
@@ -60,18 +77,19 @@ public:
 	std::string getRandomKey(usbk_keysize_t keysize) const;
 	bool refreshUsbkInfo();
 
-	static bool isDebugEnabled();
-	static void setDebug(bool enabled);
-	static std::string libusbkVersion();
+	friend std::ostream &operator<<(std::ostream &out, UsbkDevice &device);
 
 private:
-	bool m_debugEnabled;
+	USBK *m_usbk_device;
 };
 
-/*class UsbkDeviceList : public std::vector<UsbkDevice>
+class UsbkDeviceList : public std::vector<UsbkDevice *>
 {
+public:
+	UsbkDeviceList();
 
-};*/
+	friend std::ostream &operator<<(std::ostream &out, UsbkDeviceList &device_list);
+};
 
 #endif /* LIBUSBK_H_ */
 

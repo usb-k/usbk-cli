@@ -20,13 +20,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-#include <sstream>
+
+#include <iostream>
 #include <string.h>
 
 #include "../../libusbk/src/libusbk.h"
+#include "../../libusbk++/src/libusbk.hpp"
 
 using namespace std;
-
 
 #define MSG_PASS                        "Pass.\n"
 #define MSG_GEN_FAIL                    "Fail.\n"
@@ -73,8 +74,10 @@ usbk_keysize_t parse_keysize(char *s);
 int parse_keysize_inbyte(char *s);
 
 static void linuxcli_show_devices(void);
-static void linuxcli_show_dev_info(USBK* myusbk);
+static void linuxcli_show_dev_info(UsbkDevice* device);
+
 static void print_result(USBK* myusbk);
+static void print_result(UsbkDevice* device);
 
 static void print_help(int exval);
 static void print_version(void);
@@ -170,7 +173,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (Dflag) {
-        libusbk_enable_debug();
+    	libusbk_enable_debug();
+    	libusbk_plusplus_enable_debug();
     }
 
     if (question_flag) {
@@ -209,90 +213,91 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
-    USBK *myusbk = usbk_new(usbk_dev);
-    if (myusbk == NULL)
-    {
-        fprintf(stderr, "myusbk not created");
+    /* FIXME: write exception handlers */
+    UsbkDevice *device = new UsbkDevice(usbk_dev);
+
+    if (device->lastOperation() != USBK_LO_PASS) {
+        std::cerr << __LINE__ << ": device " << device->deviceNode() << " sucked!";
+    	//print_result(myusbk);
+        //usbk_release(myusbk);
+
         exit(0);
     }
 
-    if (usbk_get_lastopr_status(myusbk) != USBK_LO_PASS)
-    {
-        print_result(myusbk);
-        usbk_release(myusbk);
-        exit(0);
-    }
-
-    int res;
+    int ret;
 
     /////////////////////////////////////////////
     // ACTIVATE
     /////////////////////////////////////////////
     if (pflag & aflag & kflag) {
-        res = usbk_key_activate(myusbk, opt_parola, (int) opt_key);
-        printf("%d\n", res);
-        print_result(myusbk);
+    	ret = device->activateKey(opt_parola, opt_key);
+        printf("%d\n", ret);
+        print_result(device);
     }
 
     /////////////////////////////////////////////
     // DEACTIVATE
     /////////////////////////////////////////////
     if (dflag) {
-        res = usbk_key_deactivate(myusbk);
-        printf("%d\n", res);
-        print_result(myusbk);
+        ret = device->deactivate();
+        printf("%d\n", ret);
+        print_result(device);
     }
 
     /////////////////////////////////////////////
     // CHANGE PASSWORD
     /////////////////////////////////////////////
     if (cflag) {
-        res = usbk_change_password(myusbk, opt_parola, opt_new_password);
-        printf("%d\n", res);
-        print_result(myusbk);
+        ret = device->changePassword(opt_parola, opt_new_password);
+        printf("%d\n", ret);
+        print_result(device);
     }
 
     /////////////////////////////////////////////
     // SET DEVICE NAME
     /////////////////////////////////////////////
     if (pflag & nflag) {
-        res = usbk_set_devicelabel(myusbk, opt_parola, opt_dev_label);
-        printf("%d\n", res);
-        print_result(myusbk);
+        ret = device->setDeviceLabel(opt_parola, opt_dev_label);
+        printf("%d\n", ret);
+        print_result(device);
     }
 
+#if 0
     /////////////////////////////////////////////
     // SET KEY
     /////////////////////////////////////////////
+
+    /* FIXME: setting keys will be rehandled! */
+
     if (pflag & xflag & kflag & Fflag) {
         switch (opt_key_format) {
         case 'd':
             printf("ERROR: Depreciated function!\n");
-            res=-1;
+            ret=-1;
 
             //res = usbk_setkey_decimal(myusbk, opt_parola, opt_key, parse_keysize(opt_key_size_str), opt_string_key);
             break;
         case 't':
-            res = usbk_set_key_text(myusbk, opt_parola, opt_key, parse_keysize(opt_key_size_str), opt_string_key);
+            ret = usbk_set_key_text(myusbk, opt_parola, opt_key, parse_keysize(opt_key_size_str), opt_string_key);
             break;
         default:
             break;
         }
-        printf("%d\n", res);
+        printf("%d\n", ret);
         print_result(myusbk);
     }
 
     /////////////////////////////////////////////
     // SET KEY RANDOMLY
     /////////////////////////////////////////////
-    if (pflag & Xflag & kflag & Fflag) {
+    /*if (pflag & Xflag & kflag & Fflag) {
         int i;
         uint8_t randomkey[32];
-        res = usbk_get_randomkey(myusbk, randomkey, parse_keysize(opt_key_size_str));
+        ret = usbk_get_randomkey(myusbk, randomkey, parse_keysize(opt_key_size_str));
 
-        if (res == USBK_LO_PASS) {
-            res = usbk_set_key_hex(myusbk, opt_parola, opt_key, parse_keysize(opt_key_size_str), randomkey);
-            if (res == USBK_LO_PASS) {
+        if (ret == USBK_LO_PASS) {
+            ret = usbk_set_key_hex(myusbk, opt_parola, opt_key, parse_keysize(opt_key_size_str), randomkey);
+            if (ret == USBK_LO_PASS) {
                 for (i = 0; i < parse_keysize_inbyte(opt_key_size_str); i++) {
                     fprintf(stdout, "%d", randomkey[i]);
                     if (i != (parse_keysize_inbyte(opt_key_size_str) - 1))
@@ -301,17 +306,17 @@ int main(int argc, char *argv[]) {
                 printf("\n");
             }
         }
-        printf("%d\n", res);
+        printf("%d\n", ret);
         print_result(myusbk);
-    }
+    }*/
 
     /////////////////////////////////////////////
     // SET KEY NAME ONLY
     /////////////////////////////////////////////
     if (mflag & !xflag & !Xflag) {
         if (pflag & kflag) {
-            res = usbk_set_keyname(myusbk, opt_parola, opt_key, opt_aes_name);
-            printf("%d\n", res);
+            ret = usbk_set_keyname(myusbk, opt_parola, opt_key, opt_aes_name);
+            printf("%d\n", ret);
             print_result(myusbk);
         }
     }
@@ -320,8 +325,8 @@ int main(int argc, char *argv[]) {
     // ENABLE AUTO ACTIVATE
     /////////////////////////////////////////////
     if (pflag & tflag & kflag) {
-        res = USBK_ENABLE_AUTACT(myusbk, opt_parola, opt_key);
-        printf("%d\n", res);
+        ret = USBK_ENABLE_AUTACT(myusbk, opt_parola, opt_key);
+        printf("%d\n", ret);
         print_result(myusbk);
     }
 
@@ -329,19 +334,20 @@ int main(int argc, char *argv[]) {
     // DISABLE AUTO ACTIVATE
     /////////////////////////////////////////////
     if (pflag & Tflag) {
-        res = USBK_DISABLE_AUTACT(myusbk, opt_parola);
-        printf("%d\n", res);
+        ret = USBK_DISABLE_AUTACT(myusbk, opt_parola);
+        printf("%d\n", ret);
         print_result(myusbk);
     }
+#endif
 
     /////////////////////////////////////////////
     // SHOW USBK INFORMATION
     /////////////////////////////////////////////
     if (iflag) {
-        linuxcli_show_dev_info(myusbk);
+        linuxcli_show_dev_info(device);
     }
 
-    usbk_release(myusbk);
+    delete device;
 
     exit(0);
 }
@@ -512,126 +518,20 @@ static int _parse_options(int *argc, char** argv[]) {
     return 1;
 }
 
-void print_device(USBK* myusbk)
-{
-    if (usbk_check_support(myusbk) == true)
-    {
-        printf("  %s\n",                            usbk_get_dev_label(myusbk));
-        printf("    Device   : %s\n",               usbk_get_dev(myusbk));
-        printf("    BackDisk : %s\n",               usbk_get_backdisk(myusbk));
-        printf("    Product  : %s\n",               usbk_get_product(myusbk));
-        printf("    Model    : %s\n",               usbk_get_model(myusbk));
-        printf("    Serial   : %s\n",               usbk_get_serial(myusbk));
-        printf("    Firmware : %s\n",               usbk_get_firmware_ver(myusbk));
-        printf("\n");
-    }
-    else
-    {
-        printf("  %s(UNSUPPORTED DEVICE)\n",        usbk_get_dev_label(myusbk));
-        printf("    Device   : %s\n",               usbk_get_dev(myusbk));
-        printf("    Product  : %s\n",               usbk_get_product(myusbk));
-        printf("    Model    : %s\n",               usbk_get_model(myusbk));
-        printf("    Serial   : %s\n",               usbk_get_serial(myusbk));
-        printf("    Firmware : %s\n",               usbk_get_firmware_ver(myusbk));
-        printf("\n");
-    }
-}
-
 void linuxcli_show_devices(void)
 {
-    int counter;
+	UsbkDeviceList deviceList;
 
-    USBK_LIST* _usbk_list = usbk_list_new();
-    USBK* _usbk_entry;
-
-    usbk_list_entry_foreach (_usbk_entry, _usbk_list) {
-        print_device(_usbk_entry);
-    }
-
-    counter = usbk_list_get_count(_usbk_list);
-    printf("%d USBK(s) found", counter);
-
-    usbk_list_release(_usbk_list);
+	std::cout << deviceList;
 }
 
-void linuxcli_show_dev_info(USBK* myusbk) {
-
-
-    //USBK_INFO *usbk_infos;
-    if (usbk_check_support(myusbk) == true)
-    {
-        //UI_DEVINFO_T dev_info;
-        int i;
-        char status[64];
-        char backdisk[8];
-        char autoactive[64];
-        char model[32];
-
-        usbk_refresh_usbkinfo(myusbk);
-
-        sprintf(backdisk, "-");
-
-        switch (usbk_get_state(myusbk)) {
-        case USBK_DS_ACTIVATE:
-            sprintf(status, "active [%d]", usbk_get_current_keyno(myusbk));
-            sprintf(backdisk, "none");
-            break;
-        case USBK_DS_ACTIVATE_WITH_BACKDISK:
-            sprintf(status, "active [%d]", usbk_get_current_keyno(myusbk));
-            sprintf(backdisk, "exist");
-            break;
-        case USBK_DS_DEACTIVATE:
-            sprintf(status, "deactive");
-            break;
-        case USBK_DS_FABRIC_DEFAULT:
-            sprintf(status, "%s", MSG_DSE_FABRIC_DEFAULT);
-            break;
-        case USBK_DS_MUST_REMOVE:
-            sprintf(status, "%s", MSG_USBK_UNPLUGING);
-            break;
-        default:
-            sprintf(status, "%d:unknown", usbk_get_state(myusbk));
-            break;
-        }
-
-        if (usbk_get_autoactivation_keyno(myusbk) == 0) {
-            sprintf(autoactive, "disable");
-        } else {
-            sprintf(autoactive, "enable with key #%d", usbk_get_autoactivation_keyno(myusbk));
-        }
-
-        printf("\n  usbk information\n");
-        printf("    device path             %s\n", usbk_get_dev_path(myusbk));
-        printf("    back disk path          %s\n", usbk_get_backdisk_path(myusbk));
-        printf("    product                 %s\n", usbk_get_product(myusbk));
-        printf("    model                   %s\n", usbk_get_model(myusbk));
-        printf("    serial number           %s\n", usbk_get_serial(myusbk));
-        printf("    firmware verison        %s\n", usbk_get_firmware_ver(myusbk));
-        printf("    label                   %s\n", usbk_get_dev_label(myusbk));
-        printf("    status                  %s\n", status);
-        printf("    retry number            %d\n", usbk_get_retry_number(myusbk));
-        printf("    back disk               %s\n", backdisk);
-        printf("    auto activation         %s\n", autoactive);
-        printf("    max. key capacity       %d\n", usbk_get_multikeycap(myusbk));
-        for (i = 0; i < usbk_get_multikeycap(myusbk); i++) {
-            printf("      key %d name            %s\n", i+1, usbk_get_keyname(myusbk,i));
-        }
-    }
-    else
-    {
-        printf("\n  usbk information\n");
-        printf("    logic name              %s\n", usbk_get_dev_path(myusbk));
-        printf("    product                 %s\n", usbk_get_product(myusbk));
-        printf("    model                   %s\n", usbk_get_model(myusbk));
-        printf("    serial number           %s\n", usbk_get_serial(myusbk));
-        printf("    firmware verison        %s\n", usbk_get_firmware_ver(myusbk));
-        printf("    label                   %s\n", usbk_get_dev_label(myusbk));
-        printf("    UNSUPPORTED DEVICE!\n");
-    }
+void linuxcli_show_dev_info(UsbkDevice* myusbk)
+{
+    std::cout << *myusbk;
 }
 
-
-static void print_result(USBK* myusbk) {
+static void print_result(USBK* myusbk)
+{
     switch (usbk_get_lastopr_status(myusbk)) {
     case USBK_LO_PASS:
         fprintf(stdout, "Pass.\n");
@@ -668,6 +568,87 @@ static void print_result(USBK* myusbk) {
     case USBK_LO_STATE_ERROR:
 
         switch (usbk_get_state(myusbk)) {
+        case USBK_DS_ACTIVATE:
+            fprintf(stderr, MSG_DSE_ACTIVATE);
+            break;
+        case USBK_DS_ACTIVATE_WITH_BACKDISK:
+            fprintf(stderr, MSG_DSE_ACTIVATE_WITH_BACKDISK);
+            break;
+        case USBK_DS_DEACTIVATE:
+            fprintf(stderr, MSG_DSE_DEACTIVATE);
+            break;
+        case USBK_DS_FABRIC_DEFAULT:
+            fprintf(stderr, MSG_DSE_FABRIC_DEFAULT);
+            break;
+        case USBK_DS_MUST_REMOVE:
+            fprintf(stderr, MSG_DSE_MUST_REMOVE);
+            break;
+        default:
+            fprintf(stderr, MSG_DSE_UNKNOWN);
+            break;
+        }
+
+        break;
+    case USBK_LO_SCSI_ERROR:
+        fprintf(stderr, MSG_SCSI_ERROR);
+        break;
+    case USBK_LO_UNSUPPORTED_USBK:
+        fprintf(stderr, MSG_UNSUPPORTED_USBK);
+        break;
+    case USBK_LO_INVALID_KEY:
+        fprintf(stderr, MSG_INVALID_KEY);
+        break;
+    case USBK_LO_UDEV_ERROR:
+        fprintf(stderr, MSG_UDEV_ERROR);
+        break;
+    case USBK_LO_MEM_ERROR:
+        fprintf(stderr, MSG_MEM_ERROR);
+        break;
+    case USBK_LO_INVALID_PASS:
+    default:
+        fprintf(stderr, MSG_MEM_ERROR);
+        break;
+    }
+}
+
+static void print_result(UsbkDevice* device)
+{
+    switch (device->lastOperation()) {
+    case USBK_LO_PASS:
+        fprintf(stdout, "Pass.\n");
+        break;
+    case USBK_LO_GEN_FAIL:
+        fprintf(stderr, "Fail.\n");
+        break;
+    case USBK_LO_FAILED_PASS:
+        fprintf(stderr, "Failed Password, Retry Number = %d.\n", device->retryNumber());
+        break;
+    case USBK_LO_FABRIC_RESET:
+        printf("\n");
+        printf("***********************************************\n");
+        printf(" All keys and your password is erased.         \n");
+        printf(" Please, re-configure your device.             \n");
+        printf("***********************************************\n");
+        printf("\n");
+        break;
+    case USBK_LO_USBK_UNPLUGING:
+        fprintf(stderr, "Must remove. Please remove and re-plug the USBK.\n");
+        break;
+    case USBK_LO_INVALID_KEYNO:
+        fprintf(stderr, "Invalid Key Number.\n");
+        break;
+    case USBK_LO_INVALID_KEYSIZE:
+        fprintf(stderr, "Invalid Key Size.\n");
+        break;
+    case USBK_LO_INVALID_DEVICELABEL:
+        fprintf(stderr, "Invalid Device Label\n");
+        break;
+    case USBK_LO_INVALID_NEWPASS:
+        fprintf(stderr, "Invalid New Password.\n");
+        break;
+    case USBK_LO_STATE_ERROR:
+
+        switch (device->deviceState()) {
         case USBK_DS_ACTIVATE:
             fprintf(stderr, MSG_DSE_ACTIVATE);
             break;
@@ -760,7 +741,7 @@ static void print_help(int exval) {
 }
 
 static void print_version(void) {
-    fprintf(stdout, "%s version %s\n", PACKAGE, VERSION);
+    fprintf(stdout, "iyi iyi\n");
 }
 
 static bool check_superuser(void){

@@ -86,7 +86,7 @@ IF(UNIX AND NOT APPLE)
         CLEAN_DIRECT_OUTPUT 1
 
         # avoid conflicts between library and binary target names
-        OUTPUT_NAME libusbk++
+        OUTPUT_NAME usbk++
     )
 
     # Install this library
@@ -94,7 +94,7 @@ IF(UNIX AND NOT APPLE)
             LIBRARY DESTINATION /usr/lib
             PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-    INSTALL(FILES src/libusbk.h
+    INSTALL(FILES src/libusbk.hpp
             DESTINATION /usr/include
             PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 

@@ -33,19 +33,78 @@
 #include "libusbk.h"
 #include "usbk_scsi.h"
 
+/* terminal color definitions */
 #if defined(__linux__)
-    #define DBG_INFO(x, ...) {if(debug_enable) {fprintf(stderr, "\033[0;32;40m%s(%d):%s:\033[0;37;40m" x "\033[0;37;40m\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
-    #define DBG_ERROR(x, ...) {if(debug_enable) {fprintf(stderr, "\033[1;3;31m%s(%d):%s:\033[0;37;40m" x "\033[0;37;40m\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
-    #define DBG_RETURN_STRING(x) {if (x!=0) DBG_ERROR("%s", USBK_RTN_ERRORS_STRING[x]);}
-    #define DBG_LASTOPR_STRING(x) {if (x!=0) {DBG_ERROR("last operation status: %s", lastopr_string[x].rtrn_string);} \
-                                   else {DBG_INFO("last operation status: %s", lastopr_string[x].rtrn_string);}}
-#elif defined(WIN32)
-    #define DBG_INFO(x, ...) {if(debug_enable) {fprintf(stderr, "%s(%d):%s:" x "\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
-    #define DBG_ERROR(x, ...) {if(debug_enable) {fprintf(stderr, "%s(%d):%s:" x "\n", "libusbk",__LINE__, __FUNCTION__, ## __VA_ARGS__);}}
-    #define DBG_RETURN_STRING(x) {if (x!=0) DBG_ERROR("%s", USBK_RTN_ERRORS_STRING[x]);}
-    #define DBG_LASTOPR_STRING(x) {if (x!=0) {DBG_ERROR("last operation status: %s", lastopr_string[x].rtrn_string);} \
-                                   else {DBG_INFO("last operation status: %s", lastopr_string[x].rtrn_string);}}
-#endif
+#  define _COLOR_NO_COLOR     "\e[0m"
+#  define _COLOR_WHITE        "\e[1;37m"
+#  define _COLOR_YELLOW       "\e[1;33m"
+#  define _COLOR_CYAN         "\e[0;36m"
+#  define _COLOR_BLACK        "\e[0;30m"
+#  define _COLOR_BLUE         "\e[0;34m"
+#  define _COLOR_GREEN        "\e[0;32m"
+#  define _COLOR_RED          "\e[0;31m"
+#  define _COLOR_PURPLE       "\e[0;35m"
+#  define _COLOR_BROWN        "\e[0;33m"
+#  define _COLOR_LIGHTGRAY    "\e[0;37m"
+#  define _COLOR_LIGHTPURPLE  "\e[1;35m"
+#  define _COLOR_LIGHTRED     "\e[1;31m"
+#  define _COLOR_LIGHTCYAN    "\e[1;36m"
+#  define _COLOR_LIGHTGREEN   "\e[1;32m"
+#  define _COLOR_LIGHTBLUE    "\e[1;34m"
+#  define _COLOR_DARKGRAY     "\e[1;30m"
+#else
+#  define _COLOR_NO_COLOR
+#  define _COLOR_WHITE
+#  define _COLOR_YELLOW
+#  define _COLOR_CYAN
+#  define _COLOR_BLACK
+#  define _COLOR_BLUE
+#  define _COLOR_GREEN
+#  define _COLOR_RED
+#  define _COLOR_PURPLE
+#  define _COLOR_BROWN
+#  define _COLOR_LIGHTGRAY
+#  define _COLOR_LIGHTPURPLE
+#  define _COLOR_LIGHTRED
+#  define _COLOR_LIGHTCYAN
+#  define _COLOR_LIGHTGREEN
+#  define _COLOR_LIGHTBLUE
+#  define _COLOR_DARKGRAY
+#endif /* defined(__linux__) */
+
+#define DBG_INFO(message, ...) \
+{ \
+	if (_libusbk_debug_enabled) \
+		fprintf(stderr, _COLOR_LIGHTGRAY "%s::%s:%04d: " \
+						_COLOR_GREEN message \
+						_COLOR_NO_COLOR "\n", \
+		                "libusbk", __FUNCTION__, __LINE__, \
+		                ## __VA_ARGS__);\
+}
+
+#define DBG_ERROR(message, ...) \
+{ \
+	if (_libusbk_debug_enabled) \
+		fprintf(stderr, _COLOR_LIGHTGRAY "%s::%s:%04d: " \
+						_COLOR_RED message \
+						_COLOR_NO_COLOR "\n", \
+		                "libusbk", __FUNCTION__, __LINE__, \
+		                ## __VA_ARGS__); \
+}
+
+#define DBG_RETURN_STRING(x) \
+{ \
+	if (x!=0) { DBG_ERROR("%s", USBK_RTN_ERRORS_STRING[x]); } \
+}
+
+#define DBG_LASTOPR_STRING(x) \
+{ \
+	if (x!=0) { \
+		DBG_ERROR("last operation status: %s", lastopr_string[x].retval_string); \
+	} else { \
+		DBG_INFO("last operation status: %s", lastopr_string[x].retval_string); \
+	} \
+}
 
 //-DEFINES FOR FINDING USBK AND BACKDISK
 #define USBK_USB_IDVENDOR          "2384"
@@ -61,12 +120,10 @@
         return - usbk->lastopr; \
     }
 
-typedef struct __RTRN_STRING {
-    int rtrn;
-    const char *rtrn_string;
-} RTRN_STRING;
-
-RTRN_STRING lastopr_string[] = {
+struct {
+    int retval;
+    const char *retval_string;
+} lastopr_string[] = {
     {USBK_LO_PASS,                  "Ok"                     },
     {USBK_LO_GEN_FAIL,              "fail"                   },
     {USBK_LO_FAILED_PASS,           "wrong password"         },
@@ -81,57 +138,58 @@ RTRN_STRING lastopr_string[] = {
     {USBK_LO_SCSI_ERROR,            "scsi error"             },
     {USBK_LO_UNSUPPORTED_USBK,      "unsupported usbk"       },
     {USBK_LO_INVALID_KEY,           "invalid key"            },
-#if  defined(__linux__)
+#if defined(__linux__)
     {USBK_LO_UDEV_ERROR,            "udev error"             },
 #endif
     {USBK_LO_MEM_ERROR,             "memory allocation error"}
 };
 
-typedef struct {
+struct LIBUSBK_SUPPORTED_MODELS{
     const char* model;
     bool support;
-} LIBUSBK_SUPPORTED_MODELS;
-
-LIBUSBK_SUPPORTED_MODELS models_1_1[] = {
+} models_1_1[] = {
     { "A101", true },
     { "A103", true },
     { NULL,   false }
 };
 
-typedef struct {
+struct LIBUSBK_SUPPORTED_VERSIONS{
     int major_version;
     int minor_version;
-    LIBUSBK_SUPPORTED_MODELS* models;
-} LIBUSBK_SUPPORTED_VERSIONS;
-
-LIBUSBK_SUPPORTED_VERSIONS versions_1[] = {
+    struct LIBUSBK_SUPPORTED_MODELS* models;
+} versions_1[] = {
      { 2, 5, models_1_1 },
      { 0, 0, NULL }
 };
 
-typedef struct {
+struct LIBUSBK_SUPPORTED_PRODUCTS {
     const char* product;
-    LIBUSBK_SUPPORTED_VERSIONS* versions;
-} LIBUSBK_SUPPORTED_PRODUCTS;
-
-LIBUSBK_SUPPORTED_PRODUCTS products[] = {
+    struct LIBUSBK_SUPPORTED_VERSIONS* versions;
+} products[] = {
      { "USBK CryptoBridge 2.0", versions_1 },
      { "USBK CryptoBridge", versions_1 },
      { NULL, NULL }
 };
 
-static bool debug_enable = false;
-
-static int _get_udev_info(USBK* usbk, const char *device);
-static int _get_udev_backdisk(USBK* usbk);
-static int _command_status(USBK* usbk);
-
 #if 0
 static int _convert_key_decimal2hex(uint8_t *key_hex, const char* key_decimal, usbk_keysize_t keysize);
 #endif
 
+static int _command_status(USBK* usbk);
 static int _convert_key_text2hex(uint8_t *key_hex, const char* key_text, usbk_keysize_t keysize);
-static unsigned int _keysize_as_byte(usbk_keysize_t keysize);
+
+#if defined(__linux__)
+static int _get_udev_info(USBK* usbk, const char *device);
+static int _get_udev_backdisk(USBK* usbk);
+#endif
+
+static bool _libusbk_debug_enabled = false;
+static const char* _libusbk_version = USBK_LIB_VERSION_FULL;
+
+/* Debugging informations */
+void libusbk_enable_debug() { _libusbk_debug_enabled = true; }
+void libusbk_disable_debug() { _libusbk_debug_enabled = false; }
+const char* libusbk_version() { return _libusbk_version; }
 
 USBK* usbk_new(const char* dev)
 {
@@ -139,12 +197,7 @@ USBK* usbk_new(const char* dev)
     int i;
 
     USBK* usbk = (USBK*) calloc(1, sizeof(USBK));
-    if (usbk == NULL) {
-        free(usbk);
-        DBG_LASTOPR_STRING(USBK_LO_UDEV_ERROR);
-
-        return NULL;
-    }
+    assert(usbk != NULL);
 
 #if defined(__linux__)
     // get information about usbk by udev
@@ -174,17 +227,19 @@ USBK* usbk_new(const char* dev)
         return NULL;
     }
 
-    usbk->product = strdup(usbk_info.product.s);
-    usbk->model = strdup(usbk_info.model.s);
-    usbk->firmware_ver = strdup(usbk_info.firmware_ver.s);
-    usbk->is_supported = true;
+    /** fill usbk struct elements */
+	usbk->product = strdup(usbk_info.product.s);
+	usbk->model = strdup(usbk_info.model.s);
+	usbk->firmware_ver = strdup(usbk_info.firmware_ver.s);
+	usbk->is_supported = true;
 
-    usbk->multikey_cap = usbk_info.multikeycap;
-    usbk->current_key = usbk_info.current_keyno;
-    usbk->autoact_keyno = usbk_info.autoactivate_keyno;
-    usbk->retry_num = usbk_info.retry_num;
-    usbk->dev_state = (usbk_ds_t) usbk_info.devstate.me;
-    usbk->dev_label = strdup(usbk_info.devlabel.s);
+	usbk->multikey_cap = usbk_info.multikeycap;
+	usbk->current_key = usbk_info.current_keyno;
+	usbk->autoact_keyno = usbk_info.autoactivate_keyno;
+	usbk->retry_num = usbk_info.retry_num;
+	usbk->dev_state = (usbk_ds_t) usbk_info.devstate.me;
+	usbk->dev_label = strdup(usbk_info.devlabel.s);
+    /* --- */
 
     /* FIXME why we need this much space */
     usbk->serial = (char*) calloc((sizeof(usbk_info.serial) * 2) + 2, sizeof(char));
@@ -235,7 +290,7 @@ int usbk_key_activate(USBK* usbk, const char* password, uint8_t key_no)
 
     USBK_CHECK_SUPPORTED(usbk)
 
-    if (key_no > usbk->multikey_cap) {
+    if (key_no < 0 || key_no > usbk->multikey_cap) {
         usbk->lastopr = USBK_LO_INVALID_KEYNO;
         ret = - usbk->lastopr;
 
@@ -261,6 +316,8 @@ int usbk_key_activate(USBK* usbk, const char* password, uint8_t key_no)
 
             goto done;
         }
+
+        /* FIXME: POTENTIONAL BUG: _command_status function does not return USBK_LO_* values */
         usbk->lastopr = _command_status(usbk);
 
         break;
@@ -303,6 +360,8 @@ int usbk_key_deactivate(USBK* usbk)
 
             goto done;
         }
+
+        /* FIXME: POTENTIONAL BUG: _command_status function does not return USBK_LO_* values */
         usbk->lastopr = _command_status(usbk);
 
         break;
@@ -351,6 +410,8 @@ int usbk_change_password(USBK* usbk, const char* old_pass, const char* new_pass)
 
             goto done;
         }
+
+        /* FIXME: POTENTIONAL BUG: _command_status function does not return USBK_LO_* values */
         usbk->lastopr = _command_status(usbk);
 
         break;
@@ -391,6 +452,8 @@ int usbk_set_devicelabel(USBK* usbk, const char* pass, const char* device_label)
 
             goto done;
         }
+
+        /* FIXME: POTENTIONAL BUG: _command_status function does not return USBK_LO_* values */
         usbk->lastopr = _command_status(usbk);
 
         break;
@@ -441,7 +504,7 @@ int usbk_set_key_and_keyname(USBK* usbk, const char *pass, int key_no, const cha
         if ((key_size != USBK_KEYSIZE_NULL) && (key != NULL)) {
             setkey.options.me = SETKEY_NAME_AND_KEY;
             setkey.keysize.me = (e_UIP_KEYSIZE)  key_size;
-            memcpy(setkey.key.u8, key, _keysize_as_byte(key_size));
+            memcpy(setkey.key.u8, key, usbk_keysize_as_byte(key_size));
         } else {
             setkey.options.me = SETKEY_NAMEONLY;
         }
@@ -458,6 +521,8 @@ int usbk_set_key_and_keyname(USBK* usbk, const char *pass, int key_no, const cha
 
             goto done;
         }
+
+        /* FIXME: POTENTIONAL BUG: _command_status function does not return USBK_LO_* values */
         usbk->lastopr = _command_status(usbk);
 
         break;
@@ -554,6 +619,8 @@ int usbk_set_autact(USBK* usbk, const char *pass, int key_no)
 
             goto done;
         }
+
+        /* FIXME: POTENTIONAL BUG: _command_status function does not return USBK_LO_* values */
         usbk->lastopr = _command_status(usbk);
 
         break;
@@ -581,8 +648,8 @@ int usbk_get_randomkey(USBK* usbk, uint8_t* random_key, usbk_keysize_t keysize)
 
     USBK_CHECK_SUPPORTED(usbk)
 
-    unsigned int keysize_inbyte = _keysize_as_byte(keysize);
-    if ((keysize_inbyte == 0) || (keysize_inbyte > _keysize_as_byte(USBK_KEYSIZE_256BIT))) {
+    int keysize_inbyte = usbk_keysize_as_byte(keysize);
+    if ((keysize_inbyte == 0) || (keysize_inbyte > usbk_keysize_as_byte(USBK_KEYSIZE_256BIT))) {
         usbk->lastopr = USBK_LO_INVALID_KEYSIZE;
         ret = - usbk->lastopr;
 
@@ -602,7 +669,9 @@ int usbk_get_randomkey(USBK* usbk, uint8_t* random_key, usbk_keysize_t keysize)
         goto done;
     }
 
+    /* FIXME: POTENTIONAL BUG: _command_status function does not return USBK_LO_* values */
     usbk->lastopr = _command_status(usbk);
+
     if (usbk->lastopr == USBK_LO_PASS) {
         memcpy(random_key, genkey.key.u8, keysize_inbyte);
     }
@@ -667,7 +736,7 @@ static int _command_status(USBK* usbk)
         usbk->lastopr = USBK_LO_SCSI_ERROR;
         DBG_LASTOPR_STRING(usbk->lastopr);
 
-        return -  usbk->lastopr;
+        return - usbk->lastopr;
     }
 
     usbk->retry_num = status.retry_num;
@@ -687,7 +756,7 @@ static int _convert_key_decimal2hex(uint8_t *key_hex, const char* key_decimal, u
     // 6) 16 adet sayı cikartabildin mi?
     // 7) sayılar 0 ile 255 arasinda mi?
 
-    unsigned int key_len = _keysize_as_byte(keysize);
+    unsigned int key_len = usbk_keysize_as_byte(keysize);
     int i;
 
     /* check key_text if it is null or not */
@@ -729,7 +798,7 @@ static int _convert_key_decimal2hex(uint8_t *key_hex, const char* key_decimal, u
         key_decimal_str[found] = ' ';
         found = key_decimal_str.find_first_of(".", found + 1);
     }
-    if (i != (_keysize_as_byte(keysize) - 1)) return USBK_LO_INVALID_KEY;
+    if (i != (usbk_keysize_as_byte(keysize) - 1)) return USBK_LO_INVALID_KEY;
     //cout << str << endl;
 
     // string icerisinde bosluklar haric decimal olmayan karakter var mi?
@@ -749,12 +818,12 @@ static int _convert_key_decimal2hex(uint8_t *key_hex, const char* key_decimal, u
     // sayılar 0 ile 255 arasinda mi?
     istringstream iss(key_decimal_str, istringstream::in);
     i = 0;
-    for (unsigned int n = 0; n < _keysize_as_byte(keysize); n++) {
+    for (unsigned int n = 0; n < usbk_keysize_as_byte(keysize); n++) {
         iss >> ikey[n];
 
         if (iss.fail() || iss.bad()) return USBK_LO_INVALID_KEY;
 
-        if (iss.eof() && n != (_keysize_as_byte(keysize) - 1)) return USBK_LO_INVALID_KEY;
+        if (iss.eof() && n != (usbk_keysize_as_byte(keysize) - 1)) return USBK_LO_INVALID_KEY;
 
         if (ikey[n] > 255 || ikey[n] < 0) {
             i++;
@@ -781,7 +850,7 @@ static inline int16_t _xtod(const char c)
 
 static int _convert_key_text2hex(uint8_t *key_hex, const char* key_text, usbk_keysize_t keysize)
 {
-    unsigned int key_len = _keysize_as_byte(keysize);
+    int key_len = usbk_keysize_as_byte(keysize);
     int i;
 
     /* check key_text if it is null or not */
@@ -808,7 +877,7 @@ static int _convert_key_text2hex(uint8_t *key_hex, const char* key_text, usbk_ke
     return USBK_LO_PASS;
 }
 
-static unsigned int _keysize_as_byte(usbk_keysize_t keysize)
+unsigned int usbk_keysize_as_byte(usbk_keysize_t keysize)
 {
     unsigned int size = 0;
 
@@ -1150,28 +1219,4 @@ int usbk_list_get_count(USBK_LIST *usbk_list)
 
 #endif
 
-void usbk_debug_enable(void)
-{
-    debug_enable = true;
-}
-
-void usbk_debug_disable(void)
-{
-    debug_enable = false;
-}
-
-void usbk_debug(bool enable)
-{
-    debug_enable = enable;
-}
-
-bool usbk_debug_check(void)
-{
-    return debug_enable;
-}
-
-const char* usbk_libversion(void)
-{
-    return USBK_LIB_VERSION_FULL;
-}
 

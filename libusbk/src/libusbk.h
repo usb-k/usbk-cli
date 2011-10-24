@@ -32,6 +32,10 @@ extern "C" {
 #  error unsupported environment
 #endif
 
+#if defined(__GNUC__)
+#  define inline inline __attribute__((always_inline))
+#endif
+
 /*
  * usbk keysize type values
  *
@@ -191,6 +195,9 @@ struct USBK
 };
 typedef struct USBK USBK;
 
+/*
+ * FIXME: do we really need these macros?
+ * */
 #define USBK_ASSIGN_PASSWORD(usbk, new_pass) \
     usbk_changepassword(usbk, NULL, new_pass)
 #define USBK_SETKEY_NAME(usbk, pass, key_no, key_name) \
@@ -223,27 +230,17 @@ typedef struct USBK USBK;
 #define USBK_DISABLE_AUTACT(usbk, pass) \
     usbk_set_autact(usbk, pass, 0)
 
+/* ----------------------------------------------- */
+
 extern USBK* usbk_new(const char* dev);
 extern int usbk_release(USBK* usbk);
 
-/*
- * All the getter functions
- * */
-
-/* This is the helper macro for reaching the USBK structure */
-#define USBK_GET_ELEMENT(usbk, element)   (usbk->element)
-
-#if defined(__GNUC__)
-#  define inline inline __attribute__((always_inline))
-#endif
-
 /* Debugging informations */
-extern void usbk_debug_enable(void);
-extern void usbk_debug_disable(void);
-extern void usbk_debug(bool enable);
-extern bool usbk_debug_check(void);
+extern void libusbk_enable_debug();
+extern void libusbk_disable_debug();
 
-extern const char* usbk_libversion(void);
+/* libusbk version */
+extern const char* libusbk_version();
 
 /*
  * And all the setter and other functions which interacts
@@ -257,6 +254,7 @@ extern int usbk_set_devicelabel(USBK* usbk, const char* pass, const char* device
 extern int usbk_set_keyname(USBK* usbk, const char* pass, uint8_t key_no, const char* key_name);
 extern int usbk_set_key_hex(USBK* usbk, const char* pass, uint8_t key_no, usbk_keysize_t key_size, const uint8_t* key);
 extern int usbk_set_key_text(USBK* usbk, const char* pass, uint8_t key_no, usbk_keysize_t key_size, const char* key);
+extern unsigned int usbk_keysize_as_byte(usbk_keysize_t keysize);
 
 #if 0
 /* FIXME depreciated function */
@@ -267,6 +265,13 @@ extern int usbk_set_key_and_keyname(USBK* usbk, const char* pass, int key_no, co
 extern int usbk_set_autact(USBK* usbk, const char* pass, int key_no);
 extern int usbk_get_randomkey(USBK* usbk, uint8_t*random_key, usbk_keysize_t keysize);
 extern int usbk_refresh_usbkinfo(USBK* usbk);
+
+/*
+ * All the getter functions
+ * */
+
+/* This is the helper macro for reaching the USBK structure */
+#define USBK_GET_ELEMENT(usbk, element) (usbk->element)
 
 inline const char* usbk_get_dev(USBK* usbk)
     { return USBK_GET_ELEMENT(usbk, dev_node); }

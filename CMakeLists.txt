@@ -26,6 +26,9 @@ INCLUDE (Uninstaller)
 ADD_SUBDIRECTORY( libusbk )
 ADD_SUBDIRECTORY( libusbk++ )
 ADD_SUBDIRECTORY( usbk_cli )
+
+ADD_SUBDIRECTORY( usbk_cli_pp ) # temporary test cli
+
 ADD_SUBDIRECTORY( man )
 
 UNINSTALLLER_FEATURE()
