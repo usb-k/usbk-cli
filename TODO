@@ -1,12 +1,12 @@
-urgent
-======
- - some api enhancement required for making usbk c++ api. this api will
-   be used in qusbk.
- - make libusbk fully c source since no need to use c++
-======
+TODO
+====
+ - Write unit tests for each function both for libusbk and libusbk++
 
- - make variables fixed sizes (eg. use int32_t or int64_t instead of int (except file descriptors) )
+ - libusbk enhancement
+    . make struct USBK fully abstracted (as before)
+    . prevent segfaults caused by root access
+    . write more controls for NULL pointer addressing (still we have some problems)
 
- - c++ bindings can be written, but first qusbk project must be started!
-
+ - libusbk++ enhancements
+    . same as libusbk
 
