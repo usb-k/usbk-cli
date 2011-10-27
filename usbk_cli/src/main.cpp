@@ -23,7 +23,7 @@
 #include <sstream>
 #include <string.h>
 
-#include "../../libusbk/src/libusbk.h"
+#include <libusbk.h>
 
 using namespace std;
 

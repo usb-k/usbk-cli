@@ -18,7 +18,7 @@
 #ifndef LIBUSBK_HPP_
 #define LIBUSBK_HPP_
 
-#include "../../libusbk/src/libusbk.h"
+#include <libusbk.h>
 
 #include <vector>
 #include <string>

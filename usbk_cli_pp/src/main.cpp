@@ -27,8 +27,8 @@
 #include <sstream>
 #include <string.h>
 
-#include "../../libusbk/src/libusbk.h"
-#include "../../libusbk++/src/libusbk.hpp"
+#include <libusbk.h>
+#include <libusbk.hpp>
 
 //PRIVATE FUNCTION DECLARATIONS
 static int _parse_options(int *argc, char** argv[]);
