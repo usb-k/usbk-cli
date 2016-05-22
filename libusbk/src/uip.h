@@ -42,7 +42,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "libusbk.h"
+#if defined(__AVR32__) || defined(__linux__)
+#  include <inttypes.h>
+#elif defined(WIN32)
+#  include <stdint.h>
+#else
+#  error unsupported environment
+#endif
 
 #if defined(__AVR32__)
 #  define ATTR_PACKED_BEGIN __attribute__((__packed__))
@@ -62,6 +68,8 @@
 #else
 #  error unsupported environment
 #endif
+
+#define NB_AESKEY         3
 
 #define PROTOCOL_HEADER "USBK"
 

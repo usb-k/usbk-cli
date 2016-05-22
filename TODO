@@ -1,0 +1,12 @@
+TODO
+====
+ - Write unit tests for each function both for libusbk and libusbk++
+
+ - libusbk enhancement
+    . make struct USBK fully abstracted (as before)
+    . prevent segfaults caused by root access
+    . write more controls for NULL pointer addressing (still we have some problems)
+
+ - libusbk++ enhancements
+    . same as libusbk
+

@@ -19,7 +19,7 @@ IF(APPLE)
 ENDIF(APPLE)
 
 # Project name
-PROJECT (USBK_LIB)
+PROJECT (USBK_LIB_CPP_BINDING)
 
 # CMAKE Settings
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
@@ -35,22 +35,29 @@ SET(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_
 SET(${PROJECT_NAME}_VERSION_FULL "${${PROJECT_NAME}_VERSION}.${${PROJECT_NAME}_VERSION_PATCH}")
 SET(${PROJECT_NAME}_SOVERSION "${${PROJECT_NAME}_VERSION_FULL}")
 
-CONFIGURE_FILE(src/config.h.cmake src/config.h)
+CONFIGURE_FILE(src/config.hpp.cmake src/config.hpp)
 
 IF(UNIX AND NOT APPLE)
-    # Search for udev package
-    INCLUDE (FindUDEV)
-    IF(NOT UDEV)
-        message(FATAL_ERROR "Unable to find 'udev' library!")
-    ENDIF(NOT UDEV)
-
     # Header files are located in these directories
     SET (${PROJECT_NAME}_INCLUDE_DIRS
+        ${${PROJECT_NAME}_SOURCE_DIR}/../libusbk/src
         ${${PROJECT_NAME}_SOURCE_DIR}/src/
-        ${${PROJECT_NAME}_SOURCE_DIR}/src/linux/
         ${CMAKE_SYSTEM_INCLUDE_PATH}
     )
     INCLUDE_DIRECTORIES (${${PROJECT_NAME}_INCLUDE_DIRS})
+
+    # Libraries are located in these directories
+    SET (${PROJECT_NAME}_LIBRARY_DIRS
+        ${CMAKE_CURRENT_BINARY_DIR}/../libusbk/
+        ${CMAKE_SYSTEM_LIBRARY_PATH}
+    )
+    LINK_DIRECTORIES ( ${${PROJECT_NAME}_LIBRARY_DIRS})
+
+    # Depend Includes
+    SET (${PROJECT_NAME}_INCLUDES
+        libusbk.h
+        libusbk.hpp
+    )
 
     # Libraries are located in these directories
     SET (${PROJECT_NAME}_LIBRARIES_PATH
@@ -61,13 +68,13 @@ IF(UNIX AND NOT APPLE)
     # Source Files
     #AUX_SOURCE_DIRECTORY (src ${PROJECT_NAME}_SOURCES)
 
-    FILE(GLOB SRC_FILES "src/*" "src/linux/*")
+    FILE(GLOB SRC_FILES "src/*" )
 
     # Create Library File
     ADD_LIBRARY( ${PROJECT_NAME} SHARED ${SRC_FILES})
 
     # These are the symbols for the linker
-    TARGET_LINK_LIBRARIES(${PROJECT_NAME} udev)
+    TARGET_LINK_LIBRARIES(${PROJECT_NAME} udev)    
 
     # change lib_target properties
     SET_TARGET_PROPERTIES( ${PROJECT_NAME} PROPERTIES
@@ -79,19 +86,20 @@ IF(UNIX AND NOT APPLE)
         CLEAN_DIRECT_OUTPUT 1
 
         # avoid conflicts between library and binary target names
-        OUTPUT_NAME usbk
+        OUTPUT_NAME usbk++
     )
 
     # Install this library
-    INSTALL(TARGETS ${PROJECT_NAME}
+    INSTALL(TARGETS ${PROJECT_NAME} 
             LIBRARY DESTINATION /usr/lib
             PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-    INSTALL(FILES src/libusbk.h
+    INSTALL(FILES src/libusbk.hpp
             DESTINATION /usr/include
             PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
     IF (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
+
         # Settings for debian package
         SET(CPACK_GENERATOR "DEB")
         SET(CPACK_DEBIAN_PACKAGE_NAME ${PROJECT_NAME})
@@ -106,12 +114,13 @@ IF(UNIX AND NOT APPLE)
         SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
         SET(CPACK_DEBIAN_PACKAGE_RECOMMENDS "recommends")	
         SET(CPACK_DEBIAN_PACKAGE_SUGGESTS "suggests")
-
         INCLUDE(CPack)
 
     ENDIF (${CMAKE_PROJECT_NAME} MATCHES ${PROJECT_NAME})
+
 ELSEIF(WIN32)
-    # Header files are located in these directories
+
+        # Header files are located in these directories
     SET (${PROJECT_NAME}_INCLUDE_DIRS
         ${${PROJECT_NAME}_SOURCE_DIR}/src/
         ${${PROJECT_NAME}_SOURCE_DIR}/src/windows/
@@ -137,7 +146,7 @@ ELSEIF(WIN32)
         CLEAN_DIRECT_OUTPUT 1
 
         # avoid conflicts between library and binary target names
-        OUTPUT_NAME libusbk
+        OUTPUT_NAME libusbk++
     )
 
     INSTALL(TARGETS

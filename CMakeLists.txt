@@ -10,7 +10,7 @@
 PROJECT (usbk)
 
 # CMAKE Settings
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(CMAKE_COLOR_MAKEFILE ON)
 SET(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -24,7 +24,11 @@ SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_P
 INCLUDE (Uninstaller)
 
 ADD_SUBDIRECTORY( libusbk )
+ADD_SUBDIRECTORY( libusbk++ )
 ADD_SUBDIRECTORY( usbk_cli )
+
+ADD_SUBDIRECTORY( usbk_cli_pp ) # temporary test cli
+
 ADD_SUBDIRECTORY( man )
 
 UNINSTALLLER_FEATURE()
@@ -54,6 +58,8 @@ IF (UNIX)
          cmake.check_depends
          CMakeCache.txt
          */CMakeCache.txt
+         install_manifest.txt
+
          cmake.check_cache
          *.cmake
          Makefile
@@ -63,7 +69,9 @@ IF (UNIX)
          */Makefile
          */CMakeFiles
          */cmake_install.cmake
-         libusbk/*.so*
+         libusbk*/*.so*
+         libusbk*/src/config.h
+         libusbk*/src/config.hpp
          usbk_cli/usbk
          man/*.gz
     )
@@ -75,6 +83,7 @@ IF (UNIX)
          ARGS    -Rf CMakeTmp ${DISTCLEANED}
          TARGET  distclean
     )
+
 ENDIF(UNIX)
 
 # Settings for debian package
